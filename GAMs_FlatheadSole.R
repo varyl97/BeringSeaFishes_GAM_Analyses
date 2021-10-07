@@ -73,6 +73,9 @@ windows()
 par(mfrow=c(2,2))
 gam.check(thr.pheno[[best.index.phe]])
 
+windows()
+#plot()example 
+
 #temp threshold geo: 
 temps<-sort(unique(reg.sst$SST))
 bd<-10
