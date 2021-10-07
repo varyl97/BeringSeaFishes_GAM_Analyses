@@ -78,18 +78,19 @@ windows()
 
 #temp threshold geo: 
 temps<-sort(unique(reg.sst$SST))
-bd<-10
+bd<-10 #change this to 3/4/<=5
 temps.in<-temps[bd:(length(temps)-bd)]
 
 aic.geo<-NA*(temps.in)
 thr.geo<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
+  fhsub$th<-factor(reg.SST<=temps.in[i])
   thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+s(bottom_depth,k=5)+
-                      s(lon,lat,by=factor(reg.SST<=temps.in[i])),data=fhsub,
+                      s(lon,lat,by=th),data=fhsub,
                     family=tw(link='log'),method='REML')
   aic.geo[i]<-AIC(thr.geo[[i]])
-}
+} #add TH into grid.extent for true false based on condition 
 
 best.index.geo<-order(aic.geo)[1]
 
@@ -267,14 +268,12 @@ for(k in 1:nrow(grid.extent)){
   grid.extent$dist[k]<-min(dist)
 }
 
-#test:     #grid.extent frame needs same variables as model
+#test:     #grid.extent frame needs same variables as model, predicting below threshold in this case
 grid.extent$year<-2013 #(below thresh of 1.589 degC)
 grid.extent$doy<-as.character(median(fhsub$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-median(fhsub$bottom_depth,na.rm=TRUE)
-grid.extent$reg.SST<-NA
-grid.extent$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST<1.589],na.rm=TRUE)  
-grid.extent$temps.in=1.589 #define temps.in = to threshold estimation 
+grid.extent$th<-"TRUE"
 grid.extent$pred<-predict(thr.geo[[best.index.geo]],newdata=grid.extent) #threshold geography model 
 grid.extent$pred[grid.extent$dist>30000]<-NA
 
