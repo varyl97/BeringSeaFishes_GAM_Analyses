@@ -78,7 +78,7 @@ windows()
 
 #temp threshold geo: 
 temps<-sort(unique(reg.sst$SST))
-bd<-10 #change this to 3/4/<=5
+bd<-4 #change this to 4, more intermediate 
 temps.in<-temps[bd:(length(temps)-bd)]
 
 aic.geo<-NA*(temps.in)
@@ -179,7 +179,7 @@ eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
 summary(eg.base)
 
 temps<-sort(unique(reg.sst$SST))
-bd<-10
+bd<-4
 temps.in<-temps[bd:(length(temps)-bd)]
 aic.pheno<-NA*(temps.in)
 thr.pheno<-as.list(1:(length(temps.in)))
@@ -198,21 +198,21 @@ best.index.phe<-order(aic.pheno)[1]
 summary(thr.pheno[[best.index.phe]])
 
 temps<-sort(unique(reg.sst$SST))
-bd<-10
+bd<-4 #change this to 4, more intermediate 
 temps.in<-temps[bd:(length(temps)-bd)]
 
 aic.geo<-NA*(temps.in)
 thr.geo<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
+  fhsub$th<-factor(fhsub$reg.SST<=temps.in[i])
   thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+s(bottom_depth,k=5)+
-                      s(lon,lat,by=factor(reg.SST<=temps.in[i])),data=fhsub,
+                      s(lon,lat,by=th),data=fhsub,
                     family=tw(link='log'),method='REML')
   aic.geo[i]<-AIC(thr.geo[[i]])
-}
+} #add TH into grid.extent for true false based on condition 
 
 best.index.geo<-order(aic.geo)[1]
-
 summary(thr.geo[[best.index.geo]])
 
 vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
