@@ -1,4 +1,5 @@
 #Libraries
+setwd("C:/Users/varyl/Desktop/GitHub/BeringSeaFishes_GAM_Analyses")
 
 library(mgcv)
 library(sgeostat)
