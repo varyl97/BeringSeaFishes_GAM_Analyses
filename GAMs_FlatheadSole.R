@@ -185,10 +185,11 @@ aic.pheno<-NA*(temps.in)
 thr.pheno<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
+  fhsub$th<-factor(fhsub$reg.SST<=temps.in[i])
   thr.pheno[[i]]<-gam((Cper10m2+1)~factor(year)+
                         s(lon,lat)+
                         s(bottom_depth,k=5)+
-                        s(doy,by=factor(reg.SST<=temps.in[i])),
+                        s(doy,by=th),
                       data=fhsub,family=tw(link='log'),method='REML')
   aic.pheno[i]<-AIC(thr.pheno[[i]])
 }
@@ -273,7 +274,8 @@ grid.extent$year<-2013 #(below thresh of 1.589 degC)
 grid.extent$doy<-as.character(median(fhsub$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-median(fhsub$bottom_depth,na.rm=TRUE)
-grid.extent$th<-"TRUE"
+grid.extent$th<-as.factor("TRUE")
+grid.extent$pred<-NA
 grid.extent$pred<-predict(thr.geo[[best.index.geo]],newdata=grid.extent) #threshold geography model 
 grid.extent$pred[grid.extent$dist>30000]<-NA
 
@@ -512,8 +514,8 @@ stsweet$color<-NA
 stsweet$month_nm<-NA
 stsweet<-stsweet %>% mutate(color=case_when(
   stsweet$month==4~'#440154FF',
-  stsweet$month==5~'#433E85FF',
-  stsweet$month==6~'#1E9B8AFF',
+  stsweet$month==5~'#2D708EFF',
+  stsweet$month==6~'#482173FF',
   stsweet$month==7~'#85D54AFF',
   stsweet$month==9~'#FDE725FF'))
 stsweet<-stsweet %>%mutate(month_nm=case_when(
@@ -536,22 +538,29 @@ map("worldHires",fill=T,col="snow4",add=T)
 years<-sort(unique(stsweet$year))
 tmp1<-1:ceiling(length(years)/4)
 lg.text<-unique(stsweet$month_nm)
-lg.values<-c('#440154FF','#433E85FF','#1E9B8AFF','#85D54AFF','#FDE725FF')
+lg.values<-c('#440154FF','#2D708EFF','#482173FF','#85D54AFF','#FDE725FF')
 
+#still tweaking this: the no catch stations are overwhelming, months don't really match, order of colors isn't great. 
 for(j in 1:length(tmp1)){
   windows(width=24,height=14)
   par(mfcol=c(2,2),omi=c(0.25,0.3,0.55,0.25),mai=c(0.2,0.4,0.4,0.1))
   for(i in (4*tmp1[j]-3):min(length(years),(4*tmp1[j]))){
     plot(stsweet$lon[stsweet$year==years[i]],stsweet$lat[stsweet$year==years[i]],
-         col=stsweet$color[stsweet$year==years[i]],pch=19,cex=2,
+         col=stsweet$color[stsweet$year==years[i]],pch=17,cex=2,
          main=as.character(years[i]),
          ylim=range(fhlarv.ctd$lat),xlim=range(fhlarv.ctd$lon),
          ylab=expression(paste("Latitude ("^0,'N)')),
          xlab=expression(paste("Longitude ("^0,'E)')))
     symbols(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2>0&fhlarv.ctd$year==years[i]],
             fhlarv.ctd$lat[fhlarv.ctd$Cper10m2>0&fhlarv.ctd$year==years[i]],
-            circles=fhlarv.ctd$Cper10m2[fhlarv.ctd$Cper10m2>0&fhlarv.ctd$year==years[i]],inches=0.15,add=T)
+            circles=fhlarv.ctd$Cper10m2[fhlarv.ctd$Cper10m2>0&fhlarv.ctd$year==years[i]],
+            inches=0.15,add=T,bg=stsweet$color[stsweet$month==fhlarv.ctd$month[i]])
+    points(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2==0&fhlarv.ctd$year==years[i]],
+           fhlarv.ctd$lat[fhlarv.ctd$Cper10m2==0&fhlarv.ctd$year==years[i]],
+           pch=4,cex=2,alpha=0.6,add=T,col='hotpink3')
     map("worldHires",fill=T,col="snow4",add=T)
+    #contour(brs_bathy2,land=FALSE,deep=c(-5000,-200,0),shallow=c(-1000,-50,0),
+     #       step=c(1000,50,0),add=TRUE)
   }
   legend("topright",legend=c('April','May','June','July','September'),
          col=lg.values,lwd=3,lty=1,
