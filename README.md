@@ -6,7 +6,7 @@ The Bering Sea is a region of intense environmental variability which leads to e
 
 While spawning behavior is one piece of the puzzle regarding recruitment variability of fisheries, illuminating larval biogeography of the region will also lend insight to the ecological and physical dynamics at play. I used generalized additive models and conductivity-temperature-depth (CTD) transects across the Bering Sea to better understand patterns of larval biogeography across species with the hypothesis that some species will prefer differential temperature and salinity environments than others. An assessment of where larvae occur and at what times of the year will be very useful to inform future ichthyoplankton surveys on shifting species distributions and potential periods of recruitment variability. 
 
-The "Organized Thesis Analyses (Code)" folder contains all code files, organized by species and ichthyoplankton type (egg or larvae) from initial data loading and cleaning to production of generalized additive models. The "Data" folder contains all raw and cleaned ichthyoplankton data and cleaned and compiled CTD data for the region. 
+The "Organized Thesis Analyses (Code)" folder contains all code files, organized by species and ichthyoplankton type (egg or larvae) from initial data loading and cleaning to production of generalized additive models. The "Ichthyo Data" folder contains all raw and cleaned ichthyoplankton data while the "Environmental Data" folder contains cleaned and compiled CTD data as well as local and regional temperature indices for the Bering Sea. 
 
 
 
