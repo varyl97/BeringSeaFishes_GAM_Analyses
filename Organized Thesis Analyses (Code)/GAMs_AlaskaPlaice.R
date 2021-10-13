@@ -35,10 +35,11 @@ aic.pheno<-NA*(temps.in)
 thr.pheno<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
+  apsub$th<-factor(reg.SST<=temps.in[i])
   thr.pheno[[i]]<-gam((Cper10m2+1)~factor(year)+
                         s(lon,lat)+
                         s(bottom_depth,k=5)+
-                        s(doy,by=factor(reg.SST<=temps.in[i])),
+                        s(doy,by=th),
                       data=apsub,family=tw(link='log'),method='REML')
   aic.pheno[i]<-AIC(thr.pheno[[i]])
 }
@@ -80,8 +81,9 @@ aic.geo<-NA*(temps.in)
 thr.geo<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
+  apsub$th<-factor(reg.SST<=temps.in[i])
   thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+s(bottom_depth,k=5)+
-                      s(lon,lat,by=factor(reg.SST<=temps.in[i])),data=apsub,
+                      s(lon,lat,by=th),data=apsub,
                     family=tw(link='log'),method='REML')
   aic.geo[i]<-AIC(thr.geo[[i]])
 }
@@ -179,17 +181,18 @@ aic.pheno<-NA*(temps.in)
 thr.pheno<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
+  apsub$th<-factor(reg.SST<=temps.in[i])
   thr.pheno[[i]]<-gam((Cper10m2+1)~factor(year)+
                         s(lon,lat)+
                         s(bottom_depth,k=5)+
-                        s(doy,by=factor(reg.SST<=temps.in[i])),
+                        s(doy,by=th),
                       data=apsub,family=tw(link='log'),method='REML')
   aic.pheno[i]<-AIC(thr.pheno[[i]])
 }
 
 best.index.phe<-order(aic.pheno)[1]
-
-summary(thr.pheno[[best.index.phe]])
+thr.pheno<-thr.pheno[[best.index.phe]]
+summary(thr.pheno)
 
 temps<-sort(unique(reg.sst$SST))
 bd<-10
@@ -199,15 +202,16 @@ aic.geo<-NA*(temps.in)
 thr.geo<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
+  apsub$th<-factor(reg.SST<=temps.in[i])
   thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+s(bottom_depth,k=5)+
-                      s(lon,lat,by=factor(reg.SST<=temps.in[i])),data=apsub,
+                      s(lon,lat,by=th),data=apsub,
                     family=tw(link='log'),method='REML')
   aic.geo[i]<-AIC(thr.geo[[i]])
 }
 
 best.index.geo<-order(aic.geo)[1]
-
-summary(thr.geo[[best.index.geo]])
+thr.geo<-thr.geo[[best.index.geo]]
+summary(thr.geo)
 
 vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
                 s(doy,by=reg.SST),data=apsub,family=tw(link='log'),
@@ -218,6 +222,19 @@ vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
               s(lon,lat,by=reg.SST),data=apsub,family=tw(link='log'),
             method='REML')
 summary(vc.geo)
+
+##SAVE AND RELOAD THE MODELS
+saveRDS(eg.base,file="../GAM Models/ap_egg_base.rds")
+saveRDS(thr.pheno,file="../GAM Models/ap_egg_thr_pheno.rds")
+saveRDS(thr.geo,file="../GAM Models/ap_egg_thr_geo.rds")
+saveRDS(vc.pheno,file="../GAM Models/ap_egg_vc_pheno.rds")
+saveRDS(vc.geo,file="../GAM Models/ap_egg_vc_geo.rds")
+
+eg.base<-readRDS("../GAM Models/ap_egg_base.rds")
+thr.pheno<-readRDS("../GAM Models/ap_egg_thr_pheno.rds")
+thr.geo<-readRDS("../GAM Models/ap_egg_thr_geo.rds")
+vc.pheno<-readRDS("../GAM Models/ap_egg_vc_pheno.rds")
+vc.geo<-readRDS("../GAM Models/ap_egg_vc_geo.rds")
 
 #checking based on AIC: 
 aic.base<-AIC(eg.base)

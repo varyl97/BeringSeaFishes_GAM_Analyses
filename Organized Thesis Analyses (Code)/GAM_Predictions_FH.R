@@ -1,4 +1,7 @@
 ##GAM Predictions 
+
+# Initial Attempts - Code based off of Lorenzo's --------------------------
+
 #visualize results of best model by predicting on a grid: 
 #this attempt did not work - 10/11/2021
 windows(width=12,height=3.5)
@@ -28,9 +31,11 @@ grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-median(fhsub$bottom_depth,na.rm=TRUE)
 grid.extent$reg.SST<-NA
 grid.extent$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST<1.589],na.rm=TRUE)  
-grid.extent$temps.in=1.589 #define temps.in = to threshold estimation 
+grid.extent$th="below" #define th = to threshold estimation 
 grid.extent$pred<-predict(thr.geo,newdata=grid.extent,
                           se.fit=TRUE,type='response')#threshold geography model 
+#returns error: 'error in names(dat)<-object$term: 'names' attribute [1] must be
+  #the same length as the vector [0]' despite having all variables accounted for 
 grid.extent$dist<-NA
 for(k in 1:nrow(grid.extent)){
   dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
@@ -51,13 +56,15 @@ symbols(fhsub$lon[fhsub$Cper10m2>0],
         inches=0.1,bg=alpha('grey',f=0.02),fg=alpha('black',f=0.02),add=T)
 map("worldHires",fill=T,col="wheat4",add=T)
 
-#Working with Code from Rebecca - 10/11/2021
+
+# Working with Code from Rebecca - 10/11/2021 ----------------------------
+#write a function instead 
 distances<-function(fhsub,year){
   nlat=80
   nlon=120
   latd=seq(min(fhsub$lat),max(fhsub$lat),length.out=nlat)
   lond=seq(min(fhsub$lon),max(fhsub$lon),length.out=nlon)
-  sub_below<-expand.grid(lond,latd)
+  sub_below<-expand.grid(lond,latd) #"below" = below threshold temp 
   names(sub_below)<-c("lon","lat")
   sub_below$year<-2013 #test year
   sub_below$th<-"below"
@@ -65,17 +72,15 @@ distances<-function(fhsub,year){
   sub_below$doy<-as.character(median(fhsub$doy,na.rm=TRUE))
   sub_below$bottom_depth<-as.character(median(fhsub$bottom_depth,na.rm=TRUE))
   sub_below$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST<1.589],na.rm=TRUE)
-  sub_below$temps.in<-1.589
   for(i in 1:nrow(sub_below)){
     dist<-distance_function(
       sub_below$lat[i],sub_below$lon[i],
       fhsub$lat,fhsub$lon)
     sub_below$dist[i]<-min(dist)
   }
-  return(sub_below)
+  return(sub_below) #when I try head(sub_below), object is not found 
 }
 
-thr.geo<-thr.geo[[best.index.geo]] #function doesn't like the [[best.index]]
 tgam_pred<-function(thr.geo,sub_below,year){
   below_pred<-predict(thr.geo,newdata=sub_below,
                       se.fit=TRUE,
@@ -95,15 +100,22 @@ tgam_pred<-function(thr.geo,sub_below,year){
   sub_above$th<-"above"
   sub_above$doy<-as.character(median(fhsub$doy,na.rm=TRUE))
   sub_above$bottom_depth<-as.character(median(fhsub$bottom_depth,na.rm=TRUE))
-  sub_above$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST<1.589],na.rm=TRUE)
-  sub_above$temps.in<-1.589
+  sub_above$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST>1.589],na.rm=TRUE)
   above_pred<-predict(thr.geo,newdata=sub_above,
                       se.fit=TRUE,type='response')
   pred_mean_above<-above_pred[[1]]
   pred_se_above<-above_pred[[2]]
   pred_mean_above[sub_below$dist > 30000] <- NA
   pred_se_above[subset_below$dist > 30000] <- NA
-}
+  pred_mean_up_below<-pred_mean_below+1.96*pred_se_below #calculate 95% CI for each prediction 
+  pred_mean_down_below<-pred_mean_below-1.96*pred_se_below
+  pred_mean_up_above<-pred_mean_above+1.96*pred_se_below
+  pred_mean_down_above<-pred_mean_above-1.96*pred_se_below
+  significant_low<-pred_mean_up_above<pred_mean_down_below
+  significant_high<-pred_mean_down_above>pred_mean_up_below #significant differences in preds 
+  return(list(significant_high,significant_low,before_prediction,after_prediction))
+} #also not sure this is working. I think this above code may just be above my paygrade at this point.. I can't easily isolate what 
+#   within this is causing errors but the above functions do not result in anything that I can figure out how to plot. 
 
 #variable-coefficient spatial: 
 nlat=80
@@ -126,7 +138,11 @@ grid_vc$year<-2013
 grid_vc$doy<-median(fhsub$doy,na.rm=T)
 grid_vc$reg.SST<-mean(fhsub$reg.SST,na.rm=TRUE)
 grid_vc$bottom_depth<-as.factor(median(fhsub$bottom_depth,na.rm=T))
-grid_vc$pred<-predict(vc.geo,newdata=grid_vc,type='response')
+grid_vc$pred<-predict(vc.geo,newdata=grid_vc,type='response') 
+#results in this error: 'Error in Predict.matrix.tprs.smooth(object, dk$data) : 
+#NA/NaN/Inf in foreign function call (arg 1)
+#In addition: Warning message:
+  #In Ops.factor(xx, object$shift[i]) : '-' not meaningful for factors'
 grid_vc$se<-predict(vc.geo,newdata=grid_vc,se=2)[[2]]
 grid_vc$pred_up<-grid_vc$pred+1.96*grid_vc$se
 grid_vc$pred_lw<-grid_vc$pred-1.96*grid_vc$se

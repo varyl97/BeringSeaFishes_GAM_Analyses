@@ -195,8 +195,8 @@ for(i in 1:length(temps.in)){
 }
 
 best.index.phe<-order(aic.pheno)[1]
-
-summary(thr.pheno[[best.index.phe]])
+thr.pheno<-thr.pheno[[best.index.phe]]
+summary(thr.pheno)
 
 temps<-sort(unique(reg.sst$SST))
 bd<-4 #change this to 4, more intermediate 
@@ -214,7 +214,8 @@ for(i in 1:length(temps.in)){
 } #add TH into grid.extent for true false based on condition 
 
 best.index.geo<-order(aic.geo)[1]
-summary(thr.geo[[best.index.geo]])
+thr.geo<-thr.geo[[best.index.geo]]
+summary(thr.geo)
 
 vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
                 s(doy,by=reg.SST),data=fhsub,family=tw(link='log'),
@@ -226,10 +227,23 @@ vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
             method='REML')
 summary(vc.geo)
 
+# Saved models for loading later! -----------------------------------------
+saveRDS(eg.base,file="../GAM Models/fh_egg_base.rds")
+saveRDS(thr.pheno,file="../GAM Models/fh_egg_thr_pheno.rds")
+saveRDS(thr.geo,file="../GAM Models/fh_egg_thr_geo.rds")
+saveRDS(vc.pheno,file="../GAM Models/fh_egg_vc_pheno.rds")
+saveRDS(vc.geo,file="../GAM Models/fh_egg_vc_geo.rds")
+
+eg.base<-readRDS("../GAM Models/fh_egg_base.rds")
+thr.pheno<-readRDS("../GAM Models/fh_egg_thr_pheno.rds")
+thr.geo<-readRDS("../GAM Models/fh_egg_thr_geo.rds")
+vc.pheno<-readRDS("../GAM Models/fh_egg_vc_pheno.rds")
+vc.geo<-readRDS("../GAM Models/fh_egg_vc_geo.rds")
+
 #checking based on AIC: 
 aic.base<-AIC(eg.base)
-aic.thrph<-AIC(thr.pheno[[best.index.phe]])
-aic.thrge<-AIC(thr.geo[[best.index.geo]])
+aic.thrph<-AIC(thr.pheno)
+aic.thrge<-AIC(thr.geo)
 aic.vcph<-AIC(vc.pheno)
 aic.vcgeo<-AIC(vc.geo)
 

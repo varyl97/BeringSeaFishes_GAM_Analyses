@@ -193,7 +193,7 @@ pklarv.ctd<-pklarv.ctd[which(pklarv.ctd$date_diff>(-6)&pklarv.ctd$date_diff<6),]
 dim(pklarv.ctd) #2565
 
 ###to avoid doing all the above gymnastics: 
-pksub<-read.csv(file='Cleaned_Cut_PkEggs.csv',header=TRUE,check.names=TRUE)
-pksub.ctd<-read.csv(file='Cleaned_Cut_PkEggs_wCTD.csv',header=TRUE,check.names=TRUE)
-pklarv<-read.csv(file='Cleaned_Cut_PkLarv.csv',header=TRUE,check.names=TRUE)
-pklarv.ctd<-read.csv(file='Cleaned_Cut_PkLarv_wCTD.csv',header=TRUE,check.names=TRUE)
+pksub<-read.csv(file='../Ichthyo Data/Cleaned_Cut_PkEggs.csv',header=TRUE,check.names=TRUE)
+pksub.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_PkEggs_wCTD.csv',header=TRUE,check.names=TRUE)
+pklarv<-read.csv(file='../Ichthyo Data/Cleaned_Cut_PkLarv.csv',header=TRUE,check.names=TRUE)
+pklarv.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_PkLarv_wCTD.csv',header=TRUE,check.names=TRUE)
