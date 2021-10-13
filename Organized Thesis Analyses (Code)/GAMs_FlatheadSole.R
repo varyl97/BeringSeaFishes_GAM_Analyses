@@ -1,9 +1,9 @@
 ###EGGS: Spawning Behavior Alaska Plaice
 ##Load in local and regional temperature index for February 
-loc.sst<-read.csv('Feb_SST_ByLocation_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+loc.sst<-read.csv('../Environmental Data/Feb_SST_ByLocation_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(loc.sst) #more just to have, use regional for GAMs
 
-reg.sst<-read.csv('Feb_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+reg.sst<-read.csv('../Environmental Data/Feb_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(fhsub)){
