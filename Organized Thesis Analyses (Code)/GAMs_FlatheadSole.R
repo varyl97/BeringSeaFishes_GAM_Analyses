@@ -263,59 +263,6 @@ legend("bottomleft",legend=c('Base','Threshold Pheno','Threshold Geo',
        col=c( "#482173FF", "#38598CFF","#1E9B8AFF", "#51C56AFF","#FDE725FF"),
        lwd=3,lty=1)
 
-#visualize results of best model by predicting on a grid: 
-windows(width=12,height=3.5)
-par(mfrow=c(1,4),mai=c(0.7,0.6,0.4,0.4))
-
-#prediction grid
-nlat=80
-nlon=120
-latd=seq(min(fhsub$lat),max(fhsub$lat),length.out=nlat)
-lond=seq(min(fhsub$lon),max(fhsub$lon),length.out=nlon)
-
-grid.extent<-expand.grid(lond,latd)
-names(grid.extent)<-c('lon','lat')
-#calc distance to each positive observation
-grid.extent$dist<-NA
-for(k in 1:nrow(grid.extent)){
-  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
-                          fhsub$lat,fhsub$lon)
-  grid.extent$dist[k]<-min(dist)
-}
-
-#test:     #grid.extent frame needs same variables as model, predicting below threshold in this case
-grid.extent$year<-2013 #(below thresh of 1.589 degC)
-grid.extent$doy<-as.character(median(fhsub$doy,na.rm=TRUE))
-grid.extent$bottom_depth<-NA
-grid.extent$bottom_depth<-median(fhsub$bottom_depth,na.rm=TRUE)
-grid.extent$th<-as.factor("TRUE")
-grid.extent$pred<-NA
-grid.extent$pred<-predict(thr.geo[[best.index.geo]],newdata=grid.extent) #threshold geography model 
-grid.extent$pred[grid.extent$dist>30000]<-NA
-
-windows()
-par(mai=c(0.7,0.6,0.4,0.4))
-image(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
-                         ncol=length(lond),byrow=T)),col=tim.colors(100),ylab="",
-      xlab="",xlim=range(fhsub$lon),ylim=range(fhsub$lat),main='Distribution',
-      cex.main=1.5,cex.lab=1.4,cex.axis=1.4)
-contour(brs_bathy2,land=TRUE,deep=c(-5000,-200,0),shallow=c(-1000,-50,0),
-        step=c(1000,50,0),lwd=c(0.7,0.7,0.7,0.7),
-        lty=c(1,1,1),col=c("grey80","black"),
-        image=TRUE,drawlabels=T)
-symbols(fhsub$lon[fhsub$Cper10m2>0],
-        fhsub$lat[fhsub$Cper10m2>0],
-        circles=log(fhsub$Cper10m2+1)[fhsub$Cper10m2>0],
-        inches=0.1,bg=alpha('grey',f=0.02),fg=alpha('black',f=0.02),add=T)
-map("worldHires",fill=T,col="wheat4",add=T)
-
-#sample set of 4 years,two above and two below threshold: 
-grid.extent$year<-2013
-grid.extent$doy<-
-
-
-
-
 ###LARVAE: Water Mass Associations
 lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                s(bottom_depth,k=5),
@@ -466,6 +413,19 @@ lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
            method='REML')
 summary(lv.2d)
 
+##SAVED MODELS for reloading later: 
+saveRDS(lv.base,file="../GAM Models/fh_larv_base.rds")
+saveRDS(lv.add.sal,file="../GAM Models/fh_larv_addsal.rds")
+saveRDS(lv.add.temp,file="../GAM Models/fh_larv_addtemp.rds")
+saveRDS(lv.temp.sal,file="../GAM Models/fh_larv_tempsal.rds")
+saveRDS(lv.2d,file="../GAM Models/fh_larv_2d.rds")
+
+lv.base<-readRDS("../GAM Models/fh_larv_base.rds")
+lv.add.sal<-readRDS("../GAM Models/fh_larv_addsal.rds")
+lv.add.temp<-readRDS("../GAM Models/fh_larv_addtemp.rds")
+lv.temp.sal<-readRDS("../GAM Models/fh_larv_tempsal.rds")
+lv.2d<-readRDS("../GAM Models/fh_larv_2d.rds")
+
 #checking based on AIC: 
 aic.base.lv<-AIC(lv.base)
 aic.sal<-AIC(lv.add.sal)
@@ -512,24 +472,27 @@ legend("bottomright",legend=c('Base BioGeo','Add Sal','Add Temp',
        col=c( "#482173FF", "#38598CFF","#1E9B8AFF", "#51C56AFF","#FDE725FF"),
        lwd=3,lty=1)
 
-#finding salinity/temperature hotspots THIS WILL NEED TO BE UPDATED 
+
+# Salinity-Temp Hotspot Figures -------------------------------------------
 viridis<-colorRampPalette(c("#440154FF", "#482173FF", "#433E85FF", "#38598CFF", "#2D708EFF", "#25858EFF", "#1E9B8AFF",
                             "#2BB07FFF", "#51C56AFF", "#85D54AFF", "#C2DF23FF", "#FDE725FF")) #viridis palette
+
 
 stsweet<-fhlarv.ctd[fhlarv.ctd$temperature>1&fhlarv.ctd$temperature<10&
                       fhlarv.ctd$salinity<33&fhlarv.ctd$salinity>30,]#dim 249, 27
 tt<-table(stsweet$year)
 
 stsweet<-subset(stsweet,year%in%names(tt[tt>5]))
-table(stsweet$year) #only includes 2002,2003,2005,2009,2012,2014,2015,2016 
+table(stsweet$year) #identify years with these qualities 
 stsweet<-subset(stsweet,Cper10m2>0)
 
-stsweet$color<-NA
+stsweet$s_color<-NA #s for stations
 stsweet$month_nm<-NA
-stsweet<-stsweet %>% mutate(color=case_when(
-  stsweet$month==4~'#440154FF',
+stsweet$c_color<-NA #c for catch 
+stsweet<-stsweet %>% mutate(s_color=case_when(
+  stsweet$month==4~'#482173FF',
   stsweet$month==5~'#2D708EFF',
-  stsweet$month==6~'#482173FF',
+  stsweet$month==6~'#2BB07FFF',
   stsweet$month==7~'#85D54AFF',
   stsweet$month==9~'#FDE725FF'))
 stsweet<-stsweet %>%mutate(month_nm=case_when(
@@ -538,46 +501,56 @@ stsweet<-stsweet %>%mutate(month_nm=case_when(
   stsweet$month==6~'June',
   stsweet$month==7~'July',
   stsweet$month==9~'September'))
+stsweet<-stsweet%>%mutate(c_color=case_when(
+  stsweet$month==4~'#482173FF',
+  stsweet$month==5~'#2D708EFF',
+  stsweet$month==6~'#2BB07FFF',
+  stsweet$month==7~'#85D54AFF',
+  stsweet$month==9~'#FDE725FF'
+))
 
-test<-stsweet[stsweet$year==2002,]
-
-windows()
-plot(test$lon,test$lat,xlim=range(fhlarv.ctd$lon),ylim=range(fhlarv.ctd$lat),
-     col=test$color,pch=19,cex=2,
-     xlab='Longitude',ylab='Latitude',main='Test, Salinity/Temperature Hot Spots')
-symbols(test$lon,test$lat,circles=test$Cper10m2,inches=0.15,add=T)
-map("worldHires",fill=T,col="snow4",add=T) 
-#NOTE: when bathymetry is figured out, can add station points via points()
+stsweet$c_color<-adjust_transparency(stsweet$c_color,alpha=0.2)#so bubbles don't cloud everything else
+no.col<-adjust_transparency('hotpink3',alpha=0.3)
 
 years<-sort(unique(stsweet$year))
 tmp1<-1:ceiling(length(years)/4)
 lg.text<-unique(stsweet$month_nm)
-lg.values<-c('#440154FF','#2D708EFF','#482173FF','#85D54AFF','#FDE725FF')
+lg.values<-c('#482173FF','#2D708EFF','#2BB07FFF','#85D54AFF','#FDE725FF')
 
-#still tweaking this: the no catch stations are overwhelming, months don't really match, order of colors isn't great. 
-for(j in 1:length(tmp1)){
+add_legend<-function(...){
+  opar<-par(fig=c(0,1,0,1),oma=c(0,0,0,0),mar=c(0,0,0,0),new=TRUE)
+  on.exit(par(opar))
+  plot(0,0,type='n',bty='n',xaxt='n',yaxt='n')
+  legend(...)}
+
+for(j in 1:length(tmp1)){ 
   windows(width=24,height=14)
-  par(mfcol=c(2,2),omi=c(0.25,0.3,0.55,0.25),mai=c(0.2,0.4,0.4,0.1))
+  par(mfcol=c(2,2),omi=c(2,0.3,0.55,0.3),mai=c(0.2,0.4,0.4,0.1))
   for(i in (4*tmp1[j]-3):min(length(years),(4*tmp1[j]))){
     plot(stsweet$lon[stsweet$year==years[i]],stsweet$lat[stsweet$year==years[i]],
-         col=stsweet$color[stsweet$year==years[i]],pch=17,cex=2,
+         col=stsweet$s_color[stsweet$year==years[i]],pch=16,cex=2,
          main=as.character(years[i]),
          ylim=range(fhlarv.ctd$lat),xlim=range(fhlarv.ctd$lon),
          ylab=expression(paste("Latitude ("^0,'N)')),
          xlab=expression(paste("Longitude ("^0,'E)')))
-    symbols(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2>0&fhlarv.ctd$year==years[i]],
-            fhlarv.ctd$lat[fhlarv.ctd$Cper10m2>0&fhlarv.ctd$year==years[i]],
-            circles=fhlarv.ctd$Cper10m2[fhlarv.ctd$Cper10m2>0&fhlarv.ctd$year==years[i]],
-            inches=0.15,add=T,bg=stsweet$color[stsweet$month==fhlarv.ctd$month[i]])
     points(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2==0&fhlarv.ctd$year==years[i]],
            fhlarv.ctd$lat[fhlarv.ctd$Cper10m2==0&fhlarv.ctd$year==years[i]],
-           pch=4,cex=2,alpha=0.6,add=T,col='hotpink3')
+           pch=4,cex=1.2,col=no.col)
+    symbols(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2>0&fhlarv.ctd$year==years[i]],
+            fhlarv.ctd$lat[fhlarv.ctd$Cper10m2>0&fhlarv.ctd$year==years[i]],
+            circles=log(fhlarv.ctd$Cper10m2[fhlarv.ctd$Cper10m2>0&fhlarv.ctd$year==years[i]]+1),
+            inches=0.15,bg=(stsweet$c_color[stsweet$year==years[i]]))
     map("worldHires",fill=T,col="snow4",add=T)
-    #contour(brs_bathy2,land=FALSE,deep=c(-5000,-200,0),shallow=c(-1000,-50,0),
-     #       step=c(1000,50,0),add=TRUE)
   }
-  legend("topright",legend=c('April','May','June','July','September'),
-         col=lg.values,lwd=3,lty=1,
-         bg='lightgrey')
-  mtext("fh Sole +Cper10m2 Catch Plotted Against T-S 'Sweet Spots'",outer=TRUE,cex=1,line=1)
+  add_legend("bottom",horiz=TRUE,legend=c('April','May','June','July','September','No Catch'),
+              col=c(lg.values,'hotpink3'),lwd=c(3,3,3,3,3,NA),lty=1,
+              pch=c(NA,NA,NA,NA,NA,4),bg='lightgrey',bty='n',xpd=TRUE)
 }
+
+
+legend("bottomright",inset=c(-0.3,0),
+       legend=c('April','May','June','July','September','No Catch'),
+       col=c(lg.values,'hotpink3'),lwd=c(3,3,3,3,3,NA),lty=1,
+       pch=c(NA,NA,NA,NA,NA,4),
+       bg='lightgrey',xpd=T)
+mtext("FH Sole Cper10m2 Catch Plotted Against T-S 'Sweet Spots'",outer=TRUE,cex=1,line=1)

@@ -31,7 +31,7 @@ grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-median(fhsub$bottom_depth,na.rm=TRUE)
 grid.extent$reg.SST<-NA
 grid.extent$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST<1.589],na.rm=TRUE)  
-grid.extent$th="below" #define th = to threshold estimation 
+grid.extent$th=as.factor("TRUE") #define th = to threshold estimation 
 grid.extent$pred<-predict(thr.geo,newdata=grid.extent,
                           se.fit=TRUE,type='response')#threshold geography model 
 #returns error: 'error in names(dat)<-object$term: 'names' attribute [1] must be
@@ -67,7 +67,7 @@ distances<-function(fhsub,year){
   sub_below<-expand.grid(lond,latd) #"below" = below threshold temp 
   names(sub_below)<-c("lon","lat")
   sub_below$year<-2013 #test year
-  sub_below$th<-"below"
+  sub_below$th<-as.factor("TRUE")
   sub_below$dist<-NA
   sub_below$doy<-as.character(median(fhsub$doy,na.rm=TRUE))
   sub_below$bottom_depth<-as.character(median(fhsub$bottom_depth,na.rm=TRUE))
