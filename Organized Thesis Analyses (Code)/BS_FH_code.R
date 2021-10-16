@@ -1,6 +1,6 @@
 ###Alaska Plaice BS Code: 
 ###CTD Loading: ################################################################
-allctd<-read.csv(file="All_CTD_Data_8302021.csv")
+allctd<-read.csv(file="../Environmental Data/All_CTD_Data_8302021.csv")
 names(allctd)
 allctd<-allctd[c('Latitude','Longitude','Date','Time','Pressure','Depth',
                  'Temperature','Conductivity','Salinity','Sigma.T',

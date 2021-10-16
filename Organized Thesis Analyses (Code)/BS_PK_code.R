@@ -15,7 +15,7 @@ plot(brs_bathy2,land=TRUE,deep=c(-5000,-200,0),shallow=c(-1000,-50,0),
                  c(1, max(brs_bathy2), "gray90", "gray10")))
 
 ###CTD Loading: ################################################################
-allctd<-read.csv(file="All_CTD_Data_8302021.csv")
+allctd<-read.csv(file="../Environmental Data/All_CTD_Data_8302021.csv")
 names(allctd)
 allctd<-allctd[c('Latitude','Longitude','Date','Time','Pressure','Depth',
                  'Temperature','Conductivity','Salinity','Sigma.T',
@@ -99,7 +99,7 @@ pklarvae$DATE<-paste(pklarvae$MONTH_,pklarvae$DAY_,pklarvae$YEAR_,sep="/")
 pksub<-pkegg[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                'BOTTOM_DEPTH','id','count','SS','DATE')]
-pksub<-subset(pksub,doy>99&doy<160)
+pksub<-subset(pksub,MONTH_>3&MONTH_<7)
 pklarv<-pklarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]
@@ -112,7 +112,7 @@ names(pklarv)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
 pksub$SSB<-NA
 pklarv$SSB<-NA
 
-SSBdf<-read.csv(file='SSB_allsp.csv',header=TRUE,check.names=TRUE)
+SSBdf<-read.csv(file='../Ichthyo Data/SSB_allsp.csv',header=TRUE,check.names=TRUE)
 SSBdf$SSB<-as.numeric(SSBdf$SSB)
 pkSSB<-SSBdf[SSBdf$Species=='walleye pollock',]
 pkSSB<-pkSSB[c('Year','SSB')]

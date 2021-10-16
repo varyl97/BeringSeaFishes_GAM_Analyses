@@ -516,6 +516,7 @@ years<-sort(unique(stsweet$year))
 tmp1<-1:ceiling(length(years)/4)
 lg.text<-unique(stsweet$month_nm)
 lg.values<-c('#482173FF','#2D708EFF','#2BB07FFF','#85D54AFF','#FDE725FF')
+lg.order<-matrix(1:8,ncol=4,byrow=TRUE)
 
 add_legend<-function(...){
   opar<-par(fig=c(0,1,0,1),oma=c(0,0,0,0),mar=c(0,0,0,0),new=TRUE)
@@ -525,7 +526,7 @@ add_legend<-function(...){
 
 for(j in 1:length(tmp1)){ 
   windows(width=24,height=14)
-  par(mfcol=c(2,2),omi=c(2,0.3,0.55,0.3),mai=c(0.2,0.4,0.4,0.1))
+  par(mfcol=c(2,2),omi=c(0.8,0.3,0.55,0.3),mai=c(0.2,0.4,0.4,0.1))
   for(i in (4*tmp1[j]-3):min(length(years),(4*tmp1[j]))){
     plot(stsweet$lon[stsweet$year==years[i]],stsweet$lat[stsweet$year==years[i]],
          col=stsweet$s_color[stsweet$year==years[i]],pch=16,cex=2,
@@ -533,18 +534,22 @@ for(j in 1:length(tmp1)){
          ylim=range(fhlarv.ctd$lat),xlim=range(fhlarv.ctd$lon),
          ylab=expression(paste("Latitude ("^0,'N)')),
          xlab=expression(paste("Longitude ("^0,'E)')))
-    points(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2==0&fhlarv.ctd$year==years[i]],
-           fhlarv.ctd$lat[fhlarv.ctd$Cper10m2==0&fhlarv.ctd$year==years[i]],
-           pch=4,cex=1.2,col=no.col)
+    points(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2==0&fhlarv.ctd$year==years[i]&
+                            fhlarv.ctd$month==stsweet$month[i]],
+           fhlarv.ctd$lat[fhlarv.ctd$Cper10m2==0&fhlarv.ctd$year==years[i]&
+                            fhlarv.ctd$month==stsweet$month[i]],
+           pch=4,cex=1.2,add=T,col=no.col)
     symbols(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2>0&fhlarv.ctd$year==years[i]],
             fhlarv.ctd$lat[fhlarv.ctd$Cper10m2>0&fhlarv.ctd$year==years[i]],
             circles=log(fhlarv.ctd$Cper10m2[fhlarv.ctd$Cper10m2>0&fhlarv.ctd$year==years[i]]+1),
-            inches=0.15,bg=(stsweet$c_color[stsweet$year==years[i]]))
+            inches=0.15,add=T,bg=(stsweet$c_color[stsweet$year==years[i]]))
     map("worldHires",fill=T,col="snow4",add=T)
   }
-  add_legend("bottom",horiz=TRUE,legend=c('April','May','June','July','September','No Catch'),
-              col=c(lg.values,'hotpink3'),lwd=c(3,3,3,3,3,NA),lty=1,
-              pch=c(NA,NA,NA,NA,NA,4),bg='lightgrey',bty='n',xpd=TRUE)
+  add_legend("bottom",horiz=TRUE,legend=c('April','May','June','July','September','No Catch',
+                                          'Proportional Log(Cper10m2+1)')[lg.order],
+              col=c(lg.values,'hotpink3')[lg.order],lwd=c(3,3,3,3,3,NA,NA)[lg.order],lty=1,
+              pch=c(NA,NA,NA,NA,NA,4,1)[lg.order],bg='lightgrey',bty='n',xpd=TRUE)
+  
 }
 
 
