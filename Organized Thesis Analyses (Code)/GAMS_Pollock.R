@@ -5,10 +5,10 @@ BSmap<-world[world$long<(-155)&world$lat>50&world$lat<70,]
 
 ###EGGS: Spawning Behavior 
 ##Load in local and regional temperature index for February 
-loc.sst<-read.csv('Feb_SST_ByLocation_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+loc.sst<-read.csv('./Environmental Data/Mar_SST_ByLocation_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(loc.sst) #more just to have, use regional for GAMs
 
-reg.sst<-read.csv('Feb_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(pksub)){
@@ -70,7 +70,7 @@ aic.pheno<-NA*(temps.in)
 thr.pheno<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
-        pksub$th<-factor(reg.SST<=temps.in[i])
+        pksub$th<-factor(pksub$reg.SST<=temps.in[i])
         thr.pheno[[i]]<-gam((Cper10m2+1)~factor(year)+
                                     s(lon,lat)+
                                     s(bottom_depth,k=5)+
