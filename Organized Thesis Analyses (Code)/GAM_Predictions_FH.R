@@ -1,6 +1,14 @@
 ##GAM Predictions 
 
 # Initial Attempts - Code based off of Lorenzo's --------------------------
+#link fhsub to regional indices: 
+
+reg.sst<-read.csv('../Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
+
+for(i in 1:nrow(fhsub)){
+  fhsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==fhsub$year[i]]}
+
 
 #visualize results of best model by predicting on a grid: 
 #this attempt did not work - 10/11/2021
@@ -25,15 +33,19 @@ for(k in 1:nrow(grid.extent)){
 }
 
 #test:     #grid.extent frame needs same variables as model
-grid.extent$year<-as.factor(2013) #(below thresh of 1.589 degC)
+grid.extent$year<-as.factor(2013) #(below thresh of 1.24 degC)
 grid.extent$doy<-as.character(median(fhsub$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-median(fhsub$bottom_depth,na.rm=TRUE)
 grid.extent$reg.SST<-NA
-grid.extent$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST<1.589],na.rm=TRUE)  
-grid.extent$th=as.factor("TRUE") #define th = to threshold estimation 
+grid.extent$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST<1.24],na.rm=TRUE)  
+grid.extent$th=TRUE
+                          #also tried grid.extent$th<-factor("TRUE")[fhsub$reg.SST<=1.24] and
+                          #grid.extent$th<-factor("TRUE")
 grid.extent$pred<-predict(thr.geo,newdata=grid.extent,
-                          se.fit=TRUE,type='response')#threshold geography model 
+                          se.fit=TRUE,type='response')
+
+#threshold geography model 
 #returns error: 'error in names(dat)<-object$term: 'names' attribute [1] must be
   #the same length as the vector [0]' despite having all variables accounted for 
 grid.extent$dist<-NA
@@ -55,6 +67,33 @@ symbols(fhsub$lon[fhsub$Cper10m2>0],
         circles=log(fhsub$Cper10m2+1)[fhsub$Cper10m2>0],
         inches=0.1,bg=alpha('grey',f=0.02),fg=alpha('black',f=0.02),add=T)
 map("worldHires",fill=T,col="wheat4",add=T)
+
+#trying above code with a simpler model: 
+eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
+             data=fhsub,family=tw(link='log'),method='REML')
+
+nlat=80
+nlon=120
+latd=seq(min(fhsub$lat),max(fhsub$lat),length.out=nlat)
+lond=seq(min(fhsub$lon),max(fhsub$lon),length.out=nlon)
+
+grid.extent<-expand.grid(lond,latd)
+names(grid.extent)<-c('lon','lat')
+
+grid.extent$dist<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
+                          fhsub$lat,fhsub$lon)
+  grid.extent$dist[k]<-min(dist)
+}
+
+grid.extent$year<-as.factor(2013) #(below thresh of 1.24 degC)
+grid.extent$doy<-as.character(median(fhsub$doy,na.rm=TRUE))
+grid.extent$bottom_depth<-NA
+grid.extent$bottom_depth<-median(fhsub$bottom_depth,na.rm=TRUE)
+grid.extent$pred<-predict(eg.base,newdata=grid.extent,
+                          se.fit=TRUE,type='response')
+
 
 
 # Working with Code from Rebecca - 10/11/2021 ----------------------------

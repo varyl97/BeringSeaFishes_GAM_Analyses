@@ -4,11 +4,11 @@ BSmap<-world[world$long<(-155)&world$lat>50&world$lat<70,]
 #syntax: +geom_map(data=BSmap,map=BSmap,aes(long,lat,map_id=region))
 
 ###EGGS: Spawning Behavior 
-##Load in local and regional temperature index for February 
-loc.sst<-read.csv('./Environmental Data/Mar_SST_ByLocation_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+##Load in local and regional temperature index for March (2 mos before peak egg catch in May) 
+loc.sst<-read.csv('../Environmental Data/Mar_SST_ByLocation_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(loc.sst) #more just to have, use regional for GAMs
 
-reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+reg.sst<-read.csv('../Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(pksub)){
@@ -64,7 +64,7 @@ abline(h=0,col='sienna3',lty=2,lwd=2)
 
 #temp pheno threshold: 
 temps<-sort(unique(reg.sst$SST))
-bd<-10
+bd<-4
 temps.in<-temps[bd:(length(temps)-bd)]
 aic.pheno<-NA*(temps.in)
 thr.pheno<-as.list(1:(length(temps.in)))
@@ -109,14 +109,14 @@ gam.check(thr.pheno[[best.index.phe]])
 
 #temp threshold geo: 
 temps<-sort(unique(reg.sst$SST))
-bd<-10
+bd<-4
 temps.in<-temps[bd:(length(temps)-bd)]
 
 aic.geo<-NA*(temps.in)
 thr.geo<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
-        pksub$th<-factor(reg.SST<=temps.in[i])
+        pksub$th<-factor(pksub$reg.SST<=temps.in[i])
         thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+s(bottom_depth,k=5)+
                                   s(lon,lat,by=th),data=pksub,
                           family=tw(link='log'),method='REML')
@@ -214,13 +214,13 @@ eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
 summary(eg.base)
 
 temps<-sort(unique(reg.sst$SST))
-bd<-10
+bd<-4
 temps.in<-temps[bd:(length(temps)-bd)]
 aic.pheno<-NA*(temps.in)
 thr.pheno<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
-        pksub$th<-factor(reg.SST<=temps.in[i])
+        pksub$th<-factor(pksub$reg.SST<=temps.in[i])
         thr.pheno[[i]]<-gam((Cper10m2+1)~factor(year)+
                                     s(lon,lat)+
                                     s(bottom_depth,k=5)+
@@ -234,14 +234,14 @@ thr.pheno<-thr.pheno[[best.index.phe]]
 summary(thr.pheno)
 
 temps<-sort(unique(reg.sst$SST))
-bd<-10
+bd<-4
 temps.in<-temps[bd:(length(temps)-bd)]
 
 aic.geo<-NA*(temps.in)
 thr.geo<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
-        pksub$th<-factor(reg.SST<=temps.in[i])
+        pksub$th<-factor(pksub$reg.SST<=temps.in[i])
         thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+s(bottom_depth,k=5)+
                                   s(lon,lat,by=th),data=pksub,
                           family=tw(link='log'),method='REML')

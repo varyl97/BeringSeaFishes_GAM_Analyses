@@ -29,8 +29,8 @@ allctd<-allctd[allctd$Temperature<14,]
 allctd<-allctd[allctd$Salinity>29&allctd$Salinity<36,]
 
 ###POLLOCK: ####################################################################
-pkeggraw<-read.csv(file='BS_PollockEggCatch.csv',header=TRUE,check.names=TRUE)
-pklarvraw<-read.csv(file='BS_PollockLarvaeCatch.csv',header=TRUE,check.names=TRUE)
+pkeggraw<-read.csv(file='../Ichthyo Data/BS_PollockEggCatch.csv',header=TRUE,check.names=TRUE)
+pklarvraw<-read.csv(file='../Ichthyo Data/BS_PollockLarvaeCatch.csv',header=TRUE,check.names=TRUE)
 
 pkeggraw<-pkeggraw[pkeggraw$HAUL_ID!='1SS02 81 1 60BON 2',]
 pklarvraw<-pklarvraw[pklarvraw$HAUL_ID!='1SS02 81 1 60BON 2',]
@@ -99,7 +99,7 @@ pklarvae$DATE<-paste(pklarvae$MONTH_,pklarvae$DAY_,pklarvae$YEAR_,sep="/")
 pksub<-pkegg[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                'BOTTOM_DEPTH','id','count','SS','DATE')]
-pksub<-subset(pksub,MONTH_>3&MONTH_<7)
+pksub<-subset(pksub,doy>99&doy<160)
 pklarv<-pklarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]
@@ -193,7 +193,7 @@ pklarv.ctd<-pklarv.ctd[which(pklarv.ctd$date_diff>(-6)&pklarv.ctd$date_diff<6),]
 dim(pklarv.ctd) #2565
 
 ###to avoid doing all the above gymnastics: if doesn't work, try '../' 
-pksub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkEggs.csv',header=TRUE,check.names=TRUE)
-pksub.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkEggs_wCTD.csv',header=TRUE,check.names=TRUE)
-pklarv<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkLarv.csv',header=TRUE,check.names=TRUE)
-pklarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkLarv_wCTD.csv',header=TRUE,check.names=TRUE)
+pksub<-read.csv(file='../Ichthyo Data/Cleaned_Cut_PkEggs.csv',header=TRUE,check.names=TRUE)
+pksub.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_PkEggs_wCTD.csv',header=TRUE,check.names=TRUE)
+pklarv<-read.csv(file='../Ichthyo Data/Cleaned_Cut_PkLarv.csv',header=TRUE,check.names=TRUE)
+pklarv.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_PkLarv_wCTD.csv',header=TRUE,check.names=TRUE)

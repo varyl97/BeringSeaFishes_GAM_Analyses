@@ -1,9 +1,9 @@
 ###EGGS: Spawning Behavior Alaska Plaice
-##Load in local and regional temperature index for February 
-loc.sst<-read.csv('../Environmental Data/Feb_SST_ByLocation_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+##Load in local and regional temperature index for March (2 mos before peak egg CPUE in May) 
+loc.sst<-read.csv('../Environmental Data/Mar_SST_ByLocation_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(loc.sst) #more just to have, use regional for GAMs
 
-reg.sst<-read.csv('../Environmental Data/Feb_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+reg.sst<-read.csv('../Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(fhsub)){
@@ -28,53 +28,63 @@ plot(eg.base,select=2,xlab='Day of Year',shade=TRUE,shade.col='skyblue3')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
 ##threshold phenology curve: 
-temps<-sort(unique(reg.sst$SST))
-bd<-10
-temps.in<-temps[bd:(length(temps)-bd)]
-aic.pheno<-NA*(temps.in)
-thr.pheno<-as.list(1:(length(temps.in)))
+temps<-sort(unique(reg.sst$SST)) #order by unique values of regional SST (March temps here)
 
+bd<-4 #dictates essentially how many unique temperatures we check. can vary this depending on your system, how long you want the model to take, 
+  #and probably some other factors that I don't know as well.. relatively arbitrary. smaller values for bd check more unique temperature values 
+
+temps.in<-temps[bd:(length(temps)-bd)] #vector whose length is dependent on bd; this vector is what the for loop uses to test many models at different thresholds 
+
+aic.pheno<-NA*(temps.in) #create an empty vector with the proper length to fill in later
+
+thr.pheno<-as.list(1:(length(temps.in))) #another list with the same dimensions to fill in later
+
+#this function below takes the unique temperature values and creates a model for each temperature as a threshold. 
+#then, we use AIC to ask which model and at what threshold best explains variation in phenology? 
 for(i in 1:length(temps.in)){
+  fhsub$th<-factor(fhsub$reg.SST<=temps.in[i]) #how this is written is arbitrary, just sorts the reg.SST to below or equal to the given temp threshold
+                                                #could also write it as above or equal to the given temp threshold 
+                                                #as a result of this, for each row, the th column says either 'true' or 'false' depending on if the temperature
+                                                          #is below or equal to the threshold temperature 
   thr.pheno[[i]]<-gam((Cper10m2+1)~factor(year)+
                         s(lon,lat)+
                         s(bottom_depth,k=5)+
-                        s(doy,by=factor(reg.SST<=temps.in[i])),
-                      data=fhsub,family=tw(link='log'),method='REML')
-  aic.pheno[i]<-AIC(thr.pheno[[i]])
+                        s(doy,by=th),
+                      data=fhsub,family=tw(link='log'),method='REML') #standard gam formulation but the s(doy) term is where the threshold temp comes into play
+  aic.pheno[i]<-AIC(thr.pheno[[i]]) #calculates AIC index for each model tested 
 }
 
-best.index.phe<-order(aic.pheno)[1]
+best.index.phe<-order(aic.pheno)[1] #now we're telling R to give us the model with the best (lowest) AIC value 
+thr.pheno<-thr.pheno[[best.index.phe]]
 
 windows()
 plot(temps.in,aic.pheno,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.pheno)),
      main='Temperature Threshold Flexible Phenology',ylab='AIC Index',
      xlab='Temperature (degC)')
 abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
-abline(v=temps.in[best.index.phe],lty=2,lwd=2,col='steelblue3')
+abline(v=temps.in[best.index.phe],lty=2,lwd=2,col='steelblue3') #this plot gives us a visual representation of every model tested and their respective AIC values 
 
-summary(thr.pheno[[best.index.phe]])
+summary(thr.pheno) #again, only care about the model with the best AIC value 
 
 windows(width=12,height=8)
-plot(thr.pheno[[best.index.phe]],shade=TRUE,shade.col='skyblue3',page=1,
+plot(thr.pheno,shade=TRUE,shade.col='skyblue3',page=1,
      seWithMean=TRUE,scale=0)
 
 windows(width=12,height=8)
 par(mfrow=c(1,2))
-plot(thr.pheno[[best.index.phe]],select=4,main=paste('Below',round(temps.in[best.index.phe],digits=3)
+plot(thr.pheno,select=4,main=paste('Below',round(temps.in[best.index.phe],digits=3)
                                                      ,sep=" "),
      shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
 abline(h=0,col='sienna3',lty=2,lwd=2)
-plot(thr.pheno[[best.index.phe]],select=3,main=paste('Above',round(temps.in[best.index.phe],digits=3),
+plot(thr.pheno,select=3,main=paste('Above',round(temps.in[best.index.phe],digits=3),
                                                      sep=" "),
      shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
 windows()
 par(mfrow=c(2,2))
-gam.check(thr.pheno[[best.index.phe]])
+gam.check(thr.pheno)
 
-windows()
-#plot()example 
 
 #temp threshold geo: 
 temps<-sort(unique(reg.sst$SST))
@@ -85,7 +95,7 @@ aic.geo<-NA*(temps.in)
 thr.geo<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
-  fhsub$th<-factor(reg.SST<=temps.in[i])
+  fhsub$th<-factor(fhsub$reg.SST<=temps.in[i])
   thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+s(bottom_depth,k=5)+
                       s(lon,lat,by=th),data=fhsub,
                     family=tw(link='log'),method='REML')
@@ -93,33 +103,33 @@ for(i in 1:length(temps.in)){
 } #add TH into grid.extent for true false based on condition 
 
 best.index.geo<-order(aic.geo)[1]
-
+thr.geo<-thr.geo[[best.index.geo]]
 windows()
 plot(temps.in,aic.geo,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.geo)),
      main='Temperature Threshold Flex Geography',xlab="Temperature (degC)")
 abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
 abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
 
-summary(thr.geo[[best.index.geo]])
+summary(thr.geo)
 
 windows(width=12,height=8)
-plot(thr.geo[[best.index.geo]],page=1,scale=0,shade=TRUE,shade.col='skyblue3',
+plot(thr.geo,page=1,scale=0,shade=TRUE,shade.col='skyblue3',
      seWithMean=TRUE)
 
 windows(width=12,height=8)
 par(mfrow=c(1,2))
-plot(thr.geo[[best.index.geo]],select=4,scheme=2,too.far=0.025,
+plot(thr.geo,select=4,scheme=2,too.far=0.025,
      main=paste('Below',round(temps.in[best.index.geo],digits=3),sep=" "),
      shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
-plot(thr.geo[[best.index.geo]],select=3,scheme=2,too.far=0.025,
+plot(thr.geo,select=3,scheme=2,too.far=0.025,
      main=paste('Above',round(temps.in[best.index.geo],digits=3),sep=" "),
      shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
 
 windows()
 par(mfrow=c(2,2))
-gam.check(thr.geo[[best.index.geo]])
+gam.check(thr.geo)
 
 #vc temp pheno: 
 vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
@@ -178,6 +188,7 @@ eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
 
 summary(eg.base)
 
+#Threshold Phenology Model: 
 temps<-sort(unique(reg.sst$SST))
 bd<-4
 temps.in<-temps[bd:(length(temps)-bd)]
@@ -186,10 +197,7 @@ thr.pheno<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
   fhsub$th<-factor(fhsub$reg.SST<=temps.in[i])
-  thr.pheno[[i]]<-gam((Cper10m2+1)~factor(year)+
-                        s(lon,lat)+
-                        s(bottom_depth,k=5)+
-                        s(doy,by=th),
+  thr.pheno[[i]]<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(bottom_depth,k=5)+s(doy,by=th),
                       data=fhsub,family=tw(link='log'),method='REML')
   aic.pheno[i]<-AIC(thr.pheno[[i]])
 }
@@ -228,6 +236,7 @@ vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
 summary(vc.geo)
 
 # Saved models for loading later! -----------------------------------------
+#MAKE SURE FOR THRESHOLDS that theyre either renamed as thr.geo or you're saving "thr.geo[[best.index.geo]]"
 saveRDS(eg.base,file="../GAM Models/fh_egg_base.rds")
 saveRDS(thr.pheno,file="../GAM Models/fh_egg_thr_pheno.rds")
 saveRDS(thr.geo,file="../GAM Models/fh_egg_thr_geo.rds")
