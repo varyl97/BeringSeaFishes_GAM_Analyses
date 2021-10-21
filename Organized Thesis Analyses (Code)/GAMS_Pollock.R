@@ -265,7 +265,13 @@ summary(vc.geo)
 #Save for reloading later!!
 saveRDS(eg.base,file="../GAM Models/pk_egg_base.rds")
 saveRDS(thr.pheno,file="../GAM Models/pk_egg_thr_pheno.rds")
+saveRDS(temps.in,file="../GAM Models/pk_egg_temps_in_phe.rds")
+saveRDS(aic.pheno,file="../GAM Models/pk_egg_aic_pheno.rds")
+saveRDS(best.index.phe,file="../GAM Models/pk_egg_best_index_phe.rds")
 saveRDS(thr.geo,file="../GAM Models/pk_egg_thr_geo.rds")
+saveRDS(temps.in,file="../GAM Models/pk_egg_temps_in_geo.rds")
+saveRDS(aic.geo,file="../GAM Models/pk_egg_aic_geo.rds")
+saveRDS(best.index.geo,file="../GAM Models/pk_egg_best_index_geo.rds")
 saveRDS(vc.pheno,file="../GAM Models/pk_egg_vc_pheno.rds")
 saveRDS(vc.geo,file="../GAM Models/pk_egg_vc_geo.rds")
 

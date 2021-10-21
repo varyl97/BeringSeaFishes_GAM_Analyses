@@ -129,7 +129,6 @@ map("world",fill=T,col="snow4",add=T)
 gradientLegend(c(0,-5),color=c('red','orange','yellow'),ncol=5,side=4,
                fit.margin=TRUE)
 
-
 windows()
 par(mfrow=c(2,2))
 gam.check(thr.geo)
@@ -210,7 +209,7 @@ thr.pheno<-thr.pheno[[best.index.phe]]
 summary(thr.pheno)
 
 temps<-sort(unique(reg.sst$SST))
-bd<-4 #change this to 4, more intermediate 
+bd<-4 #change this to 4, more intermediate (checks more temperatures than bd = 10)
 temps.in<-temps[bd:(length(temps)-bd)]
 
 aic.geo<-NA*(temps.in)
@@ -242,7 +241,13 @@ summary(vc.geo)
 #MAKE SURE FOR THRESHOLDS that theyre either renamed as thr.geo or you're saving "thr.geo[[best.index.geo]]"
 saveRDS(eg.base,file="../GAM Models/fh_egg_base.rds")
 saveRDS(thr.pheno,file="../GAM Models/fh_egg_thr_pheno.rds")
+saveRDS(temps.in,file="../GAM Models/fh_egg_temps_in_pheno.rds")
+saveRDS(aic.pheno,file="../GAM Models/fh_egg_aic_pheno.rds")
+saveRDS(best.index.phe,file="../GAM Models/fh_egg_best_index_pheno.rds")
 saveRDS(thr.geo,file="../GAM Models/fh_egg_thr_geo.rds")
+saveRDS(temps.in,file="../GAM Models/fh_egg_temps_in_geo.rds")
+saveRDS(aic.geo,file="../GAM Models/fh_egg_aic_geo.rds")
+saveRDS(best.index.geo,file="../GAM Models/fh_egg_best_index_geo.rds")
 saveRDS(vc.pheno,file="../GAM Models/fh_egg_vc_pheno.rds")
 saveRDS(vc.geo,file="../GAM Models/fh_egg_vc_geo.rds")
 
@@ -251,6 +256,10 @@ thr.pheno<-readRDS("../GAM Models/fh_egg_thr_pheno.rds")
 thr.geo<-readRDS("../GAM Models/fh_egg_thr_geo.rds")
 vc.pheno<-readRDS("../GAM Models/fh_egg_vc_pheno.rds")
 vc.geo<-readRDS("../GAM Models/fh_egg_vc_geo.rds")
+
+#to load if needed: 
+temps.in.phe<-readRDS("../GAM Models/fh_egg_temps_in_pheno.rds")
+
 
 #checking based on AIC: 
 aic.base<-AIC(eg.base)
