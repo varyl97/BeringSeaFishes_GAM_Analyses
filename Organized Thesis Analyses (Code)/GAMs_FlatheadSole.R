@@ -117,15 +117,18 @@ plot(thr.geo,page=1,scale=0,shade=TRUE,shade.col='skyblue3',
      seWithMean=TRUE)
 
 windows(width=12,height=8)
-par(mfrow=c(1,2))
+par(mfrow=c(1,2),oma=c(1,1,1,4))
 plot(thr.geo,select=4,scheme=2,too.far=0.025,
-     main=paste('Below',round(temps.in[best.index.geo],digits=3),sep=" "),
+     main=paste('Below',round(temps.in[best.index.geo],digits=3),'C',sep=" "),
      shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
 plot(thr.geo,select=3,scheme=2,too.far=0.025,
-     main=paste('Above',round(temps.in[best.index.geo],digits=3),sep=" "),
+     main=paste('Above',round(temps.in[best.index.geo],digits=3),'C',sep=" "),
      shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
+gradientLegend(c(0,-5),color=c('red','orange','yellow'),ncol=5,side=4,
+               fit.margin=TRUE)
+
 
 windows()
 par(mfrow=c(2,2))
