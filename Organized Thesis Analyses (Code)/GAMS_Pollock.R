@@ -502,6 +502,20 @@ legend("bottomleft",legend=c('Base BioGeo','Add Sal','Add Temp',
        col=c( "#482173FF", "#38598CFF","#1E9B8AFF", "#51C56AFF","#FDE725FF"),
        lwd=3,lty=1)
 
+
+# Saved Larval Models -----------------------------------------------------
+saveRDS(lv.base,"../GAM Models/pk_larvae_base.rds")
+saveRDS(lv.add.sal,"../GAM Models/pk_larvae_addsal.rds")
+saveRDS(lv.add.temp,"../GAM Models/pk_larvae_addtemp.rds")
+saveRDS(lv.temp.sal,"../GAM Models/pk_larvae_addtempsal.rds")
+saveRDS(lv.2d,"../GAM Models/pk_larvae_2d.rds")
+
+lv.base<-readRDS("../GAM Models/pk_larvae_base.rds")
+lv.add.sal<-readRDS("../GAM Models/pk_larvae_addsal.rds")
+lv.add.temp<-readRDS("../GAM Models/pk_larvae_addtemp.rds")
+lv.temp.sal<-readRDS("../GAM Models/pk_larvae_addtempsal.rds")
+lv.2d<-readRDS("../GAM Models/pk_larvae_2d.rds")
+
 #finding salinity/temperature hotspots 
 viridis<-colorRampPalette(c("#440154FF", "#482173FF", "#433E85FF", "#38598CFF", "#2D708EFF", "#25858EFF", "#1E9B8AFF",
                             "#2BB07FFF", "#51C56AFF", "#85D54AFF", "#C2DF23FF", "#FDE725FF")) #viridis palette
