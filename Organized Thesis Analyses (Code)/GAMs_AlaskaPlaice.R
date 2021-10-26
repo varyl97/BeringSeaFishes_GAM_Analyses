@@ -371,10 +371,10 @@ plot(lv.2d,page=1,shade=TRUE,shade.col='skyblue4',
 windows()
 par(mfrow=c(1,2))
 plot(lv.2d,select=2,seWithMean=TRUE,shade=TRUE,shade.col='skyblue4',
-     main='Seasonal Presence, 2D Temp+Sal Model (No resids.)')
+     main='Seasonal Presence, 2D Temp+Sal Model')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.2d,select=1,scheme=2,seWithMean=TRUE,too.far=0.025,
-     xlab='Longitude',ylab='Latitude',main='Biogeography')
+     xlab='Longitude',ylab='Latitude',main='Biogeography, 2D Temp+Sal Model')
 map("world",fill=T,col="snow4",add=T)
 
 windows()
