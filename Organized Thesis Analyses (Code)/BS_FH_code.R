@@ -186,8 +186,8 @@ write.csv(fhlarv.ctd,'Cleaned_Cut_FhLarv_wCTD.csv')
 
 
 ###to avoid doing all the above gymnastics: 
-fhsub<-read.csv(file='../Ichthyo Data/Cleaned_Cut_FhEggs.csv',header=TRUE,check.names=TRUE)
-fhsub.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_FhEggs_wCTD.csv',header=TRUE,check.names=TRUE)
-fhlarv<-read.csv(file='../Ichthyo Data/Cleaned_Cut_FhLarv.csv',header=TRUE,check.names=TRUE)
-fhlarv.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_FhLarv_wCTD.csv',header=TRUE,check.names=TRUE)
+fhsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhEggs.csv',header=TRUE,check.names=TRUE)
+fhsub.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhEggs_wCTD.csv',header=TRUE,check.names=TRUE)
+fhlarv<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhLarv.csv',header=TRUE,check.names=TRUE)
+fhlarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhLarv_wCTD.csv',header=TRUE,check.names=TRUE)
 

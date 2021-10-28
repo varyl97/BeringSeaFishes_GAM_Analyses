@@ -186,8 +186,8 @@ write.csv(aplarv.ctd,'Cleaned_Cut_ApLarv_wCTD.csv')
 
 
 ###to avoid doing all the above gymnastics: 
-apsub<-read.csv(file='../Ichthyo Data/Cleaned_Cut_ApEggs.csv',header=TRUE,check.names=TRUE)
-apsub.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_ApEggs_wCTD.csv',header=TRUE,check.names=TRUE)
-aplarv<-read.csv(file='../Ichthyo Data/Cleaned_Cut_ApLarv.csv',header=TRUE,check.names=TRUE)
-aplarv.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_ApLarv_wCTD.csv',header=TRUE,check.names=TRUE)
+apsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApEggs.csv',header=TRUE,check.names=TRUE)
+apsub.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApEggs_wCTD.csv',header=TRUE,check.names=TRUE)
+aplarv<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApLarv.csv',header=TRUE,check.names=TRUE)
+aplarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApLarv_wCTD.csv',header=TRUE,check.names=TRUE)
 

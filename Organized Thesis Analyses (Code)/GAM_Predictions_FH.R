@@ -1,14 +1,26 @@
 ##GAM Predictions 
 
 # Initial Attempts - Code based off of Lorenzo's --------------------------
+
+# Preliminary Data Loading and Formatting ---------------------------------
+
 #link fhsub to regional indices: 
 
-reg.SST<-read.csv('../Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+reg.SST<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.SST) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(fhsub)){
   fhsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==fhsub$year[i]]}
 
+#get map 
+str_name<-"./Environmental Data/expanded_BS_bathy.tif"
+bathy<-raster(str_name)
+bathy.dat<-as.bathy(bathy)
+#to plot: 
+windows()
+plot.bathy(bathy.dat,image=T,land=F,n=5,drawlabels=T)
+
+# Visualize on a regular grid ---------------------------------------------
 
 #visualize results of best model by predicting on a grid: 
 #this attempt did not work - 10/11/2021
@@ -40,24 +52,22 @@ grid.extent$bottom_depth<-median(fhsub$bottom_depth,na.rm=TRUE)
 grid.extent$reg.SST<-NA
 grid.extent$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST<1.24],na.rm=TRUE)  
 grid.extent$th=as.character("TRUE")
-grid.extent$pred<-predict(thr.geo,newdata=grid.extent)
-
-
-
-
+grid.extent$pred<-predict(fh.thr.geo,newdata=grid.extent)
 
 windows()
 par(mai=c(0.7,0.6,0.4,0.4))
 image(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
-                         ncol=length(lond),byrow=T)),col=tim.colors(100),ylab="",
-      xlab="",xlim=range(fhsub$lon),ylim=range(fhsub$lat),main='Distribution',
+                         ncol=length(lond),byrow=T)),col=tim.colors(100),ylab="",xlab="",
+      xlim=range(fhsub$lon),ylim=range(fhsub$lat),main='Distribution',
       cex.main=1.5,cex.lab=1.4,cex.axis=1.4)
-symbols(fhsub$lon[fhsub$Cper10m2>0&fhsub$year==2013],#this isn't working for some reason. 
-        fhsub$lat[fhsub$Cper10m2>0&fhsub$year==2013],
-        circles=log(fhsub$Cper10m2+1)[fhsub$Cper10m2>0&fhsub$year==2013],
-        inches=0.1,bg='grey',fg='black',add=T)
-map("worldHires",fill=T,col="wheat4",add=T)
-
+symbols(fhsub$lon[fhsub$LARVALCATCHPER10M2>0],
+        fhsub$lat[fhsub$LARVALCATCHPER10M2>0],
+        circles=log(fhsub$LARVALCATCHPER10M2+1)[fhsub$LARVALCATCHPER10M2>0],
+        inches=0.1,bg=alpha('grey',f=0.02),fg=alpha('black',f=0.02),add=T)
+points(fhsub$lon[fhsub$LARVALCATCHPER10M2==0],fhsub$lat[fhsub$LARVALCATCHPER10M2==0],pch='+')
+map("worldHires",fill=T,col="wheat4",add=T)	
+      
+      
 #trying above code with the base model: 
 eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
              data=fhsub,family=tw(link='log'),method='REML')

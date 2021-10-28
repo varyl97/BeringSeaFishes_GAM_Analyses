@@ -1,9 +1,9 @@
 ###EGGS: Spawning Behavior Alaska Plaice
 ##Load in local and regional temperature index for March (2 mos before egg peak in May) 
-loc.sst<-read.csv('../Environmental Data/Mar_SST_ByLocation_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+loc.sst<-read.csv('./Environmental Data/Mar_SST_ByLocation_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(loc.sst) #more just to have, use regional for GAMs
 
-reg.sst<-read.csv('../Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(apsub)){
@@ -181,7 +181,7 @@ aic.pheno<-NA*(temps.in)
 thr.pheno<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
-  apsub$th<-factor(reg.SST<=temps.in[i])
+  apsub$th<-factor(apsub$reg.SST<=temps.in[i])
   thr.pheno[[i]]<-gam((Cper10m2+1)~factor(year)+
                         s(lon,lat)+
                         s(bottom_depth,k=5)+
@@ -202,7 +202,7 @@ aic.geo<-NA*(temps.in)
 thr.geo<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
-  apsub$th<-factor(reg.SST<=temps.in[i])
+  apsub$th<-factor(apsub$reg.SST<=temps.in[i])
   thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+s(bottom_depth,k=5)+
                       s(lon,lat,by=th),data=apsub,
                     family=tw(link='log'),method='REML')
@@ -224,17 +224,21 @@ vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
 summary(vc.geo)
 
 ##SAVE AND RELOAD THE MODELS
-saveRDS(eg.base,file="../GAM Models/ap_egg_base.rds")
-saveRDS(thr.pheno,file="../GAM Models/ap_egg_thr_pheno.rds")
-saveRDS(thr.geo,file="../GAM Models/ap_egg_thr_geo.rds")
-saveRDS(vc.pheno,file="../GAM Models/ap_egg_vc_pheno.rds")
-saveRDS(vc.geo,file="../GAM Models/ap_egg_vc_geo.rds")
+saveRDS(eg.base,file="./GAM Models/ap_egg_base.rds")
+saveRDS(thr.pheno,file="./GAM Models/ap_egg_thr_pheno.rds")
+saveRDS(temps.in,file="./GAM Models/ap_egg_temps_in_pheno.rds")
+saveRDS(best.index.phe,file="./GAM Models/ap_egg_best_index_phe.rds")
+saveRDS(thr.geo,file="./GAM Models/ap_egg_thr_geo.rds")
+saveRDS(temps.in,file="./GAM Models/ap_egg_temps_in_geo.rds")
+saveRDS(best.index.geo,file="./GAM Models/ap_egg_best_index_geo.rds")
+saveRDS(vc.pheno,file="./GAM Models/ap_egg_vc_pheno.rds")
+saveRDS(vc.geo,file="./GAM Models/ap_egg_vc_geo.rds")
 
-eg.base<-readRDS("../GAM Models/ap_egg_base.rds")
-thr.pheno<-readRDS("../GAM Models/ap_egg_thr_pheno.rds")
-thr.geo<-readRDS("../GAM Models/ap_egg_thr_geo.rds")
-vc.pheno<-readRDS("../GAM Models/ap_egg_vc_pheno.rds")
-vc.geo<-readRDS("../GAM Models/ap_egg_vc_geo.rds")
+eg.base<-readRDS("./GAM Models/ap_egg_base.rds")
+thr.pheno<-readRDS("./GAM Models/ap_egg_thr_pheno.rds")
+thr.geo<-readRDS("./GAM Models/ap_egg_thr_geo.rds")
+vc.pheno<-readRDS("./GAM Models/ap_egg_vc_pheno.rds")
+vc.geo<-readRDS("./GAM Models/ap_egg_vc_geo.rds")
 
 #checking based on AIC: 
 aic.base<-AIC(eg.base)
