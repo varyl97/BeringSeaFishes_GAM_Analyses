@@ -1,15 +1,30 @@
-###EGGS: Spawning Behavior Alaska Plaice
-##Load in local and regional temperature index for March (2 mos before peak egg CPUE in May) 
-loc.sst<-read.csv('../Environmental Data/Mar_SST_ByLocation_NCEP_BS.csv',header=TRUE,check.names=TRUE)
-head(loc.sst) #more just to have, use regional for GAMs
 
+# EGGS: Spawning Behavior Flathead Sole -----------------------------------
+#the following code creates generalized additive models for eggs and larvae of flathead sole. 
+#these analyses form the basis of my MS thesis. 
+#egg data uses an averaged sea surface temperature for the month of March in the Southeastern Bering Sea
+        #March index was chosen because it is two months before the peak of flathead egg CPUE, and thus March 
+        #conditions are likely more relevant to spawning behavior than temperatures in later months. 
+
+# Load in data ------------------------------------------------------------
+
+fhsub<-read.csv(file='../Ichthyo Data/Cleaned_Cut_FhEggs.csv',header=TRUE,check.names=TRUE) #for egg GAMs
+fhlarv.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_FhLarv_wCTD.csv',header=TRUE,check.names=TRUE) #for larval GAMs
+
+##Load in regional temperature index for March (2 mos before peak egg CPUE in May), for egg GAMs 
 reg.sst<-read.csv('../Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(fhsub)){
   fhsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==fhsub$year[i]]}
 
-#base: 
+
+# Spawning Behavior - Egg GAMs --------------------------------------------
+#the following code generations GAMs that quantify variation in space and time of spawning behavior 
+    #(as proxied by egg CPUE) in relation to regional temperature index close to typical time of spawning 
+
+# Base Egg Model ----------------------------------------------------------
+
 eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
              data=fhsub,family=tw(link='log'),method='REML')
 
@@ -27,7 +42,9 @@ map("world",fill=T,col="snow4",add=T)
 plot(eg.base,select=2,xlab='Day of Year',shade=TRUE,shade.col='skyblue3')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
-##threshold phenology curve: 
+
+# Threshold Phenology Egg GAM ---------------------------------------------
+
 temps<-sort(unique(reg.sst$SST)) #order by unique values of regional SST (March temps here)
 
 bd<-4 #dictates essentially how many unique temperatures we check. can vary this depending on your system, how long you want the model to take, 
@@ -86,7 +103,8 @@ par(mfrow=c(2,2))
 gam.check(thr.pheno)
 
 
-#temp threshold geo: 
+# Threshold Geography Egg GAM ---------------------------------------------
+
 temps<-sort(unique(reg.sst$SST))
 bd<-4 #change this to 4, more intermediate 
 temps.in<-temps[bd:(length(temps)-bd)]
@@ -118,11 +136,11 @@ plot(thr.geo,page=1,scale=0,shade=TRUE,shade.col='skyblue3',
 
 windows(width=12,height=8)
 par(mfrow=c(1,2),oma=c(1,1,1,5))
-plot(fh.thr.geo,select=4,scheme=2,too.far=0.025,
+plot(thr.geo,select=4,scheme=2,too.far=0.025,
      main=paste('Below',round(temps.in.fh[best.index.geo.fh],digits=3),'C',sep=" "),
      shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
-plot(fh.thr.geo,select=3,scheme=2,too.far=0.025,
+plot(thr.geo,select=3,scheme=2,too.far=0.025,
      main=paste('Above',round(temps.in.fh[best.index.geo.fh],digits=3),'C',sep=" "),
      shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
@@ -132,7 +150,9 @@ windows()
 par(mfrow=c(2,2))
 gam.check(thr.geo)
 
-#vc temp pheno: 
+
+# Variable-Coefficient Phenology Egg GAM  ---------------------------------
+
 vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
                 s(doy,by=reg.SST),data=fhsub,family=tw(link='log'),
               method='REML')
@@ -158,7 +178,9 @@ windows()
 par(mfrow=c(2,2))
 gam.check(vc.pheno)
 
-#vc temp geo: 
+
+# Variable-Coefficient Geography Egg GAM ----------------------------------
+
 vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
               s(lon,lat,by=reg.SST),data=fhsub,family=tw(link='log'),
             method='REML')
@@ -183,13 +205,15 @@ windows()
 par(mfrow=c(2,2))
 gam.check(vc.geo)
 
-#all models for eggs in one place: 
+
+# Collation of all Egg Models  --------------------------------------------
+
 eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
              data=fhsub,family=tw(link='log'),method='REML')
 
 summary(eg.base)
 
-#Threshold Phenology Model: 
+#threshold phenology
 temps<-sort(unique(reg.sst$SST))
 bd<-4
 temps.in<-temps[bd:(length(temps)-bd)]
@@ -207,6 +231,7 @@ best.index.phe<-order(aic.pheno)[1]
 thr.pheno<-thr.pheno[[best.index.phe]]
 summary(thr.pheno)
 
+#threshold geography
 temps<-sort(unique(reg.sst$SST))
 bd<-4 #change this to 4, more intermediate (checks more temperatures than bd = 10)
 temps.in<-temps[bd:(length(temps)-bd)]
@@ -250,17 +275,21 @@ saveRDS(best.index.geo,file="../GAM Models/fh_egg_best_index_geo.rds")
 saveRDS(vc.pheno,file="../GAM Models/fh_egg_vc_pheno.rds")
 saveRDS(vc.geo,file="../GAM Models/fh_egg_vc_geo.rds")
 
-eg.base<-readRDS("../GAM Models/fh_egg_base.rds")
-thr.pheno<-readRDS("../GAM Models/fh_egg_thr_pheno.rds")
-thr.geo<-readRDS("../GAM Models/fh_egg_thr_geo.rds")
-vc.pheno<-readRDS("../GAM Models/fh_egg_vc_pheno.rds")
-vc.geo<-readRDS("../GAM Models/fh_egg_vc_geo.rds")
+eg.base<-readRDS("./GAM Models/fh_egg_base.rds")
+thr.pheno<-readRDS("./GAM Models/fh_egg_thr_pheno.rds")
+temps.in.phe<-readRDS("./GAM Models/fh_egg_temps_in_pheno.rds")
+best.index.phe<-readRDS("./GAM Models/fh_egg_best_index_pheno.rds")
+thr.geo<-readRDS("./GAM Models/fh_egg_thr_geo.rds")
+temps.in.geo<-readRDS("./GAM Models/fh_egg_temps_in_geo.rds")
+best.index.geo<-readRDS("./GAM Models/fh_egg_best_index_geo.rds")
+vc.pheno<-readRDS("./GAM Models/fh_egg_vc_pheno.rds")
+vc.geo<-readRDS("./GAM Models/fh_egg_vc_geo.rds")
 
-#to load if needed: 
 temps.in.phe<-readRDS("../GAM Models/fh_egg_temps_in_pheno.rds")
 
 
-#checking based on AIC: 
+# Use Akaike Information Criterion to Check Model Performance -----------
+
 aic.base<-AIC(eg.base)
 aic.thrph<-AIC(thr.pheno)
 aic.thrge<-AIC(thr.geo)
@@ -283,7 +312,14 @@ legend("bottomleft",legend=c('Base','Threshold Pheno','Threshold Geo',
        col=c( "#482173FF", "#38598CFF","#1E9B8AFF", "#51C56AFF","#FDE725FF"),
        lwd=3,lty=1)
 
-###LARVAE: Water Mass Associations
+
+# Larval Biogeography GAMs ------------------------------------------------
+#the following code evaluates larval biogeography in relation to temperature and salinity
+#temp and salinity measurements were taken in situ via conductivity-temperature-depth instruments 
+      #on the same cruises where larval data were collected 
+
+# Base Larval Biogeography Model ------------------------------------------
+
 lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                s(bottom_depth,k=5),
              data=fhlarv.ctd,family=tw(link='log'),method='REML')
@@ -300,7 +336,9 @@ plot(lv.base,select=2,scheme=2,too.far=0.025,
 map("world",fill=T,col="snow4",add=T)
 
 
-#add salinity
+
+# Larval Biogeography with Additive Salinity Interaction ------------------
+
 lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                   s(bottom_depth,k=5)+
                   s(salinity),data=fhlarv.ctd,family=tw(link='log'),
@@ -326,7 +364,9 @@ plot(lv.add.sal,select=4,shade=TRUE,shade.col="skyblue4",
      xlab='Salinity (PSU)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
-#add temperature
+
+# Larval Biogeography with Additive Temperature Interaction ---------------
+
 lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature),data=fhlarv.ctd,family=tw(link='log'),
@@ -352,7 +392,9 @@ plot(lv.add.temp,select=4,shade=TRUE,shade.col="skyblue4",
      xlab='Temperature (degC)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
-#additive both temp and sal
+
+# Biogeography with Individual Additive Temperature and Salinity Interactions --------
+
 lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature)+s(salinity),data=fhlarv.ctd,
@@ -379,7 +421,9 @@ plot(lv.temp.sal,select=5,shade=TRUE,shade.col='skyblue4',
      seWithMean=TRUE,main='Effect of Salinity',xlab='Salinity (psu)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
-##2D Smooth with temp and sal: 
+
+# Biogeography with Two-Dimensional Interaction between Temperature and Salinity --------
+
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
              s(temperature,salinity),data=fhlarv.ctd,family=tw(link='log'),
            method='REML')
@@ -404,7 +448,9 @@ plot(lv.2d,select=4,scheme=2,main='Larval Log Presence, 2D Temp and Sal Effect',
      too.far=0.025,
      xlab='Temperature (degC)',ylab='Salinity (psu)')
 
-#all larval models in one place: 
+
+# Collation of all Larval GAMs --------------------------------------------
+
 lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                s(bottom_depth,k=5),
              data=fhlarv.ctd,family=tw(link='log'),method='REML')
@@ -433,7 +479,9 @@ lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
            method='REML')
 summary(lv.2d)
 
-##SAVED MODELS for reloading later: 
+
+# SAVE MODELS for reloading later -----------------------------------------
+
 saveRDS(lv.base,file="../GAM Models/fh_larv_base.rds")
 saveRDS(lv.add.sal,file="../GAM Models/fh_larv_addsal.rds")
 saveRDS(lv.add.temp,file="../GAM Models/fh_larv_addtemp.rds")
@@ -446,7 +494,9 @@ lv.add.temp<-readRDS("../GAM Models/fh_larv_addtemp.rds")
 lv.temp.sal<-readRDS("../GAM Models/fh_larv_tempsal.rds")
 lv.2d<-readRDS("../GAM Models/fh_larv_2d.rds")
 
-#checking based on AIC: 
+
+# Model Validation by Akaike Information Criterion  -----------------------
+
 aic.base.lv<-AIC(lv.base)
 aic.sal<-AIC(lv.add.sal)
 aic.temp<-AIC(lv.add.temp)
@@ -494,6 +544,10 @@ legend("bottomright",legend=c('Base BioGeo','Add Sal','Add Temp',
 
 
 # Salinity-Temp Hotspot Figures -------------------------------------------
+#these figures represent where ideal temperature and salinity conditions are located in the SEBS 
+    #and how catch of larvae interacts with those "hot spots" 
+    #temp and salinity "hot spots" are determined by the best model output, the 2D temp-salinity model. 
+
 viridis<-colorRampPalette(c("#440154FF", "#482173FF", "#433E85FF", "#38598CFF", "#2D708EFF", "#25858EFF", "#1E9B8AFF",
                             "#2BB07FFF", "#51C56AFF", "#85D54AFF", "#C2DF23FF", "#FDE725FF")) #viridis palette
 
