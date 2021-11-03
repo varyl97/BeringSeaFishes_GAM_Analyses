@@ -187,7 +187,7 @@ write.csv(yflarv.ctd,'Cleaned_Cut_YfLarv_wCTD.csv')
 yfsub<-read.csv(file='../Ichthyo Data/Cleaned_Cut_YfEggs.csv',header=TRUE,check.names=TRUE)
 yfsub.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_YfEggs_wCTD.csv',header=TRUE,check.names=TRUE)
 yflarv<-read.csv(file='../Ichthyo Data/Cleaned_Cut_YfLarv.csv',header=TRUE,check.names=TRUE)
-yflarv.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_YfLarv_wCTD.csv',header=TRUE,check.names=TRUE)
+yflarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_YfLarv_wCTD.csv',header=TRUE,check.names=TRUE)
 
 
 

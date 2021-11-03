@@ -1,9 +1,18 @@
-###EGGS: Spawning Behavior Alaska Plaice
-##Load in local and regional temperature index for March (2 mos before egg peak in May) 
-loc.sst<-read.csv('./Environmental Data/Mar_SST_ByLocation_NCEP_BS.csv',header=TRUE,check.names=TRUE)
-head(loc.sst) #more just to have, use regional for GAMs
+###Generalized Additive Analyses: Alaska Plaice
+#the following code creates generalized additive models for eggs and larvae of Alaska plaice. 
+#these analyses form the basis of my MS thesis. 
+#egg data uses an averaged sea surface temperature for the month of March in the Southeastern Bering Sea
+#March index was chosen because it is two months before the peak of Alaska plaice CPUE, and thus March 
+#conditions are likely more relevant to spawning behavior than temperatures in later months. 
+#load egg and larval data: 
 
-reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+apsub<-read.csv(file='../Ichthyo Data/Cleaned_Cut_ApEggs.csv',header=TRUE,check.names=TRUE)
+
+aplarv.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_ApLarv_wCTD.csv',header=TRUE,check.names=TRUE)
+
+##Load in local and regional temperature index for March (2 mos before egg peak in May)
+
+reg.sst<-read.csv('../Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(apsub)){
@@ -45,6 +54,7 @@ for(i in 1:length(temps.in)){
 }
 
 best.index.phe<-order(aic.pheno)[1]
+thr.pheno<-thr.pheno[[best.index.phe]]
 
 windows()
 plot(temps.in,aic.pheno,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.pheno)),
@@ -53,26 +63,26 @@ plot(temps.in,aic.pheno,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.pheno)),
 abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
 abline(v=temps.in[best.index.phe],lty=2,lwd=2,col='steelblue3')
 
-summary(thr.pheno[[best.index.phe]])
+summary(thr.pheno)
 
 windows(width=12,height=8)
-plot(thr.pheno[[best.index.phe]],shade=TRUE,shade.col='skyblue3',page=1,
+plot(thr.pheno,shade=TRUE,shade.col='skyblue3',page=1,
      seWithMean=TRUE,scale=0)
 
 windows(width=12,height=8)
 par(mfrow=c(1,2))
-plot(thr.pheno[[best.index.phe]],select=4,main=paste('Below',temps.in[best.index.phe],sep=" "),
+plot(thr.pheno,select=4,main=paste('Below',temps.in[best.index.phe],sep=" "),
      shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
 abline(h=0,col='sienna3',lty=2,lwd=2)
-plot(thr.pheno[[best.index.phe]],select=3,main=paste('Above',temps.in[best.index.phe],sep=" "),
+plot(thr.pheno,select=3,main=paste('Above',temps.in[best.index.phe],sep=" "),
      shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
 windows()
 par(mfrow=c(2,2))
-gam.check(thr.pheno[[best.index.phe]])
+gam.check(thr.pheno)
 
-#temp threshold geo: 
+#temp threshold geo model: 
 temps<-sort(unique(reg.sst$SST))
 bd<-4
 temps.in<-temps[bd:(length(temps)-bd)]
@@ -89,6 +99,7 @@ for(i in 1:length(temps.in)){
 }
 
 best.index.geo<-order(aic.geo)[1]
+thr.geo<-thr.geo[[best.index.geo]]
 
 windows()
 plot(temps.in,aic.geo,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.geo)),
@@ -96,19 +107,19 @@ plot(temps.in,aic.geo,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.geo)),
 abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
 abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
 
-summary(thr.geo[[best.index.geo]])
+summary(thr.geo)
 
 windows(width=12,height=8)
-plot(thr.geo[[best.index.geo]],page=1,scale=0,shade=TRUE,shade.col='skyblue3',
+plot(thr.geo,page=1,scale=0,shade=TRUE,shade.col='skyblue3',
      seWithMean=TRUE)
 
 windows(width=12,height=8)
 par(mfrow=c(1,2))
-plot(thr.geo[[best.index.geo]],select=4,scheme=2,too.far=0.025,
+plot(thr.geo,select=4,scheme=2,too.far=0.025,
      main=paste('Below',round(temps.in[best.index.geo],digits=3),sep=" "),
      shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
-plot(thr.geo[[best.index.geo]],select=3,scheme=2,too.far=0.025,
+plot(thr.geo,select=3,scheme=2,too.far=0.025,
      main=paste('Above',round(temps.in[best.index.geo],digits=3),sep=" "),
      shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
@@ -224,15 +235,15 @@ vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
 summary(vc.geo)
 
 ##SAVE AND RELOAD THE MODELS
-saveRDS(eg.base,file="./GAM Models/ap_egg_base.rds")
-saveRDS(thr.pheno,file="./GAM Models/ap_egg_thr_pheno.rds")
-saveRDS(temps.in,file="./GAM Models/ap_egg_temps_in_pheno.rds")
-saveRDS(best.index.phe,file="./GAM Models/ap_egg_best_index_phe.rds")
-saveRDS(thr.geo,file="./GAM Models/ap_egg_thr_geo.rds")
-saveRDS(temps.in,file="./GAM Models/ap_egg_temps_in_geo.rds")
-saveRDS(best.index.geo,file="./GAM Models/ap_egg_best_index_geo.rds")
-saveRDS(vc.pheno,file="./GAM Models/ap_egg_vc_pheno.rds")
-saveRDS(vc.geo,file="./GAM Models/ap_egg_vc_geo.rds")
+saveRDS(eg.base,file="../GAM Models/ap_egg_base.rds")
+saveRDS(thr.pheno,file="../GAM Models/ap_egg_thr_pheno.rds")
+saveRDS(temps.in,file="../GAM Models/ap_egg_temps_in_pheno.rds")
+saveRDS(best.index.phe,file="../GAM Models/ap_egg_best_index_phe.rds")
+saveRDS(thr.geo,file="../GAM Models/ap_egg_thr_geo.rds")
+saveRDS(temps.in,file="../GAM Models/ap_egg_temps_in_geo.rds")
+saveRDS(best.index.geo,file="../GAM Models/ap_egg_best_index_geo.rds")
+saveRDS(vc.pheno,file="../GAM Models/ap_egg_vc_pheno.rds")
+saveRDS(vc.geo,file="../GAM Models/ap_egg_vc_geo.rds")
 
 eg.base<-readRDS("./GAM Models/ap_egg_base.rds")
 thr.pheno<-readRDS("./GAM Models/ap_egg_thr_pheno.rds")
@@ -257,8 +268,8 @@ plot(c(1:5),aic.apegg$AIC_value,main='AIC Results for ap Egg Models',
      col=c( "#482173FF", "#38598CFF","#1E9B8AFF", "#51C56AFF","#FDE725FF"),
      pch=19,cex=2,ylab='AIC Value',xlab='')
 grid(nx=5,ny=14,col="lightgray")
-text(c(1:5),aic.apegg$AIC_value,labels=round(aic.apegg$AIC_value),pos=c(4,3,3,3,2))
-legend("bottomleft",legend=c('Base','Threshold Pheno','Threshold Geo',
+text(c(1:5),aic.apegg$AIC_value,labels=round(aic.apegg$AIC_value),pos=c(4,3,3,2,2))
+legend("bottomright",legend=c('Base','Threshold Pheno','Threshold Geo',
                              'VC Pheno','VC Geo'),
        col=c( "#482173FF", "#38598CFF","#1E9B8AFF", "#51C56AFF","#FDE725FF"),
        lwd=3,lty=1)
@@ -414,6 +425,13 @@ lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
              s(temperature,salinity),data=aplarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
+
+#SAVE LARVAL MODELS: 
+saveRDS(lv.base,file="../GAM Models/ap_larval_base.rds")
+saveRDS(lv.add.sal,file="../GAM Models/ap_larval_addsal.rds")
+saveRDS(lv.add.temp,file="../GAM Models/ap_larval_addtemp.rds")
+saveRDS(lv.temp.sal,file="../GAM Models/ap_larval_addtempsal.rds")
+saveRDS(lv.2d,file="../GAM Models/ap_larval_2d.rds")
 
 #checking based on AIC: 
 aic.base.lv<-AIC(lv.base)

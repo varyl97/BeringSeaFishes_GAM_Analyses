@@ -1,22 +1,30 @@
-########### Revised work with GAMs: 9/1/2021 ###########
+#Generalized Additive Models: Walleye Pollock
+#the following code creates generalized additive models for eggs and larvae of walleye pollock. 
+#these analyses form the basis of my MS thesis. 
+#egg data uses an averaged sea surface temperature for the month of March in the Southeastern Bering Sea
+#March index was chosen because it is two months before the peak of walleye pollock CPUE, and thus March 
+#conditions are likely more relevant to spawning behavior than temperatures in later months. 
+#load egg and larval data: 
+pksub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkEggs.csv',header=TRUE,check.names=TRUE) #for egg GAMs
+
+pklarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkLarv_wCTD.csv',header=TRUE,check.names=TRUE) #for larval GAMs
+
 world<-map_data("world")
 BSmap<-world[world$long<(-155)&world$lat>50&world$lat<70,]
 #syntax: +geom_map(data=BSmap,map=BSmap,aes(long,lat,map_id=region))
 
 ###EGGS: Spawning Behavior 
+#the following code generates models to examine flexible 
 ##Load in local and regional temperature index for March (2 mos before peak egg catch in May) 
-loc.sst<-read.csv('../Environmental Data/Mar_SST_ByLocation_NCEP_BS.csv',header=TRUE,check.names=TRUE)
-head(loc.sst) #more just to have, use regional for GAMs
-
-reg.sst<-read.csv('../Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(pksub)){
         pksub$reg.SST[i]<-reg.sst$SST[reg.sst$year==pksub$year[i]]}
 
-pksub<-pksub[pksub$lat<60.5,]
+pksub<-pksub[pksub$lat<60.5,] #trim to eliminate areas where catch is very rare 
 
-#base: 
+#Base Egg Model: simplest formulation 
 eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
              data=pksub,family=tw(link='log'),method='REML')
 
@@ -26,18 +34,17 @@ windows(width=12,height=8)
 plot(eg.base,shade=TRUE,shade.col='skyblue3',page=1,
      seWithMean=TRUE,scale=0)
 
-
-windows(width=12,height=8)#I think this is equivalent to plot above ^
+windows(width=12,height=8)
+par(mfrow=c(2,2))
 vis.gam(eg.base,view=c(c("lon","lat")),too.far=0.025,
         color="heat",plot.type="contour",n.grid=20,
         main='Geographic Linear Predictor (vis.gam), Base Egg')
 map("world",fill=T,col="snow4",add=T)
-
-windows(width=12,height=8)
 plot(eg.base,select=2,shade=TRUE,shade.col="skyblue3",
      xlab='Day of Year',ylab='Estimated Effect, Log(Cper10m2+1)',
-     main="Phenologic Smooth, Base Egg Model")
+     main='Phenologic Smooth')
 abline(h=0,col='sienna3',lty=2,lwd=2)
+plot(eg.base,select=3,shade=TRUE,shade.col="skyblue3")
 
 windows()
 par(mfrow=c(2,2),oma=c(1.5,2,1,1))
@@ -62,7 +69,7 @@ map("world",fill=T,col="snow4",add=T)
 plot(eg.base,select=2,xlab='Day of Year',shade=TRUE,shade.col='skyblue3')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
-#temp pheno threshold: 
+#Phenological Model with Temperature Threshold 
 temps<-sort(unique(reg.sst$SST))
 bd<-4
 temps.in<-temps[bd:(length(temps)-bd)]
@@ -80,6 +87,7 @@ for(i in 1:length(temps.in)){
 }
 
 best.index.phe<-order(aic.pheno)[1]
+thr.pheno<-thr.pheno[[best.index.phe]]
 
 windows()
 plot(temps.in,aic.pheno,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.pheno)),
@@ -88,24 +96,24 @@ plot(temps.in,aic.pheno,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.pheno)),
 abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
 abline(v=temps.in[best.index.phe],lty=2,lwd=2,col='steelblue3')
 
-summary(thr.pheno[[best.index.phe]])
+summary(thr.pheno)
 
 windows(width=12,height=8)
-plot(thr.pheno[[best.index.phe]],shade=TRUE,shade.col='skyblue3',page=1,
+plot(thr.pheno,shade=TRUE,shade.col='skyblue3',page=1,
      seWithMean=TRUE,scale=0)
 
 windows(width=12,height=8)
 par(mfrow=c(1,2))
-plot(thr.pheno[[best.index.phe]],select=4,main=paste('Below',temps.in[best.index.phe],sep=" "),
+plot(thr.pheno,select=4,main=paste('Below',round(temps.in[best.index.phe],digits=3),sep=" "),
      shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
 abline(h=0,col='sienna3',lty=2,lwd=2)
-plot(thr.pheno[[best.index.phe]],select=3,main=paste('Above',temps.in[best.index.phe],sep=" "),
+plot(thr.pheno,select=3,main=paste('Above',round(temps.in[best.index.phe],digits=3),sep=" "),
      shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
 windows()
 par(mfrow=c(2,2))
-gam.check(thr.pheno[[best.index.phe]])
+gam.check(thr.pheno)
 
 #temp threshold geo: 
 temps<-sort(unique(reg.sst$SST))
@@ -124,6 +132,7 @@ for(i in 1:length(temps.in)){
 }
 
 best.index.geo<-order(aic.geo)[1]
+thr.geo<-thr.geo[[best.index.geo]]
 
 windows()
 plot(temps.in,aic.geo,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.geo)),
@@ -131,10 +140,10 @@ plot(temps.in,aic.geo,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.geo)),
 abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
 abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
 
-summary(thr.geo[[best.index.geo]])
+summary(thr.geo)
 
 windows(width=12,height=8)
-plot(thr.geo[[best.index.geo]],page=1,scale=0,shade=TRUE,shade.col='skyblue3',
+plot(thr.geo,page=1,scale=0,shade=TRUE,shade.col='skyblue3',
      seWithMean=TRUE)
 
 vis.gam(eg.base,view=c("lon","lat"),too.far=0.025,
@@ -143,12 +152,12 @@ vis.gam(eg.base,view=c("lon","lat"),too.far=0.025,
 
 windows(width=12,height=8)
 par(mfrow=c(1,2))
-plot(thr.geo[[best.index.geo]],select=4,scheme=2,too.far=0.025,
-     main=paste('Below',temps.in[best.index.geo],sep=" "),
+plot(thr.geo,select=4,scheme=2,too.far=0.025,
+     main=paste('Below',round(temps.in[best.index.geo],digits=3),sep=" "),
      shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
-plot(thr.geo[[best.index.geo]],select=3,scheme=2,too.far=0.025,
-     main=paste('Above',temps.in[best.index.geo],sep=" "),
+plot(thr.geo,select=3,scheme=2,too.far=0.025,
+     main=paste('Above',round(temps.in[best.index.geo],digits=3),sep=" "),
      shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
 
@@ -263,17 +272,16 @@ vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
 summary(vc.geo)
 
 #Save for reloading later!!
-saveRDS(eg.base,file="../GAM Models/pk_egg_base.rds")
-saveRDS(thr.pheno,file="../GAM Models/pk_egg_thr_pheno.rds")
-saveRDS(temps.in,file="../GAM Models/pk_egg_temps_in_phe.rds")
-saveRDS(aic.pheno,file="../GAM Models/pk_egg_aic_pheno.rds")
-saveRDS(best.index.phe,file="../GAM Models/pk_egg_best_index_phe.rds")
-saveRDS(thr.geo,file="../GAM Models/pk_egg_thr_geo.rds")
-saveRDS(temps.in,file="../GAM Models/pk_egg_temps_in_geo.rds")
-saveRDS(aic.geo,file="../GAM Models/pk_egg_aic_geo.rds")
-saveRDS(best.index.geo,file="../GAM Models/pk_egg_best_index_geo.rds")
-saveRDS(vc.pheno,file="../GAM Models/pk_egg_vc_pheno.rds")
-saveRDS(vc.geo,file="../GAM Models/pk_egg_vc_geo.rds")
+saveRDS(eg.base,file="./GAM Models/pk_egg_base.rds")
+saveRDS(thr.pheno,file="./GAM Models/pk_egg_thr_pheno.rds")
+saveRDS(temps.in,file="./GAM Models/pk_egg_temps_in.rds")
+saveRDS(aic.pheno,file="./GAM Models/pk_egg_aic_pheno.rds")
+saveRDS(best.index.phe,file="./GAM Models/pk_egg_best_index_phe.rds")
+saveRDS(thr.geo,file="./GAM Models/pk_egg_thr_geo.rds")
+saveRDS(aic.geo,file="./GAM Models/pk_egg_aic_geo.rds")
+saveRDS(best.index.geo,file="./GAM Models/pk_egg_best_index_geo.rds")
+saveRDS(vc.pheno,file="./GAM Models/pk_egg_vc_pheno.rds")
+saveRDS(vc.geo,file="./GAM Models/pk_egg_vc_geo.rds")
 
 eg.base<-readRDS("../GAM Models/pk_egg_base.rds")
 thr.pheno<-readRDS("../GAM Models/pk_egg_thr_pheno.rds")
@@ -283,8 +291,8 @@ vc.geo<-readRDS("../GAM Models/pk_egg_vc_geo.rds")
 
 #checking based on AIC: 
 aic.base<-AIC(eg.base)
-aic.thrph<-AIC(thr.pheno[[best.index.phe]])
-aic.thrge<-AIC(thr.geo[[best.index.geo]])
+aic.thrph<-AIC(thr.pheno)
+aic.thrge<-AIC(thr.geo)
 aic.vcph<-AIC(vc.pheno)
 aic.vcgeo<-AIC(vc.geo)
 
@@ -378,12 +386,6 @@ abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.add.temp,select=2,scheme=2,seWithMean=TRUE,too.far=0.025,
      xlab='Longitude',ylab='Latitude',main='Biogeography')
 map("world",fill=T,col="snow4",add=T)
-
-windows(width=12,height=8)
-plot(lv.add.temp,select=4,shade=TRUE,shade.col="skyblue4",
-     seWithMean=TRUE,main='Larval Log(CPer10m2+1), Effect of Temperature',
-     xlab='Temperature (degC)')
-abline(h=0,col='sienna3',lty=2,lwd=2)
 
 windows(width=12,height=8)
 plot(lv.add.temp,select=4,shade=TRUE,shade.col="skyblue4",

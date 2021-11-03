@@ -8,11 +8,11 @@
 
 # Load in data ------------------------------------------------------------
 
-fhsub<-read.csv(file='../Ichthyo Data/Cleaned_Cut_FhEggs.csv',header=TRUE,check.names=TRUE) #for egg GAMs
-fhlarv.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_FhLarv_wCTD.csv',header=TRUE,check.names=TRUE) #for larval GAMs
+fhsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhEggs.csv',header=TRUE,check.names=TRUE) #for egg GAMs
+fhlarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhLarv_wCTD.csv',header=TRUE,check.names=TRUE) #for larval GAMs
 
 ##Load in regional temperature index for March (2 mos before peak egg CPUE in May), for egg GAMs 
-reg.sst<-read.csv('../Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(fhsub)){
@@ -137,11 +137,11 @@ plot(thr.geo,page=1,scale=0,shade=TRUE,shade.col='skyblue3',
 windows(width=12,height=8)
 par(mfrow=c(1,2),oma=c(1,1,1,5))
 plot(thr.geo,select=4,scheme=2,too.far=0.025,
-     main=paste('Below',round(temps.in.fh[best.index.geo.fh],digits=3),'C',sep=" "),
+     main=paste('Below',round(temps.in[best.index.geo],digits=3),'C',sep=" "),
      shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
 plot(thr.geo,select=3,scheme=2,too.far=0.025,
-     main=paste('Above',round(temps.in.fh[best.index.geo.fh],digits=3),'C',sep=" "),
+     main=paste('Above',round(temps.in[best.index.geo],digits=3),'C',sep=" "),
      shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
 gradientLegend(c(0,-5),color=c('red','orange','yellow'),ncol=5,side=4)
@@ -277,15 +277,13 @@ saveRDS(vc.geo,file="../GAM Models/fh_egg_vc_geo.rds")
 
 eg.base<-readRDS("./GAM Models/fh_egg_base.rds")
 thr.pheno<-readRDS("./GAM Models/fh_egg_thr_pheno.rds")
-temps.in.phe<-readRDS("./GAM Models/fh_egg_temps_in_pheno.rds")
+temps.in<-readRDS("./GAM Models/fh_egg_temps_in_pheno.rds") 
+      #these are based off of unique values in regional index, so "temps.in" doesn't change depending on model 
 best.index.phe<-readRDS("./GAM Models/fh_egg_best_index_pheno.rds")
 thr.geo<-readRDS("./GAM Models/fh_egg_thr_geo.rds")
-temps.in.geo<-readRDS("./GAM Models/fh_egg_temps_in_geo.rds")
 best.index.geo<-readRDS("./GAM Models/fh_egg_best_index_geo.rds")
 vc.pheno<-readRDS("./GAM Models/fh_egg_vc_pheno.rds")
 vc.geo<-readRDS("./GAM Models/fh_egg_vc_geo.rds")
-
-temps.in.phe<-readRDS("../GAM Models/fh_egg_temps_in_pheno.rds")
 
 
 # Use Akaike Information Criterion to Check Model Performance -----------

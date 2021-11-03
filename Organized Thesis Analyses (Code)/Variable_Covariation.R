@@ -1,7 +1,11 @@
 
+
+# Model Validation Techniques ---------------------------------------------
+#This script collates methods for testing the validity and robustness of GAM models.  
+
 # Checking Variable Co-variation (Semi-Quantitative) ----------------------
 
-#This script checks the co-variation of all sets of variables included in GAMs for all species. 
+#This section checks the co-variation of all sets of variables included in GAMs for all species. 
 #Though not fully quantitative methods, I plan to utilize these methods and biological understanding of the system 
       #to validate the inclusion of variables within my models. 
 
@@ -108,6 +112,52 @@ corrplot(pk,method="color",title="Pollock",col=col(15),tl.col="black",
          mar=c(1,0,1,1.5))
 corrplot(yf,method="color",title="Yellowfin Sole",col=col(15),tl.col="black",
          mar=c(1,0,1,1.5))
+
+
+
+# Compare Reduction in Mean Square Error  ---------------------------------
+#This section looks at the reduction in MSE that occurs when models vary from the base formulation. 
+#For eggs, variation means flexible phenology and/or geography and regional SST
+#For larvae, variation means the inclusion of in situ temperature and salinity values 
+
+#Flathead Sole:
+var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale
+var.ratio.phe # positive difference of 0.06, meaning egg MSE was slightly larger than thr phenology model 
+
+var.ratio.geo<-(summary(eg.base)$scale-summary(thr.geo)$scale)/summary(eg.base)$scale
+var.ratio.geo # +0.167, larger reduction than thr phenology 
+
+var.ratio.vcp<-(summary(eg.base)$scale-summary(vc.pheno)$scale)/summary(eg.base)$scale
+var.ratio.vcp # +0.045
+
+var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
+var.ratio.vcg # +0.136 #geography models produce largest reduction in MSE
+
+#Yellowfin Sole: 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
