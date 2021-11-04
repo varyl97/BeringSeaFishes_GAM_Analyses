@@ -1,6 +1,7 @@
 ##GAM Predictions 
-
-# Initial Attempts - Code based off of Lorenzo's --------------------------
+#the following code produces predictions and predictive figures based off the best model 
+#for flathead sole, the best model is the threshold geography model wherein spawning geography 
+    #varies differently above and below 2.285*C. 
 
 # Preliminary Data Loading and Formatting ---------------------------------
 
@@ -8,8 +9,8 @@
 fhsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhEggs.csv',header=TRUE,check.names=TRUE) #for egg GAMs
 fhlarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhLarv_wCTD.csv',header=TRUE,check.names=TRUE) #for larval GAMs
 
-reg.SST<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
-head(reg.SST) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
+reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(fhsub)){
   fhsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==fhsub$year[i]]}
@@ -98,7 +99,7 @@ polygon(c(grid.extent2$doy,rev(grid.extent2$doy)),c(grid.extent2$pred.l,rev(grid
         col='steelblue2',lty=0)
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
-# Calculate Differences Due to Different Temperature Regimes --------
+# Calculate Differences Due to Different Temperature Regimes Based on Best Model --------
 #start with threshold geography model to find differences between two predictions to calculate local slopes 
 nlat=120
 nlon=120
@@ -147,12 +148,15 @@ image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lon
            xlim=range(fhsub$lon),ylim=range(fhsub$lat),main='Change in FHS Distribution Due to Temperature',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2,legend.lab=expression("Difference in Log(Catch Per 10m^2+1)"))
 map("worldHires",fill=T,col="burlywood1",add=T)
+
+#now add in the phenology effect from this model: 
+
     
 #now look at changes in the phenology model - using threshold phenology because it has a lower AIC than variable-coefficient phenology model 
-grid.extent<-data.frame('lon'=rep(-155,100),'lat'=rep(52,100),'doy'=seq(min(fhsub$doy),max(fhsub$doy),length=100),
+grid.extent<-data.frame('lon'=rep(-155,100),'lat'=rep(51,100),'doy'=seq(min(fhsub$doy),max(fhsub$doy),length=100),
                         'reg.SST'=rep(mean(fhsub$reg.SST[fhsub$reg.SST<2.285]),100),
                         'bottom_depth'=rep(median(fhsub$bottom_depth,na.rm=TRUE),100),
-                        'th'=rep("TRUE"),100)
+                        'th'=rep("TRUE"),100) #create a data.frame with the same variables as those included in the GAM 
 grid.extent$pred<-predict(thr.pheno,newdata=grid.extent)
 grid.extent$se<-predict(thr.pheno,newdata=grid.extent,se=T)[[2]]
 grid.extent$pred.u<-grid.extent$pred+1.645*grid.extent$se
