@@ -1,4 +1,6 @@
 ##Bering Sea Yellowfin Sole: 
+#the following code loads and cleans the yellowfin sole egg and larval data from ecoFOCI cruises. 
+#at the end of this script are finalized datasets to load in the future. 
 ###CTD Loading: ################################################################
 allctd<-read.csv(file="All_CTD_Data_8302021.csv")
 names(allctd)
@@ -10,8 +12,9 @@ allctd<-allctd[c('Latitude','Longitude','Date','Time','Pressure','Depth',
 allctd$Year<-NA
 allctd$Year<-str_sub(allctd$Date,start=-4) #to get easy year reference
 
-allctd<-allctd[allctd$Temperature<14,]
-allctd<-allctd[allctd$Salinity>29&allctd$Salinity<36,]
+allctd<-allctd[allctd$Temperature<14,] #these 2 lines remove anomalous temp/sal values
+allctd<-allctd[allctd$Salinity>29&allctd$Salinity<36,] #this loads a compilation of all CTD data from ecoFOCI trawls 
+  #ultimately, these data will be matched with larval data for larval biogeography GAMs. 
 
 ###loading data, subsetting and cleaning properly 
 yfeggraw<-read.csv(file='YFSole_Egg_Catch.csv',header=TRUE,check.names=TRUE)

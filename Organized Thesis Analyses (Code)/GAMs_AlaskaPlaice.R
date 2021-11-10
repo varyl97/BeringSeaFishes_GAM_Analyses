@@ -235,19 +235,22 @@ vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
 summary(vc.geo)
 
 ##SAVE AND RELOAD THE MODELS
-saveRDS(eg.base,file="../GAM Models/ap_egg_base.rds")
-saveRDS(thr.pheno,file="../GAM Models/ap_egg_thr_pheno.rds")
-saveRDS(temps.in,file="../GAM Models/ap_egg_temps_in_pheno.rds")
-saveRDS(best.index.phe,file="../GAM Models/ap_egg_best_index_phe.rds")
-saveRDS(thr.geo,file="../GAM Models/ap_egg_thr_geo.rds")
-saveRDS(temps.in,file="../GAM Models/ap_egg_temps_in_geo.rds")
-saveRDS(best.index.geo,file="../GAM Models/ap_egg_best_index_geo.rds")
-saveRDS(vc.pheno,file="../GAM Models/ap_egg_vc_pheno.rds")
-saveRDS(vc.geo,file="../GAM Models/ap_egg_vc_geo.rds")
+saveRDS(eg.base,file="./GAM Models/ap_egg_base.rds")
+saveRDS(thr.pheno,file="./GAM Models/ap_egg_thr_pheno.rds")
+saveRDS(temps.in,file="./GAM Models/ap_egg_temps_in_pheno.rds")
+saveRDS(best.index.phe,file="./GAM Models/ap_egg_best_index_phe.rds")
+saveRDS(thr.geo,file="./GAM Models/ap_egg_thr_geo.rds")
+saveRDS(temps.in,file="./GAM Models/ap_egg_temps_in_geo.rds")
+saveRDS(best.index.geo,file="./GAM Models/ap_egg_best_index_geo.rds")
+saveRDS(vc.pheno,file="./GAM Models/ap_egg_vc_pheno.rds")
+saveRDS(vc.geo,file="./GAM Models/ap_egg_vc_geo.rds")
 
 eg.base<-readRDS("./GAM Models/ap_egg_base.rds")
 thr.pheno<-readRDS("./GAM Models/ap_egg_thr_pheno.rds")
+temps.in<-readRDS("./GAM Models/ap_egg_temps_in_pheno.rds") #same for geo and pheno models 
+best.index.phe<-readRDS("./GAM Models/ap_egg_best_index_phe.rds")
 thr.geo<-readRDS("./GAM Models/ap_egg_thr_geo.rds")
+best.index.geo<-readRDS("./GAM Models/ap_egg_best_index_geo.rds")
 vc.pheno<-readRDS("./GAM Models/ap_egg_vc_pheno.rds")
 vc.geo<-readRDS("./GAM Models/ap_egg_vc_geo.rds")
 

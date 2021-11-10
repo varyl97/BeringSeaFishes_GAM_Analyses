@@ -283,11 +283,14 @@ saveRDS(best.index.geo,file="./GAM Models/pk_egg_best_index_geo.rds")
 saveRDS(vc.pheno,file="./GAM Models/pk_egg_vc_pheno.rds")
 saveRDS(vc.geo,file="./GAM Models/pk_egg_vc_geo.rds")
 
-eg.base<-readRDS("../GAM Models/pk_egg_base.rds")
-thr.pheno<-readRDS("../GAM Models/pk_egg_thr_pheno.rds")
-thr.geo<-readRDS("../GAM Models/pk_egg_thr_geo.rds")
-vc.pheno<-readRDS("../GAM Models/pk_egg_vc_pheno.rds")
-vc.geo<-readRDS("../GAM Models/pk_egg_vc_geo.rds")
+eg.base<-readRDS("./GAM Models/pk_egg_base.rds")
+thr.pheno<-readRDS("./GAM Models/pk_egg_thr_pheno.rds")
+temps.in<-readRDS("./GAM Models/pk_egg_temps_in.rds")
+best.index.phe<-readRDS("./GAM Models/pk_egg_best_index_phe.rds")
+thr.geo<-readRDS("./GAM Models/pk_egg_thr_geo.rds")
+best.index.geo<-readRDS("./GAM Models/pk_egg_best_index_geo.rds")
+vc.pheno<-readRDS("./GAM Models/pk_egg_vc_pheno.rds")
+vc.geo<-readRDS("./GAM Models/pk_egg_vc_geo.rds")
 
 #checking based on AIC: 
 aic.base<-AIC(eg.base)
@@ -512,11 +515,11 @@ saveRDS(lv.add.temp,"../GAM Models/pk_larvae_addtemp.rds")
 saveRDS(lv.temp.sal,"../GAM Models/pk_larvae_addtempsal.rds")
 saveRDS(lv.2d,"../GAM Models/pk_larvae_2d.rds")
 
-lv.base<-readRDS("../GAM Models/pk_larvae_base.rds")
-lv.add.sal<-readRDS("../GAM Models/pk_larvae_addsal.rds")
-lv.add.temp<-readRDS("../GAM Models/pk_larvae_addtemp.rds")
-lv.temp.sal<-readRDS("../GAM Models/pk_larvae_addtempsal.rds")
-lv.2d<-readRDS("../GAM Models/pk_larvae_2d.rds")
+lv.base<-readRDS("./GAM Models/pk_larvae_base.rds")
+lv.add.sal<-readRDS("./GAM Models/pk_larvae_addsal.rds")
+lv.add.temp<-readRDS("./GAM Models/pk_larvae_addtemp.rds")
+lv.temp.sal<-readRDS("./GAM Models/pk_larvae_addtempsal.rds")
+lv.2d<-readRDS("./GAM Models/pk_larvae_2d.rds")
 
 #finding salinity/temperature hotspots 
 viridis<-colorRampPalette(c("#440154FF", "#482173FF", "#433E85FF", "#38598CFF", "#2D708EFF", "#25858EFF", "#1E9B8AFF",

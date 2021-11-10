@@ -6,14 +6,14 @@
 #conditions are likely more relevant to spawning behavior than temperatures in later months. 
 #load egg and larval data: 
 
-yfsub<-read.csv(file='../Ichthyo Data/Cleaned_Cut_YfEggs.csv',header=TRUE,check.names=TRUE)
+yfsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_YfEggs.csv',header=TRUE,check.names=TRUE)
 
-yflarv.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_YfLarv_wCTD.csv',header=TRUE,check.names=TRUE)
+yflarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_YfLarv_wCTD.csv',header=TRUE,check.names=TRUE)
 
 
 ###EGGS: Spawning Behavior 
 ##Load in local and regional temperature index for May (2 mos before peak in egg CPUE in July) 
-reg.sst<-read.csv('../Environmental Data/May_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+reg.sst<-read.csv('./Environmental Data/May_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(yfsub)){
@@ -435,6 +435,19 @@ lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
              s(temperature,salinity),data=yflarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
+
+#Saving and loading models: 
+saveRDS(lv.base,file="./GAM Models/yf_larvae_base.rds")
+saveRDS(lv.add.sal,file="./GAM Models/yf_larvae_addsal.rds")
+saveRDS(lv.add.temp,file="./GAM Models/yf_larvae_addtemp.rds")
+saveRDS(lv.temp.sal,file="./GAM Models/yf_larvae_addtempsal.rds")
+saveRDS(lv.2d,file="./GAM Models/yf_larvae_2d.rds")
+
+lv.base<-readRDS("./GAM Models/yf_larvae_base.rds")
+lv.add.sal<-readRDS("./GAM Models/yf_larvae_addsal.rds")
+lv.add.temp<-readRDS("./GAM Models/yf_larvae_addtemp.rds")
+lv.temp.sal<-readRDS("./GAM Models/yf_larvae_addtempsal.rds")
+lv.2d<-readRDS("./GAM Models/yf_larvae_2d.rds")
 
 #checking based on AIC: 
 aic.base.lv<-AIC(lv.base)
