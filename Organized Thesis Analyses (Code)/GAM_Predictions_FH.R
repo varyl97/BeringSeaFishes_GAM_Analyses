@@ -23,15 +23,22 @@ best.index.phe<-readRDS("./GAM Models/fh_egg_best_index_pheno.rds")
 thr.geo<-readRDS("./GAM Models/fh_egg_thr_geo.rds")
 best.index.geo<-readRDS("./GAM Models/fh_egg_best_index_geo.rds")
 vc.pheno<-readRDS("./GAM Models/fh_egg_vc_pheno.rds")
-vc.geo<-readRDS("./GAM Models/fh_egg_vc_geo.rds")
+vc.geo<-readRDS("./GAM Models/fh_egg_vc_geo.rds") #only using eg.base, thr.pheno, and thr.geo below. 
+
+lv.base<-readRDS("./GAM Models/fh_larv_base.rds")
+lv.add.sal<-readRDS("./GAM Models/fh_larv_addsal.rds")
+lv.add.temp<-readRDS("./GAM Models/fh_larv_addtemp.rds")
+lv.temp.sal<-readRDS("./GAM Models/fh_larv_tempsal.rds")
+lv.2d<-readRDS("./GAM Models/fh_larv_2d.rds") #only using lv.base and lv.2d in this code. 
 
 #get map 
 str_name<-"./Environmental Data/expanded_BS_bathy.tif"
-bathy<-raster(str_name)
+bathy<-raster(str_name) #seems 'bathy' item is best to add to existing plots
 bathy.dat<-as.bathy(bathy)
 #to plot: 
 windows()
-plot.bathy(bathy.dat,image=T,land=F,n=5,drawlabels=T) #note: this works as an argument alone, but can't seem to add this to existing plots 
+plot.bathy(bathy.dat,image=T,land=F,n=5,drawlabels=T)
+
 
 # Visualize on a regular grid ---------------------------------------------
 windowsFonts(A="Times New Roman") #for axes labels and plot titles 
@@ -73,6 +80,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
       xlim=range(fhsub$lon),ylim=range(fhsub$lat),main='Flathead Sole Distribution, Eggs',
       cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2,
       legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 points(fhsub$lon[fhsub$Cper10m2==0],fhsub$lat[fhsub$Cper10m2==0],pch='+',col='white')
 symbols(fhsub$lon[fhsub$Cper10m2>0],
         fhsub$lat[fhsub$Cper10m2>0],
@@ -93,7 +101,7 @@ grid.extent2$pred.l<-grid.extent2$pred-1.96*grid.extent2$se #calculate lower CI
 
 windows(height=15,width=15)
 par(mai=c(1,1,0.5,0.9))
-plot(grid.extent2$doy,grid.extent2$pred,main='Base Phenology',type='l',
+plot(grid.extent2$doy,grid.extent2$pred,main='Flathead Sole Base Phenology, Eggs',type='l',
      ylab=expression(paste("(log(C/(10m"^2,')+1)')),xlab='Day of Year',cex.lab=1,
      cex.axis=1,cex.main=1,cex.axis=0.9,xlim=range(fhsub$doy),
      ylim=range(c(grid.extent2$pred.u,grid.extent2$pred.l)),
@@ -103,7 +111,7 @@ polygon(c(grid.extent2$doy,rev(grid.extent2$doy)),c(grid.extent2$pred.l,rev(grid
 lines(grid.extent2$doy,grid.extent2$pred,col='grey43')
 legend('topleft',legend=c(expression(paste("(log(C/(10m"^2,')+1)')),'95% CI'),
        col=c('grey43','honeydew2'),pch=c(NA,15),lty=c(1,NA),lwd=2,cex=1)
-abline(h=0,col='lightslategray',lty=2,lwd=2)
+abline(h=0,col='grey79',lty=2,lwd=1.5)
 
 #TEMP EFFECT: Calculate Differences Due to Different Temperature Regimes Based on Best Model --------
 #start with threshold geography model to find differences between two predictions to calculate local slopes 
@@ -151,10 +159,11 @@ windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.5))
 image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
            col=hcl.colors(100,"PRGn"),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), #PRGn diverges more clearly, helping interpretation
-           xlim=range(fhsub$lon),ylim=range(fhsub$lat),main='Change in FHS Distribution Due to Temperature',
+           xlim=range(fhsub$lon),ylim=range(fhsub$lat),main='Change in FHS(E) Distribution w Threshold Temperature Effect',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),
-           legend.shrink=0.3) #would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
+           legend.shrink=0.3)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)#would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
 map("worldHires",fill=T,col="seashell2",add=T)
 
 #now add in the Phenology effect from this model (again, using this model because it produced most deviance explained and lowest AIC): 
@@ -188,5 +197,112 @@ polygon(c(grid.extent2$doy,rev(grid.extent2$doy)),c(grid.extent2$pred2.l,rev(gri
 legend('topleft',legend=c(expression(paste(mu, '(<2.285'^0,' C)')),
                               expression(paste(mu,'(>2.285'^0,' C)'))),
        col=c(coolcol,warmcol),pch=c(15,15),lwd=c(2,2),cex=0.8) #legend could be better
+
+#For added information: threshold phenology prediction (this was the best model to explain phenology):
+grid.extent3<-data.frame('lon'=rep(-155,100),'lat'=rep(51,100),'doy'=seq(min(fhsub$doy),max(fhsub$doy),length=100),
+                         'year'=rep(2013,100),'bottom_depth'=rep(median(fhsub$bottom_depth,na.rm=TRUE),100),
+                         'reg.SST'=mean(fhsub$reg.SST[fhsub$reg.SST<2.108]),'th'="TRUE")
+grid.extent3$pred<-predict(thr.pheno,newdata=grid.extent3)
+grid.extent3$se<-predict(thr.pheno,newdata=grid.extent3,se=T)[[2]] #select the standard error value from predictions 
+grid.extent3$pred.u<-grid.extent3$pred+1.645*grid.extent3$se
+grid.extent3$pred.l<-grid.extent3$pred-1.645*grid.extent3$se
+grid.extent3$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST>2.108])
+grid.extent3$th<-"FALSE"
+grid.extent3$pred2<-predict(thr.pheno,newdata=grid.extent3)
+grid.extent3$se2<-predict(thr.pheno,newdata=grid.extent3,se=T)[[2]]
+grid.extent3$pred2.u<-grid.extent3$pred2+1.645*grid.extent3$se2
+grid.extent3$pred2.l<-grid.extent3$pred2-1.645*grid.extent3$se2
+
+warmcol<-adjustcolor('orangered3',alpha.f=0.3)
+coolcol<-adjustcolor('honeydew2',alpha.f=0.8)
+
+windows(width=12,height=12)
+par(mai=c(1,1,0.5,0.5))
+plot(grid.extent3$doy,grid.extent3$pred,main='Change in Phenology Due to Two Threshold Conditions',type='l',
+     ylim=range(c(grid.extent3$pred.u,grid.extent3$pred2.u,grid.extent3$pred.l,grid.extent3$pred2.l)),
+     xlim=range(fhsub$doy),col='black',lwd=2,xlab='Day of the Year',
+     ylab=expression(paste("(log(C/(10m"^2,')+1)')),cex.lab=1,cex.axis=0.9,cex.main=1)
+polygon(c(grid.extent3$doy,rev(grid.extent3$doy)),c(grid.extent3$pred.l,rev(grid.extent3$pred.u)),
+        col=coolcol,lty=0)
+lines(grid.extent3$doy,grid.extent3$pred,col='grey43',lwd=2)
+lines(grid.extent3$doy,grid.extent3$pred2,col='indianred3',lwd=2)
+abline(h=0,col='grey79',lty=2,lwd=1.5)
+polygon(c(grid.extent3$doy,rev(grid.extent3$doy)),c(grid.extent3$pred2.l,rev(grid.extent3$pred2.u)),
+        col=warmcol,lty=0)
+legend('topleft',legend=c(expression(paste(mu, '(<2.108'^0,' C)')),
+                          expression(paste(mu,'(>2.108'^0,' C)')),'90% CI','90% CI'),
+       col=c('grey43','indianred3','honeydew2',warmcol),pch=c(NA,NA,15,15),lwd=c(2,2,NA,NA),cex=0.8) 
+
+
+# Predicting Larval Biogeography  -----------------------------------------
+#attempting to use above code to predict larval biogeography based on the 2D temp,sal model: 
+#using 2006 as the focal year because it has moderate + catches and is ~ in the middle of the time series
+
+#base biogeography: 
+nlat=120
+nlon=120
+latd=seq(min(fhlarv.ctd$lat,na.rm=TRUE),max(fhlarv.ctd$lat,na.rm=TRUE),length.out=nlat)
+lond=seq(min(fhlarv.ctd$lon,na.rm=TRUE),max(fhlarv.ctd$lon,na.rm=TRUE),length.out=nlon)
+
+grid.extent<-expand.grid(lond,latd)
+names(grid.extent)<-c('lon','lat')
+
+grid.extent$dist<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
+                          fhsub$lat,fhsub$lon)
+  grid.extent$dist[k]<-min(dist)
+}
+
+grid.extent$year<-as.numeric(2016)
+grid.extent$doy<-as.numeric(median(fhlarv.ctd$doy,na.rm=TRUE))
+grid.extent$bottom_depth<-NA
+grid.extent$bottom_depth<-as.numeric(median(fhlarv.ctd$bottom_depth,na.rm=TRUE))
+grid.extent$pred<-predict(lv.base,newdata=grid.extent)
+
+
+symcol<-adjustcolor('grey',alpha=0.5)
+
+windows(height=15,width=15)
+par(mai=c(1,1,0.5,0.9))
+image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=range(fhlarv.ctd$lon,na.rm=TRUE),ylim=range(fhlarv.ctd$lat,na.rm=TRUE),main='Flathead Sole Distribution, Larvae',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2,
+           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+points(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2==0],fhlarv.ctd$lat[fhlarv.ctd$Cper10m2==0],pch='+',col='white')
+symbols(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2>0],
+        fhlarv.ctd$lat[fhlarv.ctd$Cper10m2>0],
+        circles=log(fhlarv.ctd$Cper10m2+1)[fhlarv.ctd$Cper10m2>0],
+        inches=0.1,bg=symcol,fg='black',add=T)
+map("worldHires",fill=T,col="seashell2",add=T)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
