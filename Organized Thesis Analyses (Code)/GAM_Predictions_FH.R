@@ -1,7 +1,8 @@
 ##GAM Predictions: Flathead Sole
 #the following code produces predictions and predictive figures based off the best model 
 #for flathead sole, the best model is the threshold geography model wherein spawning geography 
-    #varies differently above and below 2.285*C. 
+    #varies differently above and below 2.285*C. The best phenology model was also the threshold formulation, 
+    #where the threshold temperature was 2.108 *C.  
 
 # Preliminary Data Loading and Formatting ---------------------------------
 
@@ -251,7 +252,7 @@ names(grid.extent)<-c('lon','lat')
 grid.extent$dist<-NA
 for(k in 1:nrow(grid.extent)){
   dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
-                          fhsub$lat,fhsub$lon)
+                          fhlarv.ctd$lat,fhlarv.ctd$lon)
   grid.extent$dist[k]<-min(dist)
 }
 
@@ -294,7 +295,7 @@ names(grid.extent)<-c('lon','lat')
 grid.extent$dist<-NA
 for(k in 1:nrow(grid.extent)){
   dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
-                          fhsub$lat,fhsub$lon)
+                          fhlarv.ctd$lat,fhlarv.ctd$lon)
   grid.extent$dist[k]<-min(dist)
 }
 
@@ -345,7 +346,7 @@ names(grid.extent)<-c('lon','lat')
 grid.extent$dist<-NA
 for(k in 1:nrow(grid.extent)){
   dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
-                          fhsub$lat,fhsub$lon)
+                          fhlarv.ctd$lat,fhlarv.ctd$lon)
   grid.extent$dist[k]<-min(dist)
 }
 
