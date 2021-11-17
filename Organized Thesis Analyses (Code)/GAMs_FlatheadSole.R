@@ -486,11 +486,11 @@ saveRDS(lv.add.temp,file="../GAM Models/fh_larv_addtemp.rds")
 saveRDS(lv.temp.sal,file="../GAM Models/fh_larv_tempsal.rds")
 saveRDS(lv.2d,file="../GAM Models/fh_larv_2d.rds")
 
-lv.base<-readRDS("../GAM Models/fh_larv_base.rds")
-lv.add.sal<-readRDS("../GAM Models/fh_larv_addsal.rds")
-lv.add.temp<-readRDS("../GAM Models/fh_larv_addtemp.rds")
-lv.temp.sal<-readRDS("../GAM Models/fh_larv_tempsal.rds")
-lv.2d<-readRDS("../GAM Models/fh_larv_2d.rds")
+lv.base<-readRDS("./GAM Models/fh_larv_base.rds")
+lv.add.sal<-readRDS("./GAM Models/fh_larv_addsal.rds")
+lv.add.temp<-readRDS("./GAM Models/fh_larv_addtemp.rds")
+lv.temp.sal<-readRDS("./GAM Models/fh_larv_tempsal.rds")
+lv.2d<-readRDS("./GAM Models/fh_larv_2d.rds")
 
 
 # Model Validation by Akaike Information Criterion  -----------------------

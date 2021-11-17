@@ -6,6 +6,7 @@
 #This section checks the co-variation of all sets of variables included in GAMs for all species. 
 #Though not fully quantitative methods, I plan to utilize these methods and biological understanding of the system 
       #to validate the inclusion of variables within my models. 
+#This code also is not complete. Not all study species are included (but will be eventually). 
 
 library(corrplot)
 
@@ -112,7 +113,6 @@ corrplot(yf,method="color",title="Yellowfin Sole",col=col(15),tl.col="black",
          mar=c(1,0,1,1.5))
 
 
-
 # Compare Reduction in Mean Square Error  ---------------------------------
 #This section looks at the reduction in MSE that occurs when models vary from the base formulation. 
 #For eggs, variation means flexible phenology and/or geography and regional SST
@@ -130,6 +130,9 @@ var.ratio.vcp # +0.045
 
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
 var.ratio.vcg # +0.136 #geography models produce largest reduction in MSE
+
+lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
+lv.2d.chg
 
 #Alaska Plaice: 
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale

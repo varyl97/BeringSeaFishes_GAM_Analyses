@@ -232,7 +232,7 @@ legend('bottomright',legend=c(expression(paste(mu, '(<2.009'^0,' C)')),
 
 # Predicting Larval Biogeography  -----------------------------------------
 #attempting to use above code to predict larval biogeography based on the 2D temp,sal model: 
-#using 2006 as the focal year because it has moderate + catches and is ~ in the middle of the time series
+#using 2009 as the focal year because it has moderate + catches and is ~ in the middle of the time series
 
 #base biogeography: 
 nlat=120
@@ -372,17 +372,17 @@ nsal<-100
 tempd<-seq(min(pklarv.ctd$temperature,na.rm=TRUE),max(pklarv.ctd$temperature,na.rm=TRUE),length.out=ntemp)
 sald<-seq(min(pklarv.ctd$salinity,na.rm=T),max(pklarv.ctd$salinity,na.rm=T),length.out=nsal)
 
-grid.extent<-expand.grid(tempd,sald)
-names(grid.extent)<-c('temperature','salinity')
+grid.extent<-expand.grid(sald,tempd)
+names(grid.extent)<-c('salinity','temperature')
 
 grid.extent$dist<-NA
 for(k in 1:nrow(grid.extent)){
-  dist<-distance.function(grid.extent$temperature[k],grid.extent$salinity[k],
-                          pklarv.ctd$temperature,pklarv.ctd$salinity)
+  dist<-distance.function(grid.extent$salinity[k],grid.extent$temperature[k],
+                          pklarv.ctd$salinity,pklarv.ctd$temperature)
   grid.extent$dist[k]<-min(dist)
 }
 
-grid.extent$year<-as.numeric(2009)
+grid.extent$year<-as.numeric(2005)
 grid.extent$lon<-as.numeric(median(pklarv.ctd$lon))
 grid.extent$lat<-as.numeric(median(pklarv.ctd$lat))
 grid.extent$doy<-as.numeric(median(pklarv.ctd$doy,na.rm=TRUE))
@@ -393,10 +393,10 @@ grid.extent$pred[grid.extent$dist>15000]<-NA #check this
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
-image.plot(tempd,sald,t(matrix(grid.extent$pred,nrow=length(sald),ncol=length(tempd),byrow=T)),
-           col=hcl.colors(100,"PRGn"),ylab='Salinity (psu)',
-           xlab=expression(paste("Temperature ("^0, 'C)')),
-           xlim=range(pklarv.ctd$temperature,na.rm=T),ylim=range(pklarv.ctd$salinity,na.rm=T),
+image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
+           col=hcl.colors(100,"PRGn"),xlab='Salinity (psu)',
+           ylab=expression(paste("Temperature ("^0, 'C)')),
+           xlim=range(pklarv.ctd$salinity,na.rm=T),ylim=range(pklarv.ctd$temperature,na.rm=T),
            main='Larval Biogeography By Temperature and Salinity',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.8,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)

@@ -10,7 +10,7 @@
 yfsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_YfEggs.csv',header=TRUE,check.names=TRUE) #for egg GAMs
 yflarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_YfLarv_wCTD.csv',header=TRUE,check.names=TRUE) #for larval GAMs
 
-reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+reg.sst<-read.csv('./Environmental Data/May_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(yfsub)){
@@ -154,7 +154,7 @@ par(mai=c(1,1,0.5,0.5))
 image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
            col=hcl.colors(100,"PRGn"),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), #PRGn diverges more clearly, helping interpretation
            xlim=range(yfsub$lon),ylim=range(yfsub$lat),main='Change in YFS(e) Distribution w Threshold Temperature Effect',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2,
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.4,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),
            legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)#would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
@@ -194,7 +194,7 @@ legend('topleft',legend=c(expression(paste(mu, '(<4.143'^0,' C)')),
 
 #For added information: threshold phenology prediction (this was the best model to explain phenology):
 grid.extent3<-data.frame('lon'=rep(-155,100),'lat'=rep(51,100),'doy'=seq(min(yfsub$doy),max(yfsub$doy),length=100),
-                         'year'=rep(2008,100),'bottom_depth'=rep(median(yfsub$bottom_depth,na.rm=TRUE),100),
+                         'year'=rep(2002,100),'bottom_depth'=rep(median(yfsub$bottom_depth,na.rm=TRUE),100),
                          'reg.SST'=mean(yfsub$reg.SST[yfsub$reg.SST<4.175]),'th'="TRUE")
 grid.extent3$pred<-predict(thr.pheno,newdata=grid.extent3)
 grid.extent3$se<-predict(thr.pheno,newdata=grid.extent3,se=T)[[2]] #select the standard error value from predictions 
@@ -248,7 +248,7 @@ for(k in 1:nrow(grid.extent)){
   grid.extent$dist[k]<-min(dist)
 }
 
-grid.extent$year<-as.numeric(2009)
+grid.extent$year<-as.numeric(2008)
 grid.extent$doy<-as.numeric(median(yflarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(yflarv.ctd$bottom_depth,na.rm=TRUE))
@@ -291,7 +291,7 @@ for(k in 1:nrow(grid.extent)){
   grid.extent$dist[k]<-min(dist)
 }
 
-grid.extent$year<-as.numeric(2009)
+grid.extent$year<-as.numeric(2008)
 grid.extent$doy<-as.numeric(median(yflarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(yflarv.ctd$bottom_depth,na.rm=TRUE))
@@ -342,7 +342,7 @@ for(k in 1:nrow(grid.extent)){
   grid.extent$dist[k]<-min(dist)
 }
 
-grid.extent$year<-as.numeric(2009)
+grid.extent$year<-as.numeric(2008)
 grid.extent$doy<-as.numeric(median(yflarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(yflarv.ctd$bottom_depth,na.rm=TRUE))
@@ -358,7 +358,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(yflarv.ctd$lon,na.rm=TRUE),ylim=range(yflarv.ctd$lat,na.rm=TRUE),
            main='Predicted Larval Biogeography, 2D Model',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.8,
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.5,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
@@ -370,17 +370,17 @@ nsal<-100
 tempd<-seq(min(yflarv.ctd$temperature,na.rm=TRUE),max(yflarv.ctd$temperature,na.rm=TRUE),length.out=ntemp)
 sald<-seq(min(yflarv.ctd$salinity,na.rm=T),max(yflarv.ctd$salinity,na.rm=T),length.out=nsal)
 
-grid.extent<-expand.grid(tempd,sald)
-names(grid.extent)<-c('temperature','salinity')
+grid.extent<-expand.grid(sald,tempd)
+names(grid.extent)<-c('salinity','temperature')
 
 grid.extent$dist<-NA
 for(k in 1:nrow(grid.extent)){
-  dist<-distance.function(grid.extent$temperature[k],grid.extent$salinity[k],
-                          yflarv.ctd$temperature,yflarv.ctd$salinity)
+  dist<-distance.function(grid.extent$salinity[k],grid.extent$temperature[k],
+                          yflarv.ctd$salinity,yflarv.ctd$temperature)
   grid.extent$dist[k]<-min(dist)
 }
 
-grid.extent$year<-as.numeric(2009)
+grid.extent$year<-as.numeric(2005)
 grid.extent$lon<-as.numeric(median(yflarv.ctd$lon))
 grid.extent$lat<-as.numeric(median(yflarv.ctd$lat))
 grid.extent$doy<-as.numeric(median(yflarv.ctd$doy,na.rm=TRUE))
@@ -391,10 +391,11 @@ grid.extent$pred[grid.extent$dist>15000]<-NA #check this
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
-image.plot(tempd,sald,t(matrix(grid.extent$pred,nrow=length(sald),ncol=length(tempd),byrow=T)),
-           col=hcl.colors(100,"PRGn"),ylab='Salinity (psu)',
-           xlab=expression(paste("Temperature ("^0, 'C)')),
-           xlim=range(yflarv.ctd$temperature,na.rm=T),ylim=range(yflarv.ctd$salinity,na.rm=T),
+image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
+           col=hcl.colors(100,"PRGn"),xlab='Salinity (psu)',
+           ylab=expression(paste("Temperature ("^0, 'C)')),
+           xlim=range(yflarv.ctd$salinity,na.rm=T),ylim=range(yflarv.ctd$temperature,na.rm=T),
            main='Larval Biogeography By Temperature and Salinity',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.8,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+
