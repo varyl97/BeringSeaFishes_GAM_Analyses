@@ -97,8 +97,8 @@ grid.extent2<-data.frame('lon'=rep(-155,100),
                          'year'=rep(2013,100),'bottom_depth'=rep(median(fhsub$bottom_depth,na.rm=TRUE),100))#setting up another clean grid on which to predict
 grid.extent2$pred<-predict(eg.base,newdata=grid.extent2)
 grid.extent2$se<-predict(eg.base,newdata=grid.extent2,se=T)[[2]] #select the standard error 
-grid.extent2$pred.u<-grid.extent2$pred+1.96*grid.extent2$se #calculate upper confidence interval (95% CI)
-grid.extent2$pred.l<-grid.extent2$pred-1.96*grid.extent2$se #calculate lower CI 
+grid.extent2$pred.u<-grid.extent2$pred+(1.645*grid.extent2$se) #calculate upper confidence interval (95% CI)
+grid.extent2$pred.l<-grid.extent2$pred-(1.645*grid.extent2$se) #calculate lower CI 
 
 
 windows(height=15,width=15)
@@ -107,12 +107,12 @@ plot(grid.extent2$doy,grid.extent2$pred,main='Flathead Sole Base Phenology, Eggs
      ylab=expression(paste("(log(C/(10m"^2,')+1)')),xlab='Day of Year',cex.lab=1,
      cex.axis=1,cex.main=1,cex.axis=0.9,xlim=range(fhsub$doy),
      ylim=range(c(grid.extent2$pred.u,grid.extent2$pred.l)),
-     col='honeydew2',lwd=2)
+     col='grey1',lwd=2)
 polygon(c(grid.extent2$doy,rev(grid.extent2$doy)),c(grid.extent2$pred.l,rev(grid.extent2$pred.u)),
-        col='honeydew2',lty=0)
-lines(grid.extent2$doy,grid.extent2$pred,col='grey43')
+        col='azure3',lty=0)
+lines(grid.extent2$doy,grid.extent2$pred,col='grey1')
 legend('topleft',legend=c(expression(paste("(log(C/(10m"^2,')+1)')),'95% CI'),
-       col=c('grey43','honeydew2'),pch=c(NA,15),lty=c(1,NA),lwd=2,cex=1)
+       col=c('grey1','azure3'),pch=c(NA,15),lty=c(1,NA),lwd=2,cex=1)
 abline(h=0,col='grey79',lty=2,lwd=1.5)
 
 #TEMP EFFECT: Calculate Differences Due to Different Temperature Regimes Based on Best Model --------
