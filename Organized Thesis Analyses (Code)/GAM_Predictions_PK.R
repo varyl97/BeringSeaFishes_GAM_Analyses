@@ -85,6 +85,13 @@ symbols(pksub$lon[pksub$Cper10m2>0],
         inches=0.1,bg=symcol,fg='black',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
 
+#with base graphics: 
+windows()
+par(mai=c(1,1,0.5,0.5))
+plot(eg.base,select=2,main='Walleye Pollock Base Phenology, Eggs',
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 27.407)',ylim=c(-2,1))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+
 # Plot Base Phenology Model -----------------------------------------------
 grid.extent2<-data.frame('lon'=rep(-155,100),
                          'lat'=rep(51,100),'doy'=seq(min(pksub$doy),max(pksub$doy),length=100),
@@ -163,36 +170,26 @@ contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)#would prefer to h
 map("worldHires",fill=T,col="seashell2",add=T)
 
 #now add in the Phenology effect from this model (again, using this model because it produced most deviance explained and lowest AIC): 
-grid.extent2<-data.frame('lon'=rep(-155,100),'lat'=rep(51,100),'doy'=seq(min(pksub$doy),max(pksub$doy),length=100),
-                         'year'=rep(2008,100),'bottom_depth'=rep(median(pksub$bottom_depth,na.rm=TRUE),100),
-                         'reg.SST'=mean(pksub$reg.SST[pksub$reg.SST<2.048]),'th'="TRUE")
-grid.extent2$pred<-predict(thr.geo,newdata=grid.extent2)
-grid.extent2$se<-predict(thr.geo,newdata=grid.extent2,se=T)[[2]] #select the standard error value from predictions 
-grid.extent2$pred.u<-grid.extent2$pred+1.645*grid.extent2$se
-grid.extent2$pred.l<-grid.extent2$pred-1.645*grid.extent2$se
-grid.extent2$reg.SST<-mean(pksub$reg.SST[pksub$reg.SST>2.048])
-grid.extent2$th<-"FALSE"
-grid.extent2$pred2<-predict(thr.geo,newdata=grid.extent2)
-grid.extent2$se2<-predict(thr.geo,newdata=grid.extent2,se=T)[[2]]
-grid.extent2$pred2.u<-grid.extent2$pred2+1.645*grid.extent2$se2
-grid.extent2$pred2.l<-grid.extent2$pred2-1.645*grid.extent2$se2
+#using base graphics here, no need to overlay anything
+windows()
+par(mai=c(1,1,0.5,0.5))
+plot(thr.geo,select=1,main='Walleye Pollock Threshold Geo Phenology, Eggs',
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 7.137)',ylim=c(-2,1))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 
-warmcol<-adjustcolor('orangered3',alpha.f=0.3)
-coolcol<-adjustcolor('honeydew2',alpha.f=0.8)
 
-plot(grid.extent2$doy,grid.extent2$pred,main='Change in Phenology Due to Two Threshold Conditions',type='l',
-     ylim=range(c(grid.extent2$pred.u,grid.extent2$pred2.u,grid.extent2$pred.l,grid.extent2$pred2.l)),
-     xlim=range(pksub$doy),col='black',lwd=2,xlab='Day of the Year',
-     ylab=expression(paste("(log(C/(10m"^2,')+1)')),cex.lab=1,cex.axis=0.9,cex.main=1)
-polygon(c(grid.extent2$doy,rev(grid.extent2$doy)),c(grid.extent2$pred.l,rev(grid.extent2$pred.u)),
-        col=coolcol,lty=0)
-lines(grid.extent2$doy,grid.extent2$pred,col='grey43',lwd=2)
-lines(grid.extent2$doy,grid.extent2$pred2,col='indianred3',lwd=2)
-polygon(c(grid.extent2$doy,rev(grid.extent2$doy)),c(grid.extent2$pred2.l,rev(grid.extent2$pred2.u)),
-        col=warmcol,lty=0)
-legend('topleft',legend=c(expression(paste(mu, '(<2.048'^0,' C)')),
-                          expression(paste(mu,'(>2.048'^0,' C)'))),
-       col=c(coolcol,warmcol),pch=c(15,15),lwd=c(2,2),cex=0.8) #legend could be better
+#plot the two phenology smooths together, one from the base model and one from the threshold geography model to see the temp effect: 
+col<-adjustcolor('tomato4',alpha.f=0.3)
+
+windows()
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(eg.base,select=2,main='Walleye Pollock Phenology, Eggs',seWithMean=TRUE,
+     ylim=c(-2,1))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(thr.geo,select=1,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-2,1))
+legend('topright',legend=c('Base','Threshold Geography'),col=c(NA,col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 
 #For added information: threshold phenology prediction (this was the best model to explain phenology):
 grid.extent3<-data.frame('lon'=rep(-155,100),'lat'=rep(51,100),'doy'=seq(min(pksub$doy),max(pksub$doy),length=100),
