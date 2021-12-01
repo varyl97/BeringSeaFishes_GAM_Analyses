@@ -147,10 +147,12 @@ var.ratio.vcp # +0.022
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
 var.ratio.vcg # +0.135 #geography models produce largest reduction in MSE
 
-AIC(eg.base)-AIC(thr.geo) #note change in AIC score
+AIC(eg.base)-AIC(thr.geo) #note change in AIC score - 463.75
 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
-lv.2d.chg
+lv.2d.chg #0.151
+
+AIC(lv.base)-AIC(lv.2d) #403.40
 
 #Walleye Pollock: 
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale

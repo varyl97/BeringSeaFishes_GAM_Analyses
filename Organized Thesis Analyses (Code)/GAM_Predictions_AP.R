@@ -36,10 +36,6 @@ lv.2d<-readRDS("./GAM Models/ap_larval_2d.rds") #only using lv.base and lv.2d in
 str_name<-"./Environmental Data/expanded_BS_bathy.tif"
 bathy<-raster(str_name)
 
-#get map 
-str_name<-"./Environmental Data/expanded_BS_bathy.tif"
-bathy<-raster(str_name)
-
 # Visualize on a regular grid ---------------------------------------------
 windowsFonts(A="Times New Roman") #for axes labels and plot titles, eventually
 
