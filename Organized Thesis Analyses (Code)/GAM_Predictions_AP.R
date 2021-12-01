@@ -113,7 +113,7 @@ abline(h=0,col='grey79',lty=2,lwd=1.5)
 windows()
 par(mai=c(1,1,0.5,0.5))
 plot(eg.base,select=2,main='Alaska Plaice Base Phenology, Eggs',
-     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 8.232)',ylim=c(-1.5,1))
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 8.232)',ylim=c(-2.5,1))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 
 #TEMP EFFECT: Calculate Differences Due to Different Temperature Regimes Based on Best Model --------
@@ -163,7 +163,7 @@ par(mai=c(1,1,0.5,0.5))
 image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
            col=hcl.colors(100,"PRGn"),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), #PRGn diverges more clearly, helping interpretation
            xlim=range(apsub$lon),ylim=range(apsub$lat),main='Change in AP(E) Distribution w Threshold Temperature Effect',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2,
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),
            legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)#would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
@@ -174,7 +174,7 @@ map("worldHires",fill=T,col="seashell2",add=T)
 windows()
 par(mai=c(1,1,0.5,0.5))
 plot(thr.geo,select=1,main='Alaska Plaice Threshold Geo Phenology, Eggs',
-     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 6.28)',ylim=c(-1.5,1))
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 8.240)',ylim=c(-2.5,1))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 
 #plot the two phenology smooths together, one from the base model and one from the threshold geography model to see the temp effect: 
@@ -183,11 +183,11 @@ col<-adjustcolor('tomato4',alpha.f=0.3)
 windows()
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
 plot(eg.base,select=2,main='Alaska Plaice Phenology, Eggs',seWithMean=TRUE,
-     ylim=c(-1.5,1))
+     ylim=c(-2.5,1))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
-plot(thr.geo,select=1,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-1.5,1))
-legend('topright',legend=c('Base','Threshold Geography'),col=c(NA,col),lwd=c(2,2),cex=0.8)
+plot(thr.geo,select=1,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-2.5,1))
+legend('topleft',legend=c('Base','Threshold Geography'),col=c(NA,col),lwd=c(2,2),cex=0.8)
 mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 
 #For added information: threshold phenology prediction (this was the best model to explain phenology):
