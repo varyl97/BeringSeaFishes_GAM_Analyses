@@ -6,13 +6,13 @@
 #conditions are likely more relevant to spawning behavior than temperatures in later months. 
 #load egg and larval data: 
 
-apsub<-read.csv(file='../Ichthyo Data/Cleaned_Cut_ApEggs.csv',header=TRUE,check.names=TRUE)
+apsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApEggs.csv',header=TRUE,check.names=TRUE)
 
-aplarv.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_ApLarv_wCTD.csv',header=TRUE,check.names=TRUE)
+aplarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApLarv_wCTD.csv',header=TRUE,check.names=TRUE)
 
 ##Load in local and regional temperature index for March (2 mos before egg peak in May)
 
-reg.sst<-read.csv('../Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
+reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(apsub)){
@@ -26,7 +26,7 @@ summary(eg.base)
 
 windows(width=12,height=8)
 plot(eg.base,shade=TRUE,shade.col='skyblue3',page=1,
-     seWithMean=TRUE,scale=0)
+     seWithMean=TRUE,scheme=2,scale=0)
 
 windows(width=12,height=8)
 par(mfrow=c(1,2))
@@ -69,14 +69,18 @@ windows(width=12,height=8)
 plot(thr.pheno,shade=TRUE,shade.col='skyblue3',page=1,
      seWithMean=TRUE,scale=0)
 
-windows(width=12,height=8)
-par(mfrow=c(1,2))
-plot(thr.pheno,select=4,main=paste('Below',temps.in[best.index.phe],sep=" "),
-     shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
-abline(h=0,col='sienna3',lty=2,lwd=2)
-plot(thr.pheno,select=3,main=paste('Above',temps.in[best.index.phe],sep=" "),
-     shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
-abline(h=0,col='sienna3',lty=2,lwd=2)
+
+col<-adjustcolor('tomato4',alpha.f=0.3)
+
+windows()
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(thr.pheno,select=4,main='Alaska Plaice Phenology, Eggs',seWithMean=TRUE,
+     ylim=c(-4.2,2))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-4.2,2))
+legend('topright',legend=c('Below','Above'),col=c(NA,col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 
 windows()
 par(mfrow=c(2,2))
@@ -110,7 +114,7 @@ abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
 summary(thr.geo)
 
 windows(width=12,height=8)
-plot(thr.geo,page=1,scale=0,shade=TRUE,shade.col='skyblue3',
+plot(thr.geo,page=1,scale=0,scheme=2,shade=TRUE,shade.col='skyblue3',
      seWithMean=TRUE)
 
 windows(width=12,height=8)
@@ -139,16 +143,19 @@ plot(vc.pheno,shade=TRUE,shade.col='skyblue3',
      page=1,scale=0,main='V-C Temp Flexible Phenology, ap Eggs',
      seWithMean=TRUE)
 
-windows(width=16,height=8)
-par(mfrow=c(1,2))
-plot(vc.pheno,select=2,shade=TRUE,shade.col='skyblue3',
-     main='V-C Regional Temp, Flexible Phenology',xlab='Day of Year',
-     seWithMean=TRUE)
-abline(h=0,col='sienna3',lty=2,lwd=2)
-plot(vc.pheno,select=4,shade=TRUE,shade.col='skyblue3',
-     main='V-C Reg. Temp, Deviation from Avg. Pheno Variation',
-     xlab='Day of Year',seWithMean=TRUE)
-abline(h=0,col='sienna3',lty=2,lwd=2)
+col<-adjustcolor('tomato4',alpha.f=0.3)
+
+windows()
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(vc.pheno,select=2,main='Alaska Plaice VC Phenology, Eggs',seWithMean=TRUE,
+     ylim=c(-25,11))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(vc.pheno,select=4,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-25,11))
+legend('topright',legend=c('Flexible Phenology Smooth','Deviation from Avg.Phenology'),
+       col=c(NA,col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
+
 
 windows()
 par(mfrow=c(2,2))
@@ -256,8 +263,8 @@ vc.geo<-readRDS("./GAM Models/ap_egg_vc_geo.rds")
 
 #checking based on AIC: 
 aic.base<-AIC(eg.base)
-aic.thrph<-AIC(thr.pheno[[best.index.phe]])
-aic.thrge<-AIC(thr.geo[[best.index.geo]])
+aic.thrph<-AIC(thr.pheno)
+aic.thrge<-AIC(thr.geo)
 aic.vcph<-AIC(vc.pheno)
 aic.vcgeo<-AIC(vc.geo)
 
@@ -272,7 +279,7 @@ plot(c(1:5),aic.apegg$AIC_value,main='AIC Results for ap Egg Models',
      pch=19,cex=2,ylab='AIC Value',xlab='')
 grid(nx=5,ny=14,col="lightgray")
 text(c(1:5),aic.apegg$AIC_value,labels=round(aic.apegg$AIC_value),pos=c(4,3,3,2,2))
-legend("bottomright",legend=c('Base','Threshold Pheno','Threshold Geo',
+legend("bottomleft",legend=c('Base','Threshold Pheno','Threshold Geo',
                              'VC Pheno','VC Geo'),
        col=c( "#482173FF", "#38598CFF","#1E9B8AFF", "#51C56AFF","#FDE725FF"),
        lwd=3,lty=1)
@@ -377,7 +384,7 @@ abline(h=0,col='sienna3',lty=2,lwd=2)
 
 ##2D Smooth with temp and sal: 
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
-             s(temperature,salinity),data=aplarv.ctd,family=tw(link='log'),
+             s(salinity,temperature),data=aplarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
 
@@ -398,7 +405,7 @@ map("world",fill=T,col="snow4",add=T)
 windows()
 plot(lv.2d,select=4,scheme=2,main='Larval Log Presence, 2D Temp and Sal Effect',
      too.far=0.025,
-     xlab='Temperature (degC)',ylab='Salinity (psu)')
+     xlab='Salinity (psu)',ylab='Temperature (degC)')
 
 #all larval models in one place: 
 lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
@@ -430,11 +437,11 @@ lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
 summary(lv.2d)
 
 #SAVE LARVAL MODELS: 
-saveRDS(lv.base,file="../GAM Models/ap_larval_base.rds")
-saveRDS(lv.add.sal,file="../GAM Models/ap_larval_addsal.rds")
-saveRDS(lv.add.temp,file="../GAM Models/ap_larval_addtemp.rds")
-saveRDS(lv.temp.sal,file="../GAM Models/ap_larval_addtempsal.rds")
-saveRDS(lv.2d,file="../GAM Models/ap_larval_2d.rds")
+saveRDS(lv.base,file="./GAM Models/ap_larval_base.rds")
+saveRDS(lv.add.sal,file="./GAM Models/ap_larval_addsal.rds")
+saveRDS(lv.add.temp,file="./GAM Models/ap_larval_addtemp.rds")
+saveRDS(lv.temp.sal,file="./GAM Models/ap_larval_addtempsal.rds")
+saveRDS(lv.2d,file="./GAM Models/ap_larval_2d.rds")
 
 #checking based on AIC: 
 aic.base.lv<-AIC(lv.base)

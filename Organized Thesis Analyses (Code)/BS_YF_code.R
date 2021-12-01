@@ -180,16 +180,25 @@ yflarv.ctd$date_diff<-difftime(yflarv.ctd$date,yflarv.ctd$CTD_date,units="hour")
 yflarv.ctd<-yflarv.ctd[which(yflarv.ctd$date_diff>(-6)&yflarv.ctd$date_diff<6),]
 dim(yflarv.ctd) #2565
 
-write.csv(yfsub,'Cleaned_Cut_YfEggs.csv')
-write.csv(yfsub.ctd,'Cleaned_Cut_YfEggs_wCTD.csv')
-write.csv(yflarv,'Cleaned_Cut_YfLarv.csv')
-write.csv(yflarv.ctd,'Cleaned_Cut_YfLarv_wCTD.csv')
+#Further trim based on depth and latitude, based on biology
+#Yellowfin sole are coastal spawners, so eggs are restricted to less than 175m
+#Larvae are then transported inshore to nursery areas, so larvae restricted to less than 175m
+#YFS eggs and larvae are rarely observed north of 61dN, so restricted data to latitudes below 
+yfsub<-subset(yfsub,bottom_depth<176&lat<62)
+yfsub.ctd<-subset(yfsub.ctd,bottom_depth<176&lat<62)
+yflarv<-subset(yflarv,bottom_depth<176)
+yflarv.ctd<-subset(yflarv.ctd,bottom_depth<176)
+
+write.csv(yfsub,'./Ichthyo Data/Cleaned_Cut_YfEggs.csv')
+write.csv(yfsub.ctd,'./Ichthyo Data/Cleaned_Cut_YfEggs_wCTD.csv')
+write.csv(yflarv,'./Ichthyo Data/Cleaned_Cut_YfLarv.csv')
+write.csv(yflarv.ctd,'./Ichthyo Data/Cleaned_Cut_YfLarv_wCTD.csv')
 
 
 ###to avoid doing all the above gymnastics: 
-yfsub<-read.csv(file='../Ichthyo Data/Cleaned_Cut_YfEggs.csv',header=TRUE,check.names=TRUE)
-yfsub.ctd<-read.csv(file='../Ichthyo Data/Cleaned_Cut_YfEggs_wCTD.csv',header=TRUE,check.names=TRUE)
-yflarv<-read.csv(file='../Ichthyo Data/Cleaned_Cut_YfLarv.csv',header=TRUE,check.names=TRUE)
+yfsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_YfEggs.csv',header=TRUE,check.names=TRUE)
+yfsub.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_YfEggs_wCTD.csv',header=TRUE,check.names=TRUE)
+yflarv<-read.csv(file='./Ichthyo Data/Cleaned_Cut_YfLarv.csv',header=TRUE,check.names=TRUE)
 yflarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_YfLarv_wCTD.csv',header=TRUE,check.names=TRUE)
 
 

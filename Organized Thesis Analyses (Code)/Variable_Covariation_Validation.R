@@ -136,16 +136,18 @@ lv.2d.chg
 
 #Alaska Plaice: 
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale
-var.ratio.phe # positive difference of 0.03, meaning egg MSE was slightly larger than thr phenology model 
+var.ratio.phe # positive difference of 0.035, meaning egg MSE was slightly larger than thr phenology model 
 
 var.ratio.geo<-(summary(eg.base)$scale-summary(thr.geo)$scale)/summary(eg.base)$scale
-var.ratio.geo # +0.104, larger reduction than thr phenology 
+var.ratio.geo # +0.149, larger reduction than thr phenology 
 
 var.ratio.vcp<-(summary(eg.base)$scale-summary(vc.pheno)$scale)/summary(eg.base)$scale
-var.ratio.vcp # +0.003
+var.ratio.vcp # +0.022
 
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
-var.ratio.vcg # +0.102 #geography models produce largest reduction in MSE
+var.ratio.vcg # +0.135 #geography models produce largest reduction in MSE
+
+AIC(eg.base)-AIC(thr.geo) #note change in AIC score
 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
 lv.2d.chg
@@ -168,19 +170,22 @@ lv.2d.chg
 
 #Yellowfin Sole: 
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale
-var.ratio.phe # positive difference of 0.103, meaning egg MSE was slightly larger than thr phenology model 
+var.ratio.phe # positive difference of 0.111, meaning egg MSE was slightly larger than thr phenology model 
 
 var.ratio.geo<-(summary(eg.base)$scale-summary(thr.geo)$scale)/summary(eg.base)$scale
-var.ratio.geo # +0.093, larger reduction than thr phenology 
+var.ratio.geo # +0.086, larger reduction than thr phenology 
 
 var.ratio.vcp<-(summary(eg.base)$scale-summary(vc.pheno)$scale)/summary(eg.base)$scale
-var.ratio.vcp # +0.049
+var.ratio.vcp # +0.042
 
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
-var.ratio.vcg # +0.041 #geography models produce largest reduction in MSE
+var.ratio.vcg # +0.032 #geography models produce largest reduction in MSE
 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
-lv.2d.chg # + 0.176
+lv.2d.chg # + 0.194
+
+AIC(eg.base)-AIC(thr.pheno) #507.03
+AIC(lv.base)-AIC(lv.2d) #596.00
 
 #Pacific Cod (larvae only): 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale

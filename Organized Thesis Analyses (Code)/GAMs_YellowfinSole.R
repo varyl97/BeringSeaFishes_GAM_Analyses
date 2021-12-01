@@ -19,7 +19,6 @@ head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 for(i in 1:nrow(yfsub)){
   yfsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==yfsub$year[i]]}
 
-yfsub<-yfsub[yfsub$lat<60.5,] #helps clarify results by trimming to most sampled area
 
 #base: 
 eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
@@ -73,14 +72,17 @@ windows(width=12,height=8)
 plot(thr.pheno,shade=TRUE,shade.col='skyblue3',page=1,
      seWithMean=TRUE,scale=0)
 
-windows(width=12,height=8)
-par(mfrow=c(1,2))
-plot(thr.pheno,select=4,main=paste('Below',round(temps.in[best.index.phe],digits=3),sep=" "),
-     shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
-abline(h=0,col='sienna3',lty=2,lwd=2)
-plot(thr.pheno,select=3,main=paste('Above',round(temps.in[best.index.phe],digits=3),sep=" "),
-     shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
-abline(h=0,col='sienna3',lty=2,lwd=2)
+col<-adjustcolor('tomato4',alpha.f=0.3)
+
+windows()
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(thr.pheno,select=4,main='Yellowfin Sole Phenology, Eggs',seWithMean=TRUE,
+     ylim=c(-3.5,3.5))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-3.5,3.5))
+legend('topright',legend=c('Below','Above'),col=c(NA,col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 
 windows()
 par(mfrow=c(2,2))
@@ -117,10 +119,6 @@ windows(width=12,height=8)
 plot(thr.geo,page=1,scale=0,shade=TRUE,shade.col='skyblue3',
      seWithMean=TRUE)
 
-vis.gam(eg.base,view=c("lon","lat"),too.far=0.025,
-        color="heat",plot.type="contour",n.grid=20,
-        main='Geographic Linear Predictor (vis.gam), Base Egg')
-
 windows(width=12,height=8)
 par(mfrow=c(1,2))
 plot(thr.geo,select=4,scheme=2,too.far=0.025,
@@ -147,16 +145,18 @@ plot(vc.pheno,shade=TRUE,shade.col='skyblue3',
      page=1,scale=0,main='V-C Temp Flexible Phenology, yf Eggs',
      seWithMean=TRUE)
 
-windows(width=16,height=8)
-par(mfrow=c(1,2))
-plot(vc.pheno,select=2,shade=TRUE,shade.col='skyblue3',
-     main='V-C Regional Temp, Flexible Phenology',xlab='Day of Year',
-     seWithMean=TRUE)
-abline(h=0,col='sienna3',lty=2,lwd=2)
-plot(vc.pheno,select=4,shade=TRUE,shade.col='skyblue3',
-     main='V-C Reg. Temp, Deviation from Avg. Pheno Variation',
-     xlab='Day of Year',seWithMean=TRUE)
-abline(h=0,col='sienna3',lty=2,lwd=2)
+col<-adjustcolor('tomato4',alpha.f=0.3)
+
+windows()
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(vc.pheno,select=2,main='Yellowfin Sole VC Phenology, Eggs',seWithMean=TRUE,
+     ylim=c(-6.5,5))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(vc.pheno,select=4,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-6.5,5))
+legend('topleft',legend=c('Flexible Phenology Smooth','Deviation from Avg.Phenology'),
+       col=c(NA,col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 
 windows()
 par(mfrow=c(2,2))
@@ -243,14 +243,14 @@ vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
 summary(vc.geo)
 
 ##SAVE AND RELOAD LATER
-saveRDS(eg.base,file="../GAM Models/yf_egg_base.rds")
-saveRDS(thr.pheno,file="../GAM Models/yf_egg_thr_pheno.rds")
-saveRDS(temps.in,file="../GAM Models/yf_egg_temps_in.rds")
-saveRDS(best.index.phe,file="../GAM Models/yf_egg_best_index_phe.rds")
-saveRDS(thr.geo,file="../GAM Models/yf_egg_thr_geo.rds")
-saveRDS(best.index.geo,file="../GAM Models/yf_egg_best_index_geo.rds")
-saveRDS(vc.pheno,file="../GAM Models/yf_egg_vc_pheno.rds")
-saveRDS(vc.geo,file="../GAM Models/yf_egg_vc_geo.rds")
+saveRDS(eg.base,file="./GAM Models/yf_egg_base.rds")
+saveRDS(thr.pheno,file="./GAM Models/yf_egg_thr_pheno.rds")
+saveRDS(temps.in,file="./GAM Models/yf_egg_temps_in.rds")
+saveRDS(best.index.phe,file="./GAM Models/yf_egg_best_index_phe.rds")
+saveRDS(thr.geo,file="./GAM Models/yf_egg_thr_geo.rds")
+saveRDS(best.index.geo,file="./GAM Models/yf_egg_best_index_geo.rds")
+saveRDS(vc.pheno,file="./GAM Models/yf_egg_vc_pheno.rds")
+saveRDS(vc.geo,file="./GAM Models/yf_egg_vc_geo.rds")
 
 eg.base<-readRDS("./GAM Models/yf_egg_base.rds")
 thr.pheno<-readRDS("./GAM Models/yf_egg_thr_pheno.rds")
@@ -384,7 +384,7 @@ abline(h=0,col='sienna3',lty=2,lwd=2)
 
 ##2D Smooth with temp and sal: 
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
-             s(temperature,salinity),data=yflarv.ctd,family=tw(link='log'),
+             s(salinity,temperature),data=yflarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
 
@@ -405,7 +405,7 @@ map("world",fill=T,col="snow4",add=T)
 windows()
 plot(lv.2d,select=4,scheme=2,main='Larval Log Presence, 2D Temp and Sal Effect',
      too.far=0.025,
-     xlab='Temperature (degC)',ylab='Salinity (psu)')
+     xlab='Salinity (psu)',ylab='Temperature (degC)')
 
 #all larval models in one place: 
 lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+

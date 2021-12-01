@@ -86,7 +86,7 @@ aplarvae$DATE<-paste(aplarvae$MONTH_,aplarvae$DAY_,aplarvae$YEAR_,sep="/")
 apsub<-apegg[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                'BOTTOM_DEPTH','id','count','SS','DATE')]
-apsub<-subset(apsub,MONTH_>2&MONTH_<7)
+apsub<-subset(apsub,doy>99&doy<182)
 aplarv<-aplarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]
@@ -178,6 +178,14 @@ aplarv.ctd$CTD_date<-parse_date_time(aplarv.ctd$CTD_date,orders="mdy")
 aplarv.ctd$date_diff<-difftime(aplarv.ctd$date,aplarv.ctd$CTD_date,units="hour")
 aplarv.ctd<-aplarv.ctd[which(aplarv.ctd$date_diff>(-6)&aplarv.ctd$date_diff<6),]
 dim(aplarv.ctd) #2565
+
+#Additional trimming based on biological characteristics: 
+#Trim eggs to a depth less than 150m (spawn on the middle shelf between 50-100m)
+#Trim larvae to a depth less than 150m (larvae transported to coastal areas after hatching)
+apsub<-subset(apsub,bottom_depth<151)
+apsub.ctd<-subset(apsub.ctd,bottom_depth<151)
+aplarv<-subset(aplarv,bottom_depth<151)
+aplarv.ctd<-subset(aplarv.ctd,bottom_depth<151)
 
 write.csv(apsub,'Cleaned_Cut_ApEggs.csv')
 write.csv(apsub.ctd,'Cleaned_Cut_ApEggs_wCTD.csv')
