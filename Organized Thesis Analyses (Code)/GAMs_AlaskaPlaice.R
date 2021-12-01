@@ -25,7 +25,7 @@ eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
 summary(eg.base)
 
 windows(width=12,height=8)
-plot(eg.base,shade=TRUE,shade.col='skyblue3',page=1,
+plot(eg.base,shade=FALSE,page=1,
      seWithMean=TRUE,scheme=2,scale=0)
 
 windows(width=12,height=8)
@@ -33,7 +33,7 @@ par(mfrow=c(1,2))
 plot(eg.base,select=1,scheme=2,too.far=0.025,xlab='Longitude',
      ylab='Latitude',main='Base Egg Model, ap')
 map("world",fill=T,col="snow4",add=T)
-plot(eg.base,select=2,xlab='Day of Year',shade=TRUE,shade.col='skyblue3')
+plot(eg.base,select=2,xlab='Day of Year',shade=FALSE,shade.col='skyblue3')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
 ##threshold phenology curve: 
@@ -66,7 +66,7 @@ abline(v=temps.in[best.index.phe],lty=2,lwd=2,col='steelblue3')
 summary(thr.pheno)
 
 windows(width=12,height=8)
-plot(thr.pheno,shade=TRUE,shade.col='skyblue3',page=1,
+plot(thr.pheno,shade=FALSE,page=1,
      seWithMean=TRUE,scale=0)
 
 
@@ -78,7 +78,7 @@ plot(thr.pheno,select=4,main='Alaska Plaice Phenology, Eggs',seWithMean=TRUE,
      ylim=c(-4.2,2))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
-plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-4.2,2))
+plot(thr.pheno,select=3,seWithMean=TRUE,shade=FALSE,shade.col=col,ylim=c(-4.2,2))
 legend('topright',legend=c('Below','Above'),col=c(NA,col),lwd=c(2,2),cex=0.8)
 mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 
@@ -114,18 +114,18 @@ abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
 summary(thr.geo)
 
 windows(width=12,height=8)
-plot(thr.geo,page=1,scale=0,scheme=2,shade=TRUE,shade.col='skyblue3',
+plot(thr.geo,page=1,scale=0,scheme=2,shade=FALSE,
      seWithMean=TRUE)
 
 windows(width=12,height=8)
 par(mfrow=c(1,2))
 plot(thr.geo,select=4,scheme=2,too.far=0.025,
      main=paste('Below',round(temps.in[best.index.geo],digits=3),sep=" "),
-     shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
+     shade=FALSE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
 plot(thr.geo,select=3,scheme=2,too.far=0.025,
      main=paste('Above',round(temps.in[best.index.geo],digits=3),sep=" "),
-     shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
+     shade=FALSE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
 
 windows()
@@ -139,7 +139,7 @@ vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
 summary(vc.pheno)
 
 windows(width=12,height=8)
-plot(vc.pheno,shade=TRUE,shade.col='skyblue3',
+plot(vc.pheno,shade=FALSE,
      page=1,scale=0,main='V-C Temp Flexible Phenology, ap Eggs',
      seWithMean=TRUE)
 
@@ -151,7 +151,7 @@ plot(vc.pheno,select=2,main='Alaska Plaice VC Phenology, Eggs',seWithMean=TRUE,
      ylim=c(-25,11))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
-plot(vc.pheno,select=4,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-25,11))
+plot(vc.pheno,select=4,seWithMean=TRUE,shade=FALSE,shade.col=col,ylim=c(-25,11))
 legend('topright',legend=c('Flexible Phenology Smooth','Deviation from Avg.Phenology'),
        col=c(NA,col),lwd=c(2,2),cex=0.8)
 mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
@@ -168,16 +168,16 @@ vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
 summary(vc.geo)
 
 windows(width=12,height=8)
-plot(vc.geo,shade=TRUE,shade.col='skyblue3',
+plot(vc.geo,shade=FALSE,
      page=1,seWithMean=TRUE,main='V-C Flex Geo')
 
 windows(width=15,height=8)
 par(mfrow=c(1,2))
-plot(vc.geo,select=1,scheme=2,too.far=0.025,shade=TRUE,shade.col='skyblue3',
+plot(vc.geo,select=1,scheme=2,too.far=0.025,shade=FALSE,
      seWithMean=TRUE,xlab='Longitude',ylab='Latitude',
      main='V-C ap Egg Flex Geo, Avg. Variation')
 map("world",fill=T,col="snow4",add=T)
-plot(vc.geo,select=4,scheme=2,too.far=0.025,shade=TRUE,shade.col='skyblue3',
+plot(vc.geo,select=4,scheme=2,too.far=0.025,shade=FALSE,
      xlab='Longitude',ylab='Latitude',seWithMean=TRUE,
      main='V-C Flex Geo, Deviation from Avg. Variation')
 map("world",fill=T,col="snow4",add=T)
@@ -292,14 +292,14 @@ summary(lv.base)
 
 windows(width=12,height=8)
 par(mfrow=c(2,2))
-plot(lv.base,select=1,shade=TRUE,shade.col='skyblue3',
+plot(lv.base,select=1,shade=FALSE,
      seWithMean=TRUE,scale=0,main='Base Larval Presence GAM, W/O Residuals')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.base,select=2,scheme=2,too.far=0.025,
-     shade=TRUE,shade.col='skyblue3',
+     shade=FALSE,
      seWithMean=TRUE,scale=0)
 map("world",fill=T,col="snow4",add=T)
-plot(lv.base,select=3,shade=TRUE,shade.col='skyblue3',
+plot(lv.base,select=3,shade=FALSE,
      seWithMean=TRUE,scale=0)
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
@@ -311,12 +311,12 @@ lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 summary(lv.add.sal)
 
 windows(width=12,height=8)
-plot(lv.add.sal,page=1,scale=0,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.sal,page=1,scale=0,shade=FALSE,shade.col="skyblue4",
      seWithMean=TRUE)
 
 windows(width=14,height=8)
 par(mfrow=c(1,2))
-plot(lv.add.sal,select=1,seWithMean=TRUE,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.sal,select=1,seWithMean=TRUE,shade=FALSE,shade.col="skyblue4",
      main='Seasonal Presence, Added Sal Model (No resids.)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.add.sal,select=2,scheme=2,seWithMean=TRUE,too.far=0.025,
@@ -324,7 +324,7 @@ plot(lv.add.sal,select=2,scheme=2,seWithMean=TRUE,too.far=0.025,
 map("world",fill=T,col="snow4",add=T)
 
 windows(width=12,height=8)
-plot(lv.add.sal,select=4,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.sal,select=4,shade=FALSE,shade.col="skyblue4",
      seWithMean=TRUE,main='Larval Log(CPer10m2+1), Effect of Salinity',
      xlab='Salinity (PSU)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
@@ -337,12 +337,12 @@ lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 summary(lv.add.temp)
 
 windows()
-plot(lv.add.temp,page=1,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.temp,page=1,shade=FALSE,shade.col="skyblue4",
      seWithMean=TRUE,main='Larval Log(Cper10m2+1) w Temp',scale=0)
 
 windows(width=14,height=8)
 par(mfrow=c(1,2))
-plot(lv.add.temp,select=1,seWithMean=TRUE,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.temp,select=1,seWithMean=TRUE,shade=FALSE,shade.col="skyblue4",
      main='Seasonal Presence, Added Temp Model (No resids.)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.add.temp,select=2,scheme=2,seWithMean=TRUE,too.far=0.025,
@@ -350,7 +350,7 @@ plot(lv.add.temp,select=2,scheme=2,seWithMean=TRUE,too.far=0.025,
 map("world",fill=T,col="snow4",add=T)
 
 windows(width=12,height=8)
-plot(lv.add.temp,select=4,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.temp,select=4,shade=FALSE,shade.col="skyblue4",
      seWithMean=TRUE,main='Larval Log(CPer10m2+1), Effect of Temperature',
      xlab='Temperature (degC)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
@@ -363,22 +363,22 @@ lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 summary(lv.temp.sal)
 
 windows()
-plot(lv.temp.sal,page=1,shade=TRUE,shade.col='skyblue4',
+plot(lv.temp.sal,page=1,shade=FALSE,shade.col='skyblue4',
      main='Larval Log Presence Temp and Sal',
      seWithMean=TRUE,scale=0)
 
 windows()
 par(mfrow=c(2,2))
-plot(lv.temp.sal,select=1,seWithMean=TRUE,shade=TRUE,
+plot(lv.temp.sal,select=1,seWithMean=TRUE,shade=FALSE,
      shade.col='skyblue4',main='Temp and Sal Model (No resids.)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.temp.sal,select=2,scheme=2,seWithMean=TRUE,too.far=0.025,
      xlab='Longitude',ylab='Latitude',main='Biogeography')
 map("world",fill=T,col="snow4",add=T)
-plot(lv.temp.sal,select=4,shade=TRUE,shade.col='skyblue4',
+plot(lv.temp.sal,select=4,shade=FALSE,shade.col='skyblue4',
      seWithMean=TRUE,main='Effect of Temp',xlab='Temperature (degC)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
-plot(lv.temp.sal,select=5,shade=TRUE,shade.col='skyblue4',
+plot(lv.temp.sal,select=5,shade=FALSE,shade.col='skyblue4',
      seWithMean=TRUE,main='Effect of Salinity',xlab='Salinity (psu)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
@@ -389,13 +389,13 @@ lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
 summary(lv.2d)
 
 windows()
-plot(lv.2d,page=1,shade=TRUE,shade.col='skyblue4',
+plot(lv.2d,page=1,shade=FALSE,shade.col='skyblue4',
      main='Larval Log Presence, 2D Temp and Sal',
      seWithMean=TRUE,scale=0)
 
 windows()
 par(mfrow=c(1,2))
-plot(lv.2d,select=2,seWithMean=TRUE,shade=TRUE,shade.col='skyblue4',
+plot(lv.2d,select=2,seWithMean=TRUE,shade=FALSE,shade.col='skyblue4',
      main='Seasonal Presence, 2D Temp+Sal Model')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.2d,select=1,scheme=2,seWithMean=TRUE,too.far=0.025,

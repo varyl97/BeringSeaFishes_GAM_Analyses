@@ -73,7 +73,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(yfsub$lon),ylim=range(yfsub$lat),main='Yellowfin Sole Distribution, Eggs',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.48,
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 points(yfsub$lon[yfsub$Cper10m2==0],yfsub$lat[yfsub$Cper10m2==0],pch='+',col='white')
@@ -111,11 +111,11 @@ abline(h=0,col='grey79',lty=2,lwd=1.5)
 windows()
 par(mai=c(1,1,0.5,0.5))
 plot(eg.base,select=2,main='Yellowfin Sole Base Phenology, Eggs',
-     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 8.83)',ylim=c(-1,1.5))
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 8.796)',ylim=c(-1,1))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 
 #TEMP EFFECT: Calculate Differences Due to Different Temperature Regimes Based on Best Model --------
-#start with threshold geography model to find differences between two predictions to calculate local slopes 
+#start with threshold phenology model to find differences between two predictions (base prediction and this prediction) to calculate local slopes 
 nlat=120
 nlon=120
 latd=seq(min(yfsub$lat),max(yfsub$lat),length.out=nlat) #center grid over study region 
@@ -134,18 +134,18 @@ for(k in 1:nrow(grid.extent)){
 
 grid.extent$year<-2002
 grid.extent$doy<-median(yfsub$doy)
-grid.extent$reg.SST<-mean(yfsub$reg.SST[yfsub$reg.SST<4.143]) #threshold temp chosen by AIC values
+grid.extent$reg.SST<-mean(yfsub$reg.SST) #threshold temp chosen by AIC values
 grid.extent$th<-"TRUE"
 grid.extent$bottom_depth<-median(yfsub$bottom_depth,na.rm=T)
-grid.extent$pred<-predict(thr.geo,newdata=grid.extent)
-grid.extent$se<-predict(thr.geo,newdata=grid.extent,se=T)[[2]]
+grid.extent$pred<-predict(eg.base,newdata=grid.extent)
+grid.extent$se<-predict(eg.base,newdata=grid.extent,se=T)[[2]]
 grid.extent$pred.u<-grid.extent$pred+1.96*grid.extent$se #95% CI here
 grid.extent$pred.l<-grid.extent$pred-1.96*grid.extent$se
 grid.extent$pred[grid.extent$dist>30000]<-NA #remove predictions that are too far from positive data values
-grid.extent$reg.SST<-mean(yfsub$reg.SST[yfsub$reg.SST>4.143])
+grid.extent$reg.SST<-mean(yfsub$reg.SST)
 grid.extent$th<-"FALSE"
-grid.extent$pred2<-predict(thr.geo,newdata=grid.extent)
-grid.extent$se2<-predict(thr.geo,newdata=grid.extent,se=T)[[2]]
+grid.extent$pred2<-predict(thr.pheno,newdata=grid.extent)
+grid.extent$se2<-predict(thr.pheno,newdata=grid.extent,se=T)[[2]]
 grid.extent$pred2.u<-grid.extent$pred2+1.96*grid.extent$se
 grid.extent$pred2.l<-grid.extent$pred2-1.96*grid.extent$se
 grid.extent$diff<-grid.extent$pred2-grid.extent$pred #calculate difference between two regimes
@@ -160,31 +160,24 @@ windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.5))
 image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
            col=hcl.colors(100,"PRGn"),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), #PRGn diverges more clearly, helping interpretation
-           xlim=range(yfsub$lon),ylim=range(yfsub$lat),main='Change in YFS(e) Distribution w Threshold Temperature Effect',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.4,
+           xlim=range(yfsub$lon),ylim=range(yfsub$lat),main='Change in YFS Egg Distribution From Base to Threshold Pheno Model',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),
            legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)#would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
 map("worldHires",fill=T,col="seashell2",add=T)
 
-#now add in the Phenology effect from this model (again, using this model because it produced most deviance explained and lowest AIC): #using base graphics here, no need to overlay anything
-windows()
-par(mai=c(1,1,0.5,0.5))
-plot(thr.geo,select=1,main='Yellowfin Sole Threshold Geo Phenology, Eggs',
-     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 8.80)',ylim=c(-1,1.5))
-abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
-
-#plot the two phenology smooths together, one from the base model and one from the threshold geography model to see the temp effect: 
+#Plot the two threshold phenology smooths together, one from the base model and one from the threshold geography model to see the temp effect: 
 col<-adjustcolor('tomato4',alpha.f=0.3)
 
 windows()
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
-plot(eg.base,select=2,main='Yellowfin Sole Phenology, Eggs',seWithMean=TRUE,
-     ylim=c(-1,1.5))
+plot(thr.pheno,select=4,main='Yellowfin Sole Phenology, Eggs',seWithMean=TRUE,
+     ylim=c(-3,3))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
-plot(thr.geo,select=1,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-1,1.5))
-legend('topright',legend=c('Base','Threshold Geography'),col=c(NA,col),lwd=c(2,2),cex=0.8)
+plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-3,3))
+legend('topright',legend=c('Below','Above'),col=c(NA,col),lwd=c(2,2),cex=0.8)
 mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 
 #For added information: threshold phenology prediction (this was the best model to explain phenology):
