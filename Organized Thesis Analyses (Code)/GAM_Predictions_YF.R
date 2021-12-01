@@ -251,7 +251,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(yflarv.ctd$lon,na.rm=TRUE),ylim=range(yflarv.ctd$lat,na.rm=TRUE),main='Yellowfin Sole Distribution, Larvae',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2,
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 points(yflarv.ctd$lon[yflarv.ctd$Cper10m2==0],yflarv.ctd$lat[yflarv.ctd$Cper10m2==0],pch='+',col='white')
@@ -346,7 +346,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(yflarv.ctd$lon,na.rm=TRUE),ylim=range(yflarv.ctd$lat,na.rm=TRUE),
            main='Predicted Larval Biogeography, 2D Model',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.5,
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
