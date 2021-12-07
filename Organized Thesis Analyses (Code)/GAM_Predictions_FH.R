@@ -119,7 +119,7 @@ abline(h=0,col='grey79',lty=2,lwd=1.5)
 windows()
 par(mai=c(1,1,0.5,0.5))
 plot(eg.base,select=2,main='Flathead Sole Base Phenology, Eggs',
-     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 8.68)',ylim=c(-1.5,3))
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 8.78)',ylim=c(-3,3))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 
 
