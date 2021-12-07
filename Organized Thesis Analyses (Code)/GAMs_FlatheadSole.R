@@ -31,7 +31,7 @@ eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
 summary(eg.base)
 
 windows(width=12,height=8)
-plot(eg.base,shade=TRUE,shade.col='skyblue3',page=1,
+plot(eg.base,shade=FALSE,page=1,
      seWithMean=TRUE,scale=0)
 
 windows(width=12,height=8)
@@ -39,7 +39,7 @@ par(mfrow=c(1,2))
 plot(eg.base,select=1,scheme=2,too.far=0.025,xlab='Longitude',
      ylab='Latitude',main='Base Egg Model, fh')
 map("world",fill=T,col="snow4",add=T)
-plot(eg.base,select=2,xlab='Day of Year',shade=TRUE,shade.col='skyblue3')
+plot(eg.base,select=2,xlab='Day of Year',shade=FALSE,)
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
 
@@ -84,18 +84,18 @@ abline(v=temps.in[best.index.phe],lty=2,lwd=2,col='steelblue3') #this plot gives
 summary(thr.pheno) #again, only care about the model with the best AIC value 
 
 windows(width=12,height=8)
-plot(thr.pheno,shade=TRUE,shade.col='skyblue3',page=1,
+plot(thr.pheno,shade=FALSE,page=1,
      seWithMean=TRUE,scale=0)
 
 windows(width=12,height=8)
 par(mfrow=c(1,2))
 plot(thr.pheno,select=4,main=paste('Below',round(temps.in[best.index.phe],digits=3)
                                                      ,sep=" "),
-     shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
+     shade=FALSE,seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(thr.pheno,select=3,main=paste('Above',round(temps.in[best.index.phe],digits=3),
                                                      sep=" "),
-     shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
+     shade=FALSE,seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
 windows()
@@ -131,18 +131,18 @@ abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
 summary(thr.geo)
 
 windows(width=12,height=8)
-plot(thr.geo,page=1,scale=0,shade=TRUE,shade.col='skyblue3',
-     seWithMean=TRUE)
+plot(thr.geo,page=1,scale=0,shade=FALSE,
+     seWithMean=TRUE,scheme=2)
 
 windows(width=12,height=8)
 par(mfrow=c(1,2),oma=c(1,1,1,5))
 plot(thr.geo,select=4,scheme=2,too.far=0.025,
      main=paste('Below',round(temps.in[best.index.geo],digits=3),'C',sep=" "),
-     shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
+     shade=FALSE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
 plot(thr.geo,select=3,scheme=2,too.far=0.025,
      main=paste('Above',round(temps.in[best.index.geo],digits=3),'C',sep=" "),
-     shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
+     shade=FALSE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
 gradientLegend(c(0,-5),color=c('red','orange','yellow'),ncol=5,side=4)
 
@@ -159,17 +159,17 @@ vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
 summary(vc.pheno)
 
 windows(width=12,height=8)
-plot(vc.pheno,shade=TRUE,shade.col='skyblue3',
+plot(vc.pheno,shade=FALSE,
      page=1,scale=0,main='V-C Temp Flexible Phenology, fh Eggs',
      seWithMean=TRUE)
 
 windows(width=16,height=8)
 par(mfrow=c(1,2))
-plot(vc.pheno,select=2,shade=TRUE,shade.col='skyblue3',
+plot(vc.pheno,select=2,shade=FALSE,
      main='V-C Regional Temp, Flexible Phenology',xlab='Day of Year',
      seWithMean=TRUE)
 abline(h=0,col='sienna3',lty=2,lwd=2)
-plot(vc.pheno,select=4,shade=TRUE,shade.col='skyblue3',
+plot(vc.pheno,select=4,shade=FALSE,
      main='V-C Reg. Temp, Deviation from Avg. Pheno Variation',
      xlab='Day of Year',seWithMean=TRUE)
 abline(h=0,col='sienna3',lty=2,lwd=2)
@@ -187,16 +187,16 @@ vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
 summary(vc.geo)
 
 windows(width=12,height=8)
-plot(vc.geo,shade=TRUE,shade.col='skyblue3',
+plot(vc.geo,shade=FALSE,
      page=1,seWithMean=TRUE,main='V-C Flex Geo')
 
 windows(width=15,height=8)
 par(mfrow=c(1,2))
-plot(vc.geo,select=1,scheme=2,too.far=0.025,shade=TRUE,shade.col='skyblue3',
+plot(vc.geo,select=1,scheme=2,too.far=0.025,shade=FALSE,
      seWithMean=TRUE,xlab='Longitude',ylab='Latitude',
      main='V-C fh Egg Flex Geo, Avg. Variation')
 map("world",fill=T,col="snow4",add=T)
-plot(vc.geo,select=4,scheme=2,too.far=0.025,shade=TRUE,shade.col='skyblue3',
+plot(vc.geo,select=4,scheme=2,too.far=0.025,shade=FALSE,
      xlab='Longitude',ylab='Latitude',seWithMean=TRUE,
      main='V-C Flex Geo, Deviation from Avg. Variation')
 map("world",fill=T,col="snow4",add=T)
@@ -263,17 +263,17 @@ summary(vc.geo)
 
 # Saved models for loading later! -----------------------------------------
 #MAKE SURE FOR THRESHOLDS that theyre either renamed as thr.geo or you're saving "thr.geo[[best.index.geo]]"
-saveRDS(eg.base,file="../GAM Models/fh_egg_base.rds")
-saveRDS(thr.pheno,file="../GAM Models/fh_egg_thr_pheno.rds")
-saveRDS(temps.in,file="../GAM Models/fh_egg_temps_in_pheno.rds")
-saveRDS(aic.pheno,file="../GAM Models/fh_egg_aic_pheno.rds")
-saveRDS(best.index.phe,file="../GAM Models/fh_egg_best_index_pheno.rds")
-saveRDS(thr.geo,file="../GAM Models/fh_egg_thr_geo.rds")
-saveRDS(temps.in,file="../GAM Models/fh_egg_temps_in_geo.rds")
-saveRDS(aic.geo,file="../GAM Models/fh_egg_aic_geo.rds")
-saveRDS(best.index.geo,file="../GAM Models/fh_egg_best_index_geo.rds")
-saveRDS(vc.pheno,file="../GAM Models/fh_egg_vc_pheno.rds")
-saveRDS(vc.geo,file="../GAM Models/fh_egg_vc_geo.rds")
+saveRDS(eg.base,file="./GAM Models/fh_egg_base.rds")
+saveRDS(thr.pheno,file="./GAM Models/fh_egg_thr_pheno.rds")
+saveRDS(temps.in,file="./GAM Models/fh_egg_temps_in_pheno.rds")
+saveRDS(aic.pheno,file="./GAM Models/fh_egg_aic_pheno.rds")
+saveRDS(best.index.phe,file="./GAM Models/fh_egg_best_index_pheno.rds")
+saveRDS(thr.geo,file="./GAM Models/fh_egg_thr_geo.rds")
+saveRDS(temps.in,file="./GAM Models/fh_egg_temps_in_geo.rds")
+saveRDS(aic.geo,file="./GAM Models/fh_egg_aic_geo.rds")
+saveRDS(best.index.geo,file="./GAM Models/fh_egg_best_index_geo.rds")
+saveRDS(vc.pheno,file="./GAM Models/fh_egg_vc_pheno.rds")
+saveRDS(vc.geo,file="./GAM Models/fh_egg_vc_geo.rds")
 
 eg.base<-readRDS("./GAM Models/fh_egg_base.rds")
 thr.pheno<-readRDS("./GAM Models/fh_egg_thr_pheno.rds")
@@ -305,7 +305,7 @@ plot(c(1:5),aic.fhegg$AIC_value,main='AIC Results for fh Egg Models',
      pch=19,cex=2,ylab='AIC Value',xlab='')
 grid(nx=5,ny=14,col="lightgray")
 text(c(1:5),aic.fhegg$AIC_value,labels=round(aic.fhegg$AIC_value),pos=c(4,3,3,3,2))
-legend("bottomleft",legend=c('Base','Threshold Pheno','Threshold Geo',
+legend("topright",legend=c('Base','Threshold Pheno','Threshold Geo',
                              'VC Pheno','VC Geo'),
        col=c( "#482173FF", "#38598CFF","#1E9B8AFF", "#51C56AFF","#FDE725FF"),
        lwd=3,lty=1)
@@ -325,11 +325,11 @@ summary(lv.base)
 
 windows(width=12,height=8)
 par(mfrow=c(1,2))
-plot(lv.base,select=1,shade=TRUE,shade.col='skyblue3',
+plot(lv.base,select=1,shade=FALSE,
      seWithMean=TRUE,scale=0,main='Base Larval Presence GAM, W/O Residuals')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.base,select=2,scheme=2,too.far=0.025,
-     shade=TRUE,shade.col='skyblue3',
+     shade=FALSE,
      seWithMean=TRUE,scale=0)
 map("world",fill=T,col="snow4",add=T)
 
@@ -344,12 +344,12 @@ lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 summary(lv.add.sal)
 
 windows(width=12,height=8)
-plot(lv.add.sal,page=1,scale=0,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.sal,page=1,scale=0,shade=FALSE,
      seWithMean=TRUE)
 
 windows(width=14,height=8)
 par(mfrow=c(1,2))
-plot(lv.add.sal,select=1,seWithMean=TRUE,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.sal,select=1,seWithMean=TRUE,shade=FALSE,
      main='Seasonal Presence, Added Sal Model (No resids.)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.add.sal,select=2,scheme=2,seWithMean=TRUE,too.far=0.025,
@@ -357,7 +357,7 @@ plot(lv.add.sal,select=2,scheme=2,seWithMean=TRUE,too.far=0.025,
 map("world",fill=T,col="snow4",add=T)
 
 windows(width=12,height=8)
-plot(lv.add.sal,select=4,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.sal,select=4,shade=FALSE,
      seWithMean=TRUE,main='Larval Log(CPer10m2+1), Effect of Salinity',
      xlab='Salinity (PSU)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
@@ -372,12 +372,12 @@ lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 summary(lv.add.temp)
 
 windows()
-plot(lv.add.temp,page=1,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.temp,page=1,shade=FALSE,
      seWithMean=TRUE,main='Larval Log(Cper10m2+1) w Temp',scale=0)
 
 windows(width=14,height=8)
 par(mfrow=c(1,2))
-plot(lv.add.temp,select=1,seWithMean=TRUE,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.temp,select=1,seWithMean=TRUE,shade=FALSE,
      main='Seasonal Presence, Added Temp Model (No resids.)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.add.temp,select=2,scheme=2,seWithMean=TRUE,too.far=0.025,
@@ -385,7 +385,7 @@ plot(lv.add.temp,select=2,scheme=2,seWithMean=TRUE,too.far=0.025,
 map("world",fill=T,col="snow4",add=T)
 
 windows(width=12,height=8)
-plot(lv.add.temp,select=4,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.temp,select=4,shade=FALSE,
      seWithMean=TRUE,main='Larval Log(CPer10m2+1), Effect of Temperature',
      xlab='Temperature (degC)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
@@ -400,22 +400,22 @@ lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 summary(lv.temp.sal)
 
 windows()
-plot(lv.temp.sal,page=1,shade=TRUE,shade.col='skyblue4',
+plot(lv.temp.sal,page=1,shade=FALSE,
      main='Larval Log Presence Temp and Sal',
      seWithMean=TRUE,scale=0)
 
 windows()
 par(mfrow=c(2,2))
-plot(lv.temp.sal,select=1,seWithMean=TRUE,shade=TRUE,
-     shade.col='skyblue4',main='Temp and Sal Model (No resids.)')
+plot(lv.temp.sal,select=1,seWithMean=TRUE,shade=FALSE,
+     main='Temp and Sal Model (No resids.)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.temp.sal,select=2,scheme=2,seWithMean=TRUE,too.far=0.025,
      xlab='Longitude',ylab='Latitude',main='Biogeography')
 map("world",fill=T,col="snow4",add=T)
-plot(lv.temp.sal,select=4,shade=TRUE,shade.col='skyblue4',
+plot(lv.temp.sal,select=4,shade=FALSE,
      seWithMean=TRUE,main='Effect of Temp',xlab='Temperature (degC)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
-plot(lv.temp.sal,select=5,shade=TRUE,shade.col='skyblue4',
+plot(lv.temp.sal,select=5,shade=FALSE,
      seWithMean=TRUE,main='Effect of Salinity',xlab='Salinity (psu)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
@@ -423,18 +423,18 @@ abline(h=0,col='sienna3',lty=2,lwd=2)
 # Biogeography with Two-Dimensional Interaction between Temperature and Salinity --------
 
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
-             s(temperature,salinity),data=fhlarv.ctd,family=tw(link='log'),
+             s(salinity,temperature),data=fhlarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
 
 windows()
-plot(lv.2d,page=1,shade=TRUE,shade.col='skyblue4',
+plot(lv.2d,page=1,shade=FALSE,
      main='Larval Log Presence, 2D Temp and Sal',
-     seWithMean=TRUE,scale=0)
+     seWithMean=TRUE,scale=0,scheme=2)
 
 windows()
 par(mfrow=c(1,2))
-plot(lv.2d,select=2,seWithMean=TRUE,shade=TRUE,shade.col='skyblue4',
+plot(lv.2d,select=2,seWithMean=TRUE,shade=FALSE,
      main='Seasonal Presence, 2D Temp+Sal Model (No resids.)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.2d,select=1,scheme=2,seWithMean=TRUE,too.far=0.025,
@@ -473,18 +473,18 @@ lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 summary(lv.temp.sal)
 
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
-             s(temperature,salinity),data=fhlarv.ctd,family=tw(link='log'),
+             s(salinity,temperature),data=fhlarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
 
 
 # SAVE MODELS for reloading later -----------------------------------------
 
-saveRDS(lv.base,file="../GAM Models/fh_larv_base.rds")
-saveRDS(lv.add.sal,file="../GAM Models/fh_larv_addsal.rds")
-saveRDS(lv.add.temp,file="../GAM Models/fh_larv_addtemp.rds")
-saveRDS(lv.temp.sal,file="../GAM Models/fh_larv_tempsal.rds")
-saveRDS(lv.2d,file="../GAM Models/fh_larv_2d.rds")
+saveRDS(lv.base,file="./GAM Models/fh_larv_base.rds")
+saveRDS(lv.add.sal,file="./GAM Models/fh_larv_addsal.rds")
+saveRDS(lv.add.temp,file="./GAM Models/fh_larv_addtemp.rds")
+saveRDS(lv.temp.sal,file="./GAM Models/fh_larv_tempsal.rds")
+saveRDS(lv.2d,file="./GAM Models/fh_larv_2d.rds")
 
 lv.base<-readRDS("./GAM Models/fh_larv_base.rds")
 lv.add.sal<-readRDS("./GAM Models/fh_larv_addsal.rds")

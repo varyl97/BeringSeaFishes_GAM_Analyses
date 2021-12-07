@@ -432,7 +432,7 @@ lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 summary(lv.temp.sal)
 
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
-             s(temperature,salinity),data=yflarv.ctd,family=tw(link='log'),
+             s(salinity,temperature),data=yflarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
 

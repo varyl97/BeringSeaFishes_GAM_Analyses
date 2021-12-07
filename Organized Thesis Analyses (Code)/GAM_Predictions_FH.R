@@ -38,7 +38,7 @@ bathy<-raster(str_name) #seems 'bathy' item is best to add to existing plots
 #bathy.dat<-as.bathy(bathy)
 #to plot: 
 windows()
-plot.bathy(bathy.dat,image=T,land=F,n=5,drawlabels=T)
+plot.bathy(bathy,image=T,land=F,n=5,drawlabels=T)
 
 
 # Visualize on a regular grid ---------------------------------------------

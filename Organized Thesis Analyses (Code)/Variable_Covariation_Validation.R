@@ -120,19 +120,24 @@ corrplot(yf,method="color",title="Yellowfin Sole",col=col(15),tl.col="black",
 
 #Flathead Sole:
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale
-var.ratio.phe # positive difference of 0.06, meaning egg MSE was slightly larger than thr phenology model 
+var.ratio.phe # positive difference of 0.190, meaning egg MSE was slightly larger than thr phenology model 
 
 var.ratio.geo<-(summary(eg.base)$scale-summary(thr.geo)$scale)/summary(eg.base)$scale
-var.ratio.geo # +0.167, larger reduction than thr phenology 
+var.ratio.geo # +0.105, smaller reduction than thr phenology 
 
 var.ratio.vcp<-(summary(eg.base)$scale-summary(vc.pheno)$scale)/summary(eg.base)$scale
-var.ratio.vcp # +0.045
+var.ratio.vcp # +0.171
 
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
-var.ratio.vcg # +0.136 #geography models produce largest reduction in MSE
+var.ratio.vcg # +0.088 #geography models produce largest reduction in MSE
+
+AIC(eg.base)-AIC(thr.pheno) #1333.99
 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
-lv.2d.chg
+lv.2d.chg #0.126
+
+AIC(lv.base)-AIC(lv.2d) #407.67
+
 
 #Alaska Plaice: 
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale

@@ -1,6 +1,6 @@
 ###Alaska Plaice BS Code: 
 ###CTD Loading: ################################################################
-allctd<-read.csv(file="../Environmental Data/All_CTD_Data_8302021.csv")
+allctd<-read.csv(file="./Environmental Data/All_CTD_Data_8302021.csv")
 names(allctd)
 allctd<-allctd[c('Latitude','Longitude','Date','Time','Pressure','Depth',
                  'Temperature','Conductivity','Salinity','Sigma.T',
@@ -87,6 +87,8 @@ fhsub<-fhegg[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                'BOTTOM_DEPTH','id','count','SS','DATE')]
 fhsub<-subset(fhsub,MONTH_>1&MONTH_<7)
+fhsub<-subset(fhsub,BOTTOM_DEPTH<220)
+fhlarvae<-subset(fhlarvae,BOTTOM_DEPTH<220)
 fhlarv<-fhlarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]
@@ -99,7 +101,7 @@ names(fhlarv)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
 fhsub$SSB<-NA
 fhlarv$SSB<-NA
 
-SSBdf<-read.csv(file='SSB_allsp.csv',header=TRUE,check.names=TRUE)
+SSBdf<-read.csv(file='./Ichthyo Data/SSB_allsp.csv',header=TRUE,check.names=TRUE)
 SSBdf$SSB<-as.numeric(SSBdf$SSB)
 fhSSB<-SSBdf[SSBdf$Species=='alaska plaice',]
 fhSSB<-fhSSB[c('Year','SSB')]
@@ -115,20 +117,9 @@ for(i in 1:nrow(fhsub)){
 fhsub.ctd<-fhsub
 fhlarv.ctd<-fhlarv
 
-#uniquecruise<-read.csv(file='Unique_Cruise_Files.csv',header=TRUE,check.names=TRUE,na.strings="")
-#idx.eg<-match(fhsub.ctd$CRUISE,uniquecruise$unique_cruise)
-#idx.lv<-match(fhlarv.ctd$CRUISE,uniquecruise$unique_cruise)
-#fhsub.ctd$ctd_file_name<-uniquecruise$file_name[idx.eg]
-#fhlarv.ctd$ctd_file_name<-uniquecruise$file_name[idx.lv]
-
 allctd$Link_ID<-NA
 fhsub.ctd$Link_ID<-NA
 fhlarv.ctd$Link_ID<-NA
-
-#allctd$Station<-as.numeric(allctd$Station)#conversion in an attempt to make matching work 
-#allctd$Haul<-as.numeric(allctd$Haul)
-#fhsub.ctd$STATION_NAME<-as.numeric(fhsub.ctd$STATION) #warnings introduced for cruises: 2MF92, 10C88, 1MP91, 0MF91, 3MF79, 1DN88, MF862 
-#fhsub.ctd$HAUL_NAME<-as.numeric(fhsub.ctd$HAUL)
 
 allctd$Link_ID<-paste(allctd$Cruise,allctd$Station,allctd$Haul,sep="_") #create new, clean unique identifier
 fhsub.ctd$Link_ID<-paste(fhsub.ctd$CRUISE,fhsub.ctd$STATION,fhsub.ctd$HAUL,sep="_")
@@ -170,19 +161,19 @@ for(i in 1:nrow(fhlarv.ctd)){
     fhlarv.ctd$CTD_time[i]<-unique(ctdcast$Time)
   },error=function(e){cat(as.character(print(i)),as.character(fhlarv.ctd$CRUISE[i]),
                           conditionMessage(e),"\n")})}
-fhlarv.ctd<-fhlarv.ctd[!fhlarv.ctd$temperature=="NaN",]#dim: 2646 24
+fhlarv.ctd<-fhlarv.ctd[!fhlarv.ctd$temperature=="NaN",]
 
 fhlarv.ctd$date_diff<-NA
 fhlarv.ctd$date<-parse_date_time(fhlarv.ctd$date,orders="mdy")
 fhlarv.ctd$CTD_date<-parse_date_time(fhlarv.ctd$CTD_date,orders="mdy")
 fhlarv.ctd$date_diff<-difftime(fhlarv.ctd$date,fhlarv.ctd$CTD_date,units="hour")
 fhlarv.ctd<-fhlarv.ctd[which(fhlarv.ctd$date_diff>(-6)&fhlarv.ctd$date_diff<6),]
-dim(fhlarv.ctd) #2565
+dim(fhlarv.ctd) 
 
-write.csv(fhsub,'Cleaned_Cut_FhEggs.csv')
-write.csv(fhsub.ctd,'Cleaned_Cut_FhEggs_wCTD.csv')
-write.csv(fhlarv,'Cleaned_Cut_FhLarv.csv')
-write.csv(fhlarv.ctd,'Cleaned_Cut_FhLarv_wCTD.csv')
+write.csv(fhsub,'./Ichthyo Data/Cleaned_Cut_FhEggs.csv')
+write.csv(fhsub.ctd,'./Ichthyo Data/Cleaned_Cut_FhEggs_wCTD.csv')
+write.csv(fhlarv,'./Ichthyo Data/Cleaned_Cut_FhLarv.csv')
+write.csv(fhlarv.ctd,'./Ichthyo Data/Cleaned_Cut_FhLarv_wCTD.csv')
 
 
 ###to avoid doing all the above gymnastics: 

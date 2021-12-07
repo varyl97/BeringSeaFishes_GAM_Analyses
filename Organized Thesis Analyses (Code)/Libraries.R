@@ -1,5 +1,7 @@
 #Libraries
-setwd("C:/Users/varyl/Desktop/GitHub/BeringSeaFishes_GAM_Analyses")
+gitwd<-"C:/Users/varyl/Desktop/GitHub/BeringSeaFishes_GAM_Analyses"
+rwd<-"C:/Users/varyl/Desktop/MS Research/RStudio"
+setwd(gitwd)
 
 library(mgcv)
 library(sgeostat)
@@ -17,6 +19,7 @@ library(raster)
 library(ggplot2)
 source('./Organized Thesis Analyses (Code)/distance.function.R')
 source("./Organized Thesis Analyses (Code)/vis.gam_COLORS.R")
+source("./Organized Thesis Analyses (Code)/euclidean.distance.R")
 library(RColorBrewer)
 library(ggrepel)
 library(viridisLite)
