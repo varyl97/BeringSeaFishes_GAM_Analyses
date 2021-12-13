@@ -120,23 +120,23 @@ corrplot(yf,method="color",title="Yellowfin Sole",col=col(15),tl.col="black",
 
 #Flathead Sole:
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale
-var.ratio.phe # positive difference of 0.190, meaning egg MSE was slightly larger than thr phenology model 
+var.ratio.phe # positive difference of 0.179, meaning egg MSE was slightly larger than thr phenology model 
 
 var.ratio.geo<-(summary(eg.base)$scale-summary(thr.geo)$scale)/summary(eg.base)$scale
-var.ratio.geo # +0.105, smaller reduction than thr phenology 
+var.ratio.geo # +0.097, smaller reduction than thr phenology 
 
 var.ratio.vcp<-(summary(eg.base)$scale-summary(vc.pheno)$scale)/summary(eg.base)$scale
-var.ratio.vcp # +0.171
+var.ratio.vcp # +0.170
 
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
-var.ratio.vcg # +0.088 #geography models produce largest reduction in MSE
+var.ratio.vcg # +0.080 #geography models produce largest reduction in MSE
 
-AIC(eg.base)-AIC(thr.pheno) #1333.99
+AIC(eg.base)-AIC(thr.pheno) #901.13
 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
 lv.2d.chg #0.126
 
-AIC(lv.base)-AIC(lv.2d) #407.67
+AIC(lv.base)-AIC(lv.2d) #381.28
 
 
 #Alaska Plaice: 
@@ -147,7 +147,7 @@ var.ratio.geo<-(summary(eg.base)$scale-summary(thr.geo)$scale)/summary(eg.base)$
 var.ratio.geo # +0.149, larger reduction than thr phenology 
 
 var.ratio.vcp<-(summary(eg.base)$scale-summary(vc.pheno)$scale)/summary(eg.base)$scale
-var.ratio.vcp # +0.022
+var.ratio.vcp # +0.022===
 
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
 var.ratio.vcg # +0.135 #geography models produce largest reduction in MSE
@@ -210,25 +210,25 @@ aic.chg # + 371.43
 
 #Rex Sole: 
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale
-var.ratio.phe # positive difference of 0.037, meaning egg MSE was slightly larger than thr phenology model 
+var.ratio.phe # positive difference of 0.038, meaning egg MSE was slightly larger than thr phenology model 
 
 var.ratio.geo<-(summary(eg.base)$scale-summary(thr.geo)$scale)/summary(eg.base)$scale
 var.ratio.geo # +0.171, largest reduction across all 
 
 var.ratio.vcp<-(summary(eg.base)$scale-summary(vc.pheno)$scale)/summary(eg.base)$scale
-var.ratio.vcp # +0.019
+var.ratio.vcp # +0.020
 
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
-var.ratio.vcg # +0.100 #geography models produce largest reduction in MSE
+var.ratio.vcg # +0.010 #geography models produce largest reduction in MSE
 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
-lv.2d.chg # + 0.046
+lv.2d.chg # + 0.052
 
 thr.chg<-AIC(eg.base)-AIC(thr.geo)
-thr.chg
+thr.chg #708.68
 
 lv.chg<-AIC(lv.base)-AIC(lv.2d)
-lv.chg
+lv.chg #113.18
 
 
 

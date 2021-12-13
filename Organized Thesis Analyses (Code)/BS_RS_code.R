@@ -22,8 +22,8 @@ allctd<-allctd[allctd$Salinity>29&allctd$Salinity<36,] #this removes anomalous t
 
 # Loading Data, Subsetting, and Cleaning ----------------------------------
 #the following lines related to cleaning are based off intel from collaborators familiar with cruises
-rxeggraw<-read.csv(file='./Ichthyo Data/BS_RexSole_Eggs_CatchwZeros_PrimaryNPQ.csv')
-rxlarvraw<-read.csv(file='./Ichthyo Data/BS_RexSole_Larvae_CatchwZeros_PrimaryNPQ.csv')
+rxeggraw<-read.csv(file='BS_RexSole_Eggs_CatchwZeros_PrimaryNPQ.csv')
+rxlarvraw<-read.csv(file='BS_RexSole_Larvae_CatchwZeros_PrimaryNPQ.csv')
 
 rxeggraw<-rxeggraw[rxeggraw$HAUL_ID!='1SS02 81 1 60BON 2',]
 rxlarvraw<-rxlarvraw[rxlarvraw$HAUL_ID!='1SS02 81 1 60BON 2',]
@@ -95,6 +95,8 @@ rxsub<-rxegg[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR','MONTH','LAT','LON','doy','VOLUME_FILTERED',
                'BOTTOM_DEPTH','id','count','SS','DATE')]
 rxsub<-subset(rxsub,MONTH>3&MONTH<8)
+rxsub<-subset(rxsub,LAT<62.1)
+rxlarvae<-subset(rxlarvae,LAT<62.1)
 rxlarv<-rxlarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR','MONTH','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]
@@ -159,7 +161,7 @@ rxlarv.ctd$date<-parse_date_time(rxlarv.ctd$date,orders="mdy")
 rxlarv.ctd$CTD_date<-parse_date_time(rxlarv.ctd$CTD_date,orders="mdy")
 rxlarv.ctd$date_diff<-difftime(rxlarv.ctd$date,rxlarv.ctd$CTD_date,units="hour")
 rxlarv.ctd<-rxlarv.ctd[which(rxlarv.ctd$date_diff>(-6)&rxlarv.ctd$date_diff<6),]
-dim(rxlarv.ctd) #2626, 25
+dim(rxlarv.ctd) 
 
 write.csv(rxsub,'Cleaned_Cut_RxEggs.csv')
 write.csv(rxsub.ctd,'Cleaned_Cut_RxEggs_wCTD.csv')

@@ -95,7 +95,7 @@ abline(h=0,col='sienna3',lty=2,lwd=2)
 
 ##Now try temperature and salinity in a two-dimensional, mutually interacting smooth: 
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
-             s(temperature,salinity),data=nrslarv.ctd,family=tw(link='log'),
+             s(salinity,temperature),data=nrslarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
 

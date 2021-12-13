@@ -58,6 +58,9 @@ thr.pheno<-as.list(1:(length(temps.in))) #another list with the same dimensions 
 
 #this function below takes the unique temperature values and creates a model for each temperature as a threshold. 
 #then, we use AIC to ask which model and at what threshold best explains variation in phenology? 
+pb<-txtProgressBar(min=0,max=length(temps.in),
+                   style=3,width=50,char="=")
+
 for(i in 1:length(temps.in)){
   fhsub$th<-factor(fhsub$reg.SST<=temps.in[i]) #how this is written is arbitrary, just sorts the reg.SST to below or equal to the given temp threshold
                                                 #could also write it as above or equal to the given temp threshold 
@@ -69,7 +72,10 @@ for(i in 1:length(temps.in)){
                         s(doy,by=th),
                       data=fhsub,family=tw(link='log'),method='REML') #standard gam formulation but the s(doy) term is where the threshold temp comes into play
   aic.pheno[i]<-AIC(thr.pheno[[i]]) #calculates AIC index for each model tested 
+  setTxtProgressBar(pb,i)
 }
+
+close(pb)
 
 best.index.phe<-order(aic.pheno)[1] #now we're telling R to give us the model with the best (lowest) AIC value 
 thr.pheno<-thr.pheno[[best.index.phe]]
@@ -112,13 +118,19 @@ temps.in<-temps[bd:(length(temps)-bd)]
 aic.geo<-NA*(temps.in)
 thr.geo<-as.list(1:(length(temps.in)))
 
+pb<-txtProgressBar(min=0,max=length(temps.in),
+                   style=3,width=50,char="=")
+
 for(i in 1:length(temps.in)){
   fhsub$th<-factor(fhsub$reg.SST<=temps.in[i])
   thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+s(bottom_depth,k=5)+
                       s(lon,lat,by=th),data=fhsub,
                     family=tw(link='log'),method='REML')
-  aic.geo[i]<-AIC(thr.geo[[i]])
-} #add TH into grid.extent for true false based on condition 
+  aic.geo[i]<-AIC(thr.geo[[i]]) 
+  setTxtProgressBar(pb,i) #add TH into grid.extent for true false based on condition 
+}
+
+close(pb) 
 
 best.index.geo<-order(aic.geo)[1]
 thr.geo<-thr.geo[[best.index.geo]]
@@ -631,3 +643,4 @@ legend("bottomright",inset=c(-0.3,0),
        pch=c(NA,NA,NA,NA,NA,4),
        bg='lightgrey',xpd=T)
 mtext("FH Sole Cper10m2 Catch Plotted Against T-S 'Sweet Spots'",outer=TRUE,cex=1,line=1)
+

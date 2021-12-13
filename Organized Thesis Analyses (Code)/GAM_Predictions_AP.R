@@ -136,7 +136,7 @@ for(k in 1:nrow(grid.extent)){
 
 grid.extent$year<-2008
 grid.extent$doy<-median(apsub$doy)
-grid.extent$reg.SST<-mean(apsub$reg.SST[apsub$reg.SST<2.064]) #threshold temp chosen by AIC values
+grid.extent$reg.SST<-mean(apsub$reg.SST[apsub$reg.SST<temps.in[best.index.geo]]) #threshold temp chosen by AIC values
 grid.extent$th<-"TRUE"
 grid.extent$bottom_depth<-median(apsub$bottom_depth,na.rm=T)
 grid.extent$pred<-predict(thr.geo,newdata=grid.extent)
@@ -144,7 +144,7 @@ grid.extent$se<-predict(thr.geo,newdata=grid.extent,se=T)[[2]]
 grid.extent$pred.u<-grid.extent$pred+1.96*grid.extent$se #95% CI here
 grid.extent$pred.l<-grid.extent$pred-1.96*grid.extent$se
 grid.extent$pred[grid.extent$dist>30000]<-NA #remove predictions that are too far from positive data values
-grid.extent$reg.SST<-mean(apsub$reg.SST[apsub$reg.SST>2.064])
+grid.extent$reg.SST<-mean(apsub$reg.SST[apsub$reg.SST>temps.in[best.index.geo]])
 grid.extent$th<-"FALSE"
 grid.extent$pred2<-predict(thr.geo,newdata=grid.extent)
 grid.extent$se2<-predict(thr.geo,newdata=grid.extent,se=T)[[2]]
@@ -191,6 +191,7 @@ legend('topleft',legend=c('Base','Threshold Geography'),col=c(NA,col),lwd=c(2,2)
 mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 
 #For added information: threshold phenology prediction (this was the best model to explain phenology):
+#check the threshold temperature values if ever plotting this part 
 grid.extent3<-data.frame('lon'=rep(-155,100),'lat'=rep(51,100),'doy'=seq(min(apsub$doy),max(apsub$doy),length=100),
                          'year'=rep(2008,100),'bottom_depth'=rep(median(apsub$bottom_depth,na.rm=TRUE),100),
                          'reg.SST'=mean(apsub$reg.SST[apsub$reg.SST<1.641]),'th'="TRUE")

@@ -432,7 +432,7 @@ abline(h=0,col='sienna3',lty=2,lwd=2)
 
 ##2D Smooth with temp and sal: 
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
-                   s(temperature,salinity),data=pklarv.ctd,family=tw(link='log'),
+                   s(salinity,temperature),data=pklarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
 
@@ -509,11 +509,11 @@ legend("bottomleft",legend=c('Base BioGeo','Add Sal','Add Temp',
 
 
 # Saved Larval Models -----------------------------------------------------
-saveRDS(lv.base,"../GAM Models/pk_larvae_base.rds")
-saveRDS(lv.add.sal,"../GAM Models/pk_larvae_addsal.rds")
-saveRDS(lv.add.temp,"../GAM Models/pk_larvae_addtemp.rds")
-saveRDS(lv.temp.sal,"../GAM Models/pk_larvae_addtempsal.rds")
-saveRDS(lv.2d,"../GAM Models/pk_larvae_2d.rds")
+saveRDS(lv.base,"./GAM Models/pk_larvae_base.rds")
+saveRDS(lv.add.sal,"./GAM Models/pk_larvae_addsal.rds")
+saveRDS(lv.add.temp,"./GAM Models/pk_larvae_addtemp.rds")
+saveRDS(lv.temp.sal,"./GAM Models/pk_larvae_addtempsal.rds")
+saveRDS(lv.2d,"./GAM Models/pk_larvae_2d.rds")
 
 lv.base<-readRDS("./GAM Models/pk_larvae_base.rds")
 lv.add.sal<-readRDS("./GAM Models/pk_larvae_addsal.rds")

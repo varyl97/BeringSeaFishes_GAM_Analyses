@@ -161,11 +161,14 @@ sald<-seq(min(pclarv.ctd$salinity,na.rm=T),max(pclarv.ctd$salinity,na.rm=T),leng
 grid.extent<-expand.grid(sald,tempd)
 names(grid.extent)<-c('salinity','temperature')
 
-grid.extent$dist<-NA
+grid.extent$dist.sal<-NA
+grid.extent$dist.temp<-NA
 for(k in 1:nrow(grid.extent)){
-  dist<-distance.function(grid.extent$salinity[k],grid.extent$temperature[k],
-                          pclarv.ctd$salinity,pclarv.ctd$temperature)
-  grid.extent$dist[k]<-min(dist)
+  dist.sal<-euclidean.distance(grid.extent$salinity[k],pclarv.ctd$salinity[k])
+  dist.temp<-euclidean.distance(grid.extent$temperature[k],pclarv.ctd$temperature[k])
+  
+  grid.extent$dist.sal[k]<-min(dist.sal)
+  grid.extent$dist.temp[k]<-min(dist.temp)
 }
 
 grid.extent$year<-as.numeric(2005)
@@ -175,7 +178,8 @@ grid.extent$doy<-as.numeric(median(pclarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(pclarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist>15000]<-NA #check this
+grid.extent$pred[grid.extent$dist.sal>75]<-NA
+grid.extent$pred[grid.extent$dist.temp>75]<-NA #check this
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
@@ -184,7 +188,7 @@ image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(s
            ylab=expression(paste("Temperature ("^0, 'C)')),
            xlim=range(pclarv.ctd$salinity,na.rm=T),ylim=range(pclarv.ctd$temperature,na.rm=T),
            main='Larval Biogeography By Temperature and Salinity',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.8,
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 
 

@@ -119,7 +119,7 @@ abline(h=0,col='grey79',lty=2,lwd=1.5)
 windows()
 par(mai=c(1,1,0.5,0.5))
 plot(eg.base,select=2,main='Flathead Sole Base Phenology, Eggs',
-     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 8.78)',ylim=c(-3,3))
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 8.79)',ylim=c(-3,3))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 
 
@@ -143,7 +143,7 @@ for(k in 1:nrow(grid.extent)){
 
 grid.extent$year<-2013
 grid.extent$doy<-median(fhsub$doy)
-grid.extent$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST<2.285]) #threshold temp chosen by AIC values
+grid.extent$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST<temps.in[best.index.geo]]) #threshold temp chosen by AIC values
 grid.extent$th<-"TRUE"
 grid.extent$bottom_depth<-median(fhsub$bottom_depth,na.rm=T)
 grid.extent$pred<-predict(thr.geo,newdata=grid.extent)
@@ -151,7 +151,7 @@ grid.extent$se<-predict(thr.geo,newdata=grid.extent,se=T)[[2]]
 grid.extent$pred.u<-grid.extent$pred+1.96*grid.extent$se #95% CI here
 grid.extent$pred.l<-grid.extent$pred-1.96*grid.extent$se
 grid.extent$pred[grid.extent$dist>30000]<-NA #remove predictions that are too far from positive data values
-grid.extent$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST>2.285])
+grid.extent$reg.SST<-mean(fhsub$reg.SST[fhsub$reg.SST>temps.in[best.index.geo]])
 grid.extent$th<-"FALSE"
 grid.extent$pred2<-predict(thr.geo,newdata=grid.extent)
 grid.extent$se2<-predict(thr.geo,newdata=grid.extent,se=T)[[2]]
@@ -170,7 +170,7 @@ par(mai=c(1,1,0.5,0.5))
 image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
            col=hcl.colors(100,"PRGn"),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), #PRGn diverges more clearly, helping interpretation
            xlim=range(fhsub$lon),ylim=range(fhsub$lat),main='Change in FHS(E) Distribution w Threshold Temperature Effect',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2,
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),
            legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)#would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
@@ -198,8 +198,43 @@ plot(thr.geo,select=1,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-1.5,3))
 legend('topright',legend=c('Base','Threshold Geography'),col=c(NA,col),lwd=c(2,2),cex=0.8)
 mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 
+#Plot Threshold Phenology (best model after new iteration, 12/13/2021):
+col<-adjustcolor('tomato4',alpha.f=0.3)
 
-#For added information: threshold phenology prediction (this was the best model to explain phenology, but explains 77.8% dev.):
+windows()
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(thr.pheno,select=4,main='Flathead Sole Phenology, Threshold Effect',seWithMean=TRUE,
+     ylim=c(-3,3))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-3,3))
+legend('topright',legend=c('Below 2.12*C','Above 2.12*C'),col=c('grey25',col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
+
+
+# Plot Geography from Phenology Model -----------------------------------------------
+grid.extent$year<-as.numeric(2013) #for base, just pick a year that has coverage
+grid.extent$doy<-as.numeric(median(fhsub$doy,na.rm=TRUE))
+grid.extent$bottom_depth<-NA
+grid.extent$bottom_depth<-median(fhsub$bottom_depth,na.rm=TRUE)
+grid.extent$reg.SST<-NA
+grid.extent$reg.SST<-mean(fhsub$reg.SST,na.rm=TRUE) 
+grid.extent$th<-as.character("TRUE")
+grid.extent$pred<-predict(thr.pheno,newdata=grid.extent)
+grid.extent$pred[grid.extent$dist>30000]<-NA 
+
+windows(height=15,width=15)
+par(mai=c(1,1,0.5,0.9))
+image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=range(fhsub$lon),ylim=range(fhsub$lat),main='Flathead Sole Distribution, Th.Ph, Eggs',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
+           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+map("worldHires",fill=T,col="seashell2",add=T)
+
+#RELIC: For added information: threshold phenology prediction (this was the best model to explain phenology; In new iteration (12/7/2021, this is best model)
 grid.extent3<-data.frame('lon'=rep(-155,100),'lat'=rep(51,100),'doy'=seq(min(fhsub$doy),max(fhsub$doy),length=100),
                          'year'=rep(2013,100),'bottom_depth'=rep(median(fhsub$bottom_depth,na.rm=TRUE),100),
                          'reg.SST'=mean(fhsub$reg.SST[fhsub$reg.SST<2.108]),'th'="TRUE")
@@ -270,7 +305,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(fhlarv.ctd$lon,na.rm=TRUE),ylim=range(fhlarv.ctd$lat,na.rm=TRUE),main='Flathead Sole Distribution, Larvae',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2,
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 points(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2==0],fhlarv.ctd$lat[fhlarv.ctd$Cper10m2==0],pch='+',col='white')
@@ -278,59 +313,6 @@ symbols(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2>0],
         fhlarv.ctd$lat[fhlarv.ctd$Cper10m2>0],
         circles=log(fhlarv.ctd$Cper10m2+1)[fhlarv.ctd$Cper10m2>0],
         inches=0.1,bg=symcol,fg='black',add=T)
-map("worldHires",fill=T,col="seashell2",add=T)
-
-#Improved distribution with temperature,salinity 2D model: 
-#plan is to calculate the significant differences in larval biogeography from base model to 2D model
-  #to show how inclusion of temperature and salinity improves biogeography understanding
-nlat=120
-nlon=120
-latd=seq(min(fhlarv.ctd$lat,na.rm=TRUE),max(fhlarv.ctd$lat,na.rm=TRUE),length.out=nlat)
-lond=seq(min(fhlarv.ctd$lon,na.rm=TRUE),max(fhlarv.ctd$lon,na.rm=TRUE),length.out=nlon)
-
-grid.extent<-expand.grid(lond,latd)
-names(grid.extent)<-c('lon','lat')
-
-grid.extent$dist<-NA
-for(k in 1:nrow(grid.extent)){
-  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
-                          fhlarv.ctd$lat,fhlarv.ctd$lon)
-  grid.extent$dist[k]<-min(dist)
-}
-
-grid.extent$year<-as.numeric(2016)
-grid.extent$doy<-as.numeric(median(fhlarv.ctd$doy,na.rm=TRUE))
-grid.extent$bottom_depth<-NA
-grid.extent$bottom_depth<-as.numeric(median(fhlarv.ctd$bottom_depth,na.rm=TRUE))
-grid.extent$pred<-predict(lv.base,newdata=grid.extent)
-grid.extent$se<-predict(lv.base,newdata=grid.extent,se=T)[[2]]
-grid.extent$pred.u<-grid.extent$pred+1.96*grid.extent$se
-grid.extent$pred.l<-grid.extent$pred-1.96*grid.extent$se
-grid.extent$pred[grid.extent$dist>30000]<-NA
-grid.extent$temperature<-as.numeric(mean(fhlarv.ctd$temperature))
-grid.extent$salinity<-as.numeric(mean(fhlarv.ctd$salinity))
-grid.extent$pred2<-predict(lv.2d,newdata=grid.extent) 
-grid.extent$se2<-predict(lv.2d,newdata=grid.extent,se=T)[[2]]
-grid.extent$pred2.u<-grid.extent$pred2+1.96*grid.extent$se2
-grid.extent$pred2.l<-grid.extent$pred2-1.96*grid.extent$se2
-grid.extent$diff<-grid.extent$pred2-grid.extent$pred #calculate differences between base and 2D
-
-grid.extent$sig.pos<-c(grid.extent$pred2.l>grid.extent$pred.u) #isolate areas where there is a higher predicted CPUE in 2D model 
-grid.extent$sig.neg<-c(grid.extent$pred2.u<grid.extent$pred.l)
-grid.extent$pos.diff<-grid.extent$diff*grid.extent$sig.pos #calculate areas with a significant positive difference in 2D
-grid.extent$neg.diff<-grid.extent$diff*grid.extent$sig.neg
-max.slope<-max(grid.extent$diff,na.rm=T)
-
-windows(height=15,width=15)
-par(mai=c(1,1,0.5,0.9))
-image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
-           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=range(fhlarv.ctd$lon,na.rm=TRUE),ylim=range(fhlarv.ctd$lat,na.rm=TRUE),
-           main=expression(paste('Flathead Sole ',Delta,'Larval Distribution w Temp and Salinity')),
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.8,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
-contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
 
 #More Simplistic Predicted Larval Biogeography - just plot based on what the 2D model predicts: 
@@ -365,7 +347,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(fhlarv.ctd$lon,na.rm=TRUE),ylim=range(fhlarv.ctd$lat,na.rm=TRUE),
            main='Predicted Larval Biogeography, 2D Model',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.8,
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
@@ -380,11 +362,14 @@ sald<-seq(min(fhlarv.ctd$salinity,na.rm=T),max(fhlarv.ctd$salinity,na.rm=T),leng
 grid.extent<-expand.grid(sald,tempd)
 names(grid.extent)<-c('salinity','temperature')
 
-grid.extent$dist<-NA
+grid.extent$dist.sal<-NA
+grid.extent$dist.temp<-NA
 for(k in 1:nrow(grid.extent)){
-  dist<-distance.function(grid.extent$salinity[k],grid.extent$temperature[k],
-                          fhlarv.ctd$salinity,fhlarv.ctd$temperature)
-  grid.extent$dist[k]<-min(dist)
+  dist.sal<-euclidean.distance(grid.extent$salinity[k],fhlarv.ctd$salinity[k])
+  dist.temp<-euclidean.distance(grid.extent$temperature[k],fhlarv.ctd$temperature[k])
+  
+  grid.extent$dist.sal[k]<-min(dist.sal)
+  grid.extent$dist.temp[k]<-min(dist.temp)
 }
 
 grid.extent$year<-as.numeric(2005)
@@ -394,7 +379,8 @@ grid.extent$doy<-as.numeric(median(fhlarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(fhlarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist>15000]<-NA #check this
+grid.extent$pred[grid.extent$dist.sal>75]<-NA
+grid.extent$pred[grid.extent$dist.temp>75]<-NA #check this
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
@@ -403,7 +389,7 @@ image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(s
            ylab=expression(paste("Temperature ("^0, 'C)')),
            xlim=range(fhlarv.ctd$salinity,na.rm=T),ylim=range(fhlarv.ctd$temperature,na.rm=T),
            main='Larval Biogeography By Temperature and Salinity',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.8,
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 
 

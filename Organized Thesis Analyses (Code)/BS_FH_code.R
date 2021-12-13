@@ -86,9 +86,11 @@ fhlarvae$DATE<-paste(fhlarvae$MONTH_,fhlarvae$DAY_,fhlarvae$YEAR_,sep="/")
 fhsub<-fhegg[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                'BOTTOM_DEPTH','id','count','SS','DATE')]
-fhsub<-subset(fhsub,MONTH_>1&MONTH_<7)
-fhsub<-subset(fhsub,BOTTOM_DEPTH<220)
-fhlarvae<-subset(fhlarvae,BOTTOM_DEPTH<220)
+fhsub<-subset(fhsub,doy>99&doy<283)
+fhsub<-subset(fhsub,BOTTOM_DEPTH>54&BOTTOM_DEPTH<221)
+fhsub<-subset(fhsub,LAT<61)
+fhlarvae<-subset(fhlarvae,BOTTOM_DEPTH>54&BOTTOM_DEPTH<221)
+fhlarvae<-subset(fhlarvae,LAT<61)
 fhlarv<-fhlarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]

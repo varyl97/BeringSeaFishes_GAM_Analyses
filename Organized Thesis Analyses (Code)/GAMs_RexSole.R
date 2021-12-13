@@ -22,8 +22,6 @@ head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 for(i in 1:nrow(rxsub)){
   rxsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==rxsub$year[i]]}
 
-rxsub<-rxsub[rxsub$lat<60.5,] #trim to eliminate areas where catch is very rare 
-
 #Base Egg Model: simplest formulation 
 eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
              data=rxsub,family=tw(link='log'),method='REML')
@@ -31,7 +29,7 @@ eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
 summary(eg.base)
 
 windows(width=12,height=8)
-plot(eg.base,shade=TRUE,shade.col='skyblue3',page=1,
+plot(eg.base,page=1,
      seWithMean=TRUE,scale=0)
 
 windows(width=12,height=8)
@@ -40,11 +38,11 @@ vis.gam(eg.base,view=c(c("lon","lat")),too.far=0.025,
         color="heat",plot.type="contour",n.grid=20,
         main='Geographic Linear Predictor (vis.gam), Base Egg')
 map("world",fill=T,col="snow4",add=T)
-plot(eg.base,select=2,shade=TRUE,shade.col="skyblue3",
+plot(eg.base,select=2,
      xlab='Day of Year',ylab='Estimated Effect, Log(Cper10m2+1)',
      main='Phenologic Smooth')
 abline(h=0,col='sienna3',lty=2,lwd=2)
-plot(eg.base,select=3,shade=TRUE,shade.col="skyblue3")
+plot(eg.base,select=3,shade.col="skyblue3")
 
 windows()
 par(mfrow=c(2,2),oma=c(1.5,2,1,1))
@@ -52,6 +50,9 @@ gam.check(eg.base)
 mtext('gam.check Output for Base Egg Rex CPUE',outer=TRUE,cex=1,line=-0.5)
 
 #Phenological Model with Temperature Threshold 
+pb<-txtProgressBar(min=0,max=length(temps.in),
+                    style=3,width=50,char="=") #create a progress bar to make waiting less painful
+
 temps<-sort(unique(reg.sst$SST))
 bd<-4
 temps.in<-temps[bd:(length(temps)-bd)]
@@ -66,7 +67,9 @@ for(i in 1:length(temps.in)){
                         s(doy,by=th),
                       data=rxsub,family=tw(link='log'),method='REML')
   aic.pheno[i]<-AIC(thr.pheno[[i]])
+  setTxtProgressBar(pb,i)
 }
+close(pb)
 
 best.index.phe<-order(aic.pheno)[1]
 thr.pheno<-thr.pheno[[best.index.phe]]
@@ -81,16 +84,16 @@ abline(v=temps.in[best.index.phe],lty=2,lwd=2,col='steelblue3')
 summary(thr.pheno)
 
 windows(width=12,height=8)
-plot(thr.pheno,shade=TRUE,shade.col='skyblue3',page=1,
+plot(thr.pheno,page=1,
      seWithMean=TRUE,scale=0)
 
 windows(width=12,height=8)
 par(mfrow=c(1,2))
 plot(thr.pheno,select=4,main=paste('Below',round(temps.in[best.index.phe],digits=3),sep=" "),
-     shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(thr.pheno,select=3,main=paste('Above',round(temps.in[best.index.phe],digits=3),sep=" "),
-     shade=TRUE,shade.col='skyblue3',seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
 
@@ -108,7 +111,9 @@ for(i in 1:length(temps.in)){
                       s(lon,lat,by=th),data=rxsub,
                     family=tw(link='log'),method='REML')
   aic.geo[i]<-AIC(thr.geo[[i]])
+  setTxtProgressBar(pb,i)
 }
+close(pb)
 
 best.index.geo<-order(aic.geo)[1]
 thr.geo<-thr.geo[[best.index.geo]]
@@ -122,18 +127,18 @@ abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
 summary(thr.geo)
 
 windows(width=12,height=8)
-plot(thr.geo,page=1,scale=0,shade=TRUE,shade.col='skyblue3',
+plot(thr.geo,page=1,scale=0,
      seWithMean=TRUE)
 
 windows(width=12,height=8)
 par(mfrow=c(1,2))
 plot(thr.geo,select=4,scheme=2,too.far=0.025,
      main=paste('Below',round(temps.in[best.index.geo],digits=3),sep=" "),
-     shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
+     seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
 plot(thr.geo,select=3,scheme=2,too.far=0.025,
      main=paste('Above',round(temps.in[best.index.geo],digits=3),sep=" "),
-     shade=TRUE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
+     seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
 map("world",fill=T,col="snow4",add=T)
 
 #Now for Variable-Coefficient Models, beginning with VC Phenology: 
@@ -146,17 +151,17 @@ vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
 summary(vc.pheno)
 
 windows(width=12,height=8)
-plot(vc.pheno,shade=TRUE,shade.col='skyblue3',
+plot(vc.pheno,
      page=1,scale=0,main='V-C Temp Flexible Phenology, RX Eggs',
      seWithMean=TRUE)
 
 windows(width=16,height=8)
 par(mfrow=c(1,2))
-plot(vc.pheno,select=2,shade=TRUE,shade.col='skyblue3',
+plot(vc.pheno,select=2,
      main='V-C Regional Temp, Flexible Phenology',xlab='Day of Year',
      seWithMean=TRUE)
 abline(h=0,col='sienna3',lty=2,lwd=2)
-plot(vc.pheno,select=4,shade=TRUE,shade.col='skyblue3',
+plot(vc.pheno,select=4,
      main='V-C Reg. Temp, Deviation from Avg. Pheno Variation',
      xlab='Day of Year',seWithMean=TRUE)
 abline(h=0,col='sienna3',lty=2,lwd=2)
@@ -168,16 +173,16 @@ vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
 summary(vc.geo)
 
 windows(width=12,height=8)
-plot(vc.geo,shade=TRUE,shade.col='skyblue3',
+plot(vc.geo,
      page=1,seWithMean=TRUE,main='V-C Flex Geo')
 
 windows(width=15,height=8)
 par(mfrow=c(1,2))
-plot(vc.geo,select=1,scheme=2,too.far=0.025,shade=TRUE,shade.col='skyblue3',
+plot(vc.geo,select=1,scheme=2,too.far=0.025,
      seWithMean=TRUE,xlab='Longitude',ylab='Latitude',
      main='V-C Rx Egg Flex Geo, Avg. Variation')
 map("world",fill=T,col="snow4",add=T)
-plot(vc.geo,select=4,scheme=2,too.far=0.025,shade=TRUE,shade.col='skyblue3',
+plot(vc.geo,select=4,scheme=2,too.far=0.025,
      xlab='Longitude',ylab='Latitude',seWithMean=TRUE,
      main='V-C Flex Geo, Deviation from Avg. Variation')
 map("world",fill=T,col="snow4",add=T)
@@ -215,13 +220,13 @@ aic.rxegg<-data.frame('model'=c('Base','Threshold Pheno','Threshold Geo',
                       'AIC_value'=c(aic.base,aic.thrph,aic.thrge,
                                     aic.vcph,aic.vcgeo))
 
-windows()
+windows(width=15,height=10)
 plot(c(1:5),aic.rxegg$AIC_value,main='AIC Results for Rx Egg Models',
      col=c( "#482173FF", "#38598CFF","#1E9B8AFF", "#51C56AFF","#FDE725FF"),
      pch=19,cex=2,ylab='AIC Value',xlab='')
 grid(nx=5,ny=14,col="lightgray")
 text(c(1:5),aic.rxegg$AIC_value,labels=round(aic.rxegg$AIC_value),pos=c(4,3,3,3,2))
-legend("bottomleft",legend=c('Base','Threshold Pheno','Threshold Geo',
+legend("bottomright",legend=c('Base','Threshold Pheno','Threshold Geo',
                              'VC Pheno','VC Geo'),
        col=c( "#482173FF", "#38598CFF","#1E9B8AFF", "#51C56AFF","#FDE725FF"),
        lwd=3,lty=1)
@@ -238,14 +243,14 @@ summary(lv.base)
 
 windows(width=12,height=8)
 par(mfrow=c(2,2))
-plot(lv.base,select=1,shade=TRUE,shade.col='skyblue3',
+plot(lv.base,select=1,
      seWithMean=TRUE,scale=0,main='Base Larval Presence GAM, W/O Residuals')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.base,select=2,scheme=2,too.far=0.025,
-     shade=TRUE,shade.col='skyblue3',
+     
      seWithMean=TRUE,scale=0)
 map("world",fill=T,col="snow4",add=T)
-plot(lv.base,select=3,shade=TRUE,shade.col='skyblue3',
+plot(lv.base,select=3,
      seWithMean=TRUE,scale=0)
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
@@ -257,11 +262,11 @@ lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 summary(lv.add.sal)
 
 windows(width=12,height=8)
-plot(lv.add.sal,page=1,scale=0,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.sal,page=1,scale=0,
      seWithMean=TRUE)
 
 windows(width=12,height=8)
-plot(lv.add.sal,select=4,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.sal,select=4,
      seWithMean=TRUE,main='Larval Log(CPer10m2+1), Effect of Salinity',
      xlab='Salinity (PSU)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
@@ -274,12 +279,12 @@ lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 summary(lv.add.temp)
 
 windows()
-plot(lv.add.temp,page=1,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.temp,page=1,
      seWithMean=TRUE,main='Larval Log(Cper10m2+1) w Temp',scale=0)
     #note: scale=0 allows each individual smooth to have its own y-axis scale
 
 windows(width=12,height=8)
-plot(lv.add.temp,select=4,shade=TRUE,shade.col="skyblue4",
+plot(lv.add.temp,select=4,
      seWithMean=TRUE,main='Effect of Temperature',
      xlab='Temperature (degC)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
@@ -292,14 +297,14 @@ lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 summary(lv.temp.sal)
 
 windows()
-plot(lv.temp.sal,page=1,shade=TRUE,shade.col='skyblue4',
+plot(lv.temp.sal,page=1,
      main='Larval Log Presence Temp and Sal',
      seWithMean=TRUE,scale=0)
 
 windows()
 par(mfrow=c(1,2))
-plot(lv.temp.sal,select=1,seWithMean=TRUE,shade=TRUE,
-     shade.col='skyblue4',main='Temp and Sal Model')
+plot(lv.temp.sal,select=1,seWithMean=TRUE,
+     main='Temp and Sal Model')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.temp.sal,select=2,scheme=2,seWithMean=TRUE,too.far=0.025,
      xlab='Longitude',ylab='Latitude',main='Biogeography')
@@ -307,22 +312,22 @@ map("world",fill=T,col="snow4",add=T)
 
 windows()
 par(mfrow=c(1,2))
-plot(lv.temp.sal,select=4,shade=TRUE,shade.col='skyblue4',
+plot(lv.temp.sal,select=4,
      seWithMean=TRUE,main='Effect of Temp',xlab='Temperature (degC)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
-plot(lv.temp.sal,select=5,shade=TRUE,shade.col='skyblue4',
+plot(lv.temp.sal,select=5,
      seWithMean=TRUE,main='Effect of Salinity',xlab='Salinity (psu)')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 
 ##Now try temperature and salinity in a two-dimensional, mutually interacting smooth: 
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
-             s(temperature,salinity),data=rxlarv.ctd,family=tw(link='log'),
+             s(salinity,temperature),data=rxlarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
 
 windows()
 par(mfrow=c(1,2))
-plot(lv.2d,select=2,seWithMean=TRUE,shade=TRUE,shade.col='skyblue4',
+plot(lv.2d,select=2,seWithMean=TRUE,
      main='Seasonal Presence, 2D Temp+Sal Model')
 abline(h=0,col='sienna3',lty=2,lwd=2)
 plot(lv.2d,select=1,scheme=2,seWithMean=TRUE,too.far=0.025,
@@ -330,7 +335,7 @@ plot(lv.2d,select=1,scheme=2,seWithMean=TRUE,too.far=0.025,
 map("world",fill=T,col="snow4",add=T)
 
 windows()
-plot(lv.2d,select=4,scheme=2,main='Larval Log Presence, 2D Temp and Sal Effect',
+plot(lv.2d,select=4,scheme=TRUE,main='Larval Log Presence, 2D Temp and Sal Effect',
      too.far=0.025,
      xlab='Temperature (degC)',ylab='Salinity (psu)')
 
