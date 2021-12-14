@@ -161,19 +161,22 @@ AIC(lv.base)-AIC(lv.2d) #403.40
 
 #Walleye Pollock: 
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale
-var.ratio.phe # positive difference of 0.032, meaning egg MSE was slightly larger than thr phenology model 
+var.ratio.phe # positive difference of 0.035, meaning egg MSE was slightly larger than thr phenology model 
 
 var.ratio.geo<-(summary(eg.base)$scale-summary(thr.geo)$scale)/summary(eg.base)$scale
-var.ratio.geo # +0.133, larger reduction than thr phenology 
+var.ratio.geo # +0.147, larger reduction than thr phenology 
 
 var.ratio.vcp<-(summary(eg.base)$scale-summary(vc.pheno)$scale)/summary(eg.base)$scale
-var.ratio.vcp # +0.027
+var.ratio.vcp # +0.034
 
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
-var.ratio.vcg # +0.133 #geography models produce largest reduction in MSE
+var.ratio.vcg # +0.131 #geography models produce largest reduction in MSE
 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
-lv.2d.chg
+lv.2d.chg #0.136
+
+AIC(eg.base)-AIC(thr.geo) #620.57
+AIC(lv.base)-AIC(lv.2d) #531.51
 
 #Yellowfin Sole: 
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale
@@ -196,17 +199,17 @@ AIC(lv.base)-AIC(lv.2d) #596.00
 
 #Pacific Cod (larvae only): 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
-lv.2d.chg #+ 0.0713
+lv.2d.chg #+ 0.094
 
 aic.chg<-AIC(lv.base)-AIC(lv.2d)
-aic.chg # +225.643
+aic.chg # +229.84
 
 #Northern Rock Sole (larvae only): 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
-lv.2d.chg #+ 0.102
+lv.2d.chg #+ 0.118
 
 aic.chg<-AIC(lv.base)-AIC(lv.2d)
-aic.chg # + 371.43
+aic.chg # + 344.99
 
 #Rex Sole: 
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale

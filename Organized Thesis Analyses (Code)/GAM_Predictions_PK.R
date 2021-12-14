@@ -43,8 +43,8 @@ windowsFonts(A="Times New Roman") #for axes labels and plot titles, eventually
 #prediction grid
 nlat=120
 nlon=120
-latd=seq(min(pksub$lat),max(pksub$lat),length.out=nlat) #center grid over study region 
-lond=seq(min(pksub$lon),max(pksub$lon),length.out=nlon)
+latd=seq(min(pksub$lat),61,length.out=nlat) #center grid over study region 
+lond=seq((-173.5),max(pksub$lon),length.out=nlon)
 
 grid.extent<-expand.grid(lond,latd)
 names(grid.extent)<-c('lon','lat')
@@ -74,8 +74,8 @@ par(mai=c(1,1,0.5,0.9))
 image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=range(pksub$lon),ylim=range(pksub$lat),main='Walleye Pollock Distribution, Eggs',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2,
+           xlim=range(grid.extent$lon),ylim=range(grid.extent$lat),main='Walleye Pollock Distribution, Eggs',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 points(pksub$lon[pksub$Cper10m2==0],pksub$lat[pksub$Cper10m2==0],pch='+',col='white')
@@ -120,8 +120,8 @@ abline(h=0,col='grey79',lty=2,lwd=1.5)
 #start with threshold geography model to find differences between two predictions to calculate local slopes 
 nlat=120
 nlon=120
-latd=seq(min(pksub$lat),max(pksub$lat),length.out=nlat) #center grid over study region 
-lond=seq(min(pksub$lon),max(pksub$lon),length.out=nlon)
+latd=seq(min(pksub$lat),61,length.out=nlat) #center grid over study region 
+lond=seq((-173.5),max(pksub$lon),length.out=nlon)
 
 grid.extent<-expand.grid(lond,latd)
 names(grid.extent)<-c('lon','lat')
@@ -162,8 +162,8 @@ windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.5))
 image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
            col=hcl.colors(100,"PRGn"),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), #PRGn diverges more clearly, helping interpretation
-           xlim=range(pksub$lon),ylim=range(pksub$lat),main='Change in PK(e) Distribution w Threshold Temperature Effect',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2,
+           xlim=range(grid.extent$lon),ylim=range(grid.extent$lat),main='Change in PK(e) Distribution w Threshold Temperature Effect',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),
            legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)#would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
@@ -184,10 +184,10 @@ col<-adjustcolor('tomato4',alpha.f=0.3)
 windows()
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
 plot(eg.base,select=2,main='Walleye Pollock Phenology, Eggs',seWithMean=TRUE,
-     ylim=c(-2,1))
+     ylim=c(-2.5,2))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
-plot(thr.geo,select=1,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-2,1))
+plot(thr.geo,select=1,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-2.5,2))
 legend('topright',legend=c('Base','Threshold Geography'),col=c(NA,col),lwd=c(2,2),cex=0.8)
 mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 
@@ -262,7 +262,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(pklarv.ctd$lon,na.rm=TRUE),ylim=range(pklarv.ctd$lat,na.rm=TRUE),main='Walleye Pollock Distribution, Larvae',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2,
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 points(pklarv.ctd$lon[pklarv.ctd$Cper10m2==0],pklarv.ctd$lat[pklarv.ctd$Cper10m2==0],pch='+',col='white')
@@ -272,60 +272,8 @@ symbols(pklarv.ctd$lon[pklarv.ctd$Cper10m2>0],
         inches=0.1,bg=symcol,fg='black',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
 
-#Improved distribution with temperature,salinity 2D model: 
-#plan is to calculate the significant differences in larval biogeography from base model to 2D model
-#to show how inclusion of temperature and salinity improves biogeography understanding
-nlat=120
-nlon=120
-latd=seq(min(pklarv.ctd$lat,na.rm=TRUE),max(pklarv.ctd$lat,na.rm=TRUE),length.out=nlat)
-lond=seq(min(pklarv.ctd$lon,na.rm=TRUE),max(pklarv.ctd$lon,na.rm=TRUE),length.out=nlon)
 
-grid.extent<-expand.grid(lond,latd)
-names(grid.extent)<-c('lon','lat')
-
-grid.extent$dist<-NA
-for(k in 1:nrow(grid.extent)){
-  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
-                          pklarv.ctd$lat,pklarv.ctd$lon)
-  grid.extent$dist[k]<-min(dist)
-}
-
-grid.extent$year<-as.numeric(2009)
-grid.extent$doy<-as.numeric(median(pklarv.ctd$doy,na.rm=TRUE))
-grid.extent$bottom_depth<-NA
-grid.extent$bottom_depth<-as.numeric(median(pklarv.ctd$bottom_depth,na.rm=TRUE))
-grid.extent$pred<-predict(lv.base,newdata=grid.extent)
-grid.extent$se<-predict(lv.base,newdata=grid.extent,se=T)[[2]]
-grid.extent$pred.u<-grid.extent$pred+1.96*grid.extent$se
-grid.extent$pred.l<-grid.extent$pred-1.96*grid.extent$se
-grid.extent$pred[grid.extent$dist>30000]<-NA
-grid.extent$temperature<-as.numeric(mean(pklarv.ctd$temperature))
-grid.extent$salinity<-as.numeric(mean(pklarv.ctd$salinity))
-grid.extent$pred2<-predict(lv.2d,newdata=grid.extent) 
-grid.extent$se2<-predict(lv.2d,newdata=grid.extent,se=T)[[2]]
-grid.extent$pred2.u<-grid.extent$pred2+1.96*grid.extent$se2
-grid.extent$pred2.l<-grid.extent$pred2-1.96*grid.extent$se2
-grid.extent$diff<-grid.extent$pred2-grid.extent$pred #calculate differences between base and 2D
-
-grid.extent$sig.pos<-c(grid.extent$pred2.l>grid.extent$pred.u) #isolate areas where there is a higher predicted CPUE in 2D model 
-grid.extent$sig.neg<-c(grid.extent$pred2.u<grid.extent$pred.l)
-grid.extent$pos.diff<-grid.extent$diff*grid.extent$sig.pos #calculate areas with a significant positive difference in 2D
-grid.extent$neg.diff<-grid.extent$diff*grid.extent$sig.neg
-max.slope<-max(grid.extent$diff,na.rm=T)
-
-windows(height=15,width=15)
-par(mai=c(1,1,0.5,0.9))
-image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
-           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=range(pklarv.ctd$lon,na.rm=TRUE),ylim=range(pklarv.ctd$lat,na.rm=TRUE),
-           main=expression(paste('Walleye Pollock ',Delta,'Larval Distribution w Temp and Salinity')),
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.8,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
-contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
-map("worldHires",fill=T,col="seashell2",add=T)
-
-#More Simplistic Predicted Larval Biogeography - just plot based on what the 2D model predicts: 
+#Predicted Larval Biogeography - based on what the 2D model predicts: 
 nlat=120
 nlon=120
 latd=seq(min(pklarv.ctd$lat,na.rm=TRUE),max(pklarv.ctd$lat,na.rm=TRUE),length.out=nlat)
@@ -357,7 +305,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(pklarv.ctd$lon,na.rm=TRUE),ylim=range(pklarv.ctd$lat,na.rm=TRUE),
            main='Predicted Larval Biogeography, 2D Model',
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.8,
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
@@ -375,8 +323,10 @@ names(grid.extent)<-c('salinity','temperature')
 grid.extent$dist.sal<-NA
 grid.extent$dist.temp<-NA
 for(k in 1:nrow(grid.extent)){
-  dist.sal<-euclidean.distance(grid.extent$salinity[k],pklarv.ctd$salinity[k])
-  dist.temp<-euclidean.distance(grid.extent$temperature[k],pklarv.ctd$temperature[k])
+  dist.sal<-euclidean.distance(grid.extent$salinity[k],
+                               pklarv.ctd$salinity[pklarv.ctd$Cper10m2>0][k])
+  dist.temp<-euclidean.distance(grid.extent$temperature[k],
+                                pklarv.ctd$temperature[pklarv.ctd$Cper10m2>0][k])
   
   grid.extent$dist.sal[k]<-min(dist.sal)
   grid.extent$dist.temp[k]<-min(dist.temp)
@@ -389,8 +339,8 @@ grid.extent$doy<-as.numeric(median(pklarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(pklarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist.sal>75]<-NA
-grid.extent$pred[grid.extent$dist.temp>75]<-NA #check this
+grid.extent$pred[grid.extent$dist.sal>1.851]<-NA
+grid.extent$pred[grid.extent$dist.temp>6.453]<-NA #based on 3rd quartile values
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
@@ -401,3 +351,7 @@ image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(s
            main='Larval Biogeography By Temperature and Salinity',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+symbols(pklarv.ctd$salinity[pklarv.ctd$Cper10m2>0],
+        pklarv.ctd$temperature[pklarv.ctd$Cper10m2>0],
+        circles=log(pklarv.ctd$Cper10m2+1)[pklarv.ctd$Cper10m2>0],
+        inches=0.1,bg=symcol,fg='black',add=T)

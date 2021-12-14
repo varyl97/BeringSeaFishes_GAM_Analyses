@@ -1,6 +1,7 @@
 #BS Pollock Code: 
 
 ###BATHYMETRY###################################################################
+setwd(rwd)
 str_name<-"BeringSea_1.tiff"
 brs_bathy<-raster(str_name)
 brs_bathy2<-as.bathy(brs_bathy)
@@ -15,7 +16,8 @@ plot(brs_bathy2,land=TRUE,deep=c(-5000,-200,0),shallow=c(-1000,-50,0),
                  c(1, max(brs_bathy2), "gray90", "gray10")))
 
 ###CTD Loading: ################################################################
-allctd<-read.csv(file="../Environmental Data/All_CTD_Data_8302021.csv")
+setwd(gitwd)
+allctd<-read.csv(file="./Environmental Data/All_CTD_Data_8302021.csv")
 names(allctd)
 allctd<-allctd[c('Latitude','Longitude','Date','Time','Pressure','Depth',
                  'Temperature','Conductivity','Salinity','Sigma.T',
@@ -29,8 +31,10 @@ allctd<-allctd[allctd$Temperature<14,]
 allctd<-allctd[allctd$Salinity>29&allctd$Salinity<36,]
 
 ###POLLOCK: ####################################################################
-pkeggraw<-read.csv(file='../Ichthyo Data/BS_PollockEggCatch.csv',header=TRUE,check.names=TRUE)
-pklarvraw<-read.csv(file='../Ichthyo Data/BS_PollockLarvaeCatch.csv',header=TRUE,check.names=TRUE)
+setwd(rwd)
+pkeggraw<-read.csv(file='BS_PollockEggCatch.csv',header=TRUE,check.names=TRUE)
+pklarvraw<-read.csv(file='BS_PollockLarvaeCatch.csv',header=TRUE,check.names=TRUE)
+setwd(gitwd)
 
 pkeggraw<-pkeggraw[pkeggraw$HAUL_ID!='1SS02 81 1 60BON 2',]
 pklarvraw<-pklarvraw[pklarvraw$HAUL_ID!='1SS02 81 1 60BON 2',]
@@ -100,10 +104,11 @@ pksub<-pkegg[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                'BOTTOM_DEPTH','id','count','SS','DATE')]
 pksub<-subset(pksub,doy>99&doy<160)
+pksub<-pksub[pksub$LAT>54&pksub$LON>(-173),]
 pklarv<-pklarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]
-
+pklarv<-pklarv[pklarv$LAT>53.5&pklarv$LON>(-175),]
 names(pksub)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
                 'Cper1000m3','year','month','lat','lon','doy','vol','bottom_depth','id','count','SS','date')
 names(pklarv)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
@@ -112,7 +117,7 @@ names(pklarv)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
 pksub$SSB<-NA
 pklarv$SSB<-NA
 
-SSBdf<-read.csv(file='../Ichthyo Data/SSB_allsp.csv',header=TRUE,check.names=TRUE)
+SSBdf<-read.csv(file='./Ichthyo Data/SSB_allsp.csv',header=TRUE,check.names=TRUE)
 SSBdf$SSB<-as.numeric(SSBdf$SSB)
 pkSSB<-SSBdf[SSBdf$Species=='walleye pollock',]
 pkSSB<-pkSSB[c('Year','SSB')]
@@ -191,6 +196,12 @@ pklarv.ctd$CTD_date<-parse_date_time(pklarv.ctd$CTD_date,orders="mdy")
 pklarv.ctd$date_diff<-difftime(pklarv.ctd$date,pklarv.ctd$CTD_date,units="hour")
 pklarv.ctd<-pklarv.ctd[which(pklarv.ctd$date_diff>(-6)&pklarv.ctd$date_diff<6),]
 dim(pklarv.ctd) #2565
+
+#Save for later: 
+write.csv(pksub,'./Ichthyo Data/Cleaned_Cut_PkEggs.csv')
+write.csv(pksub.ctd,'./Ichthyo Data/Cleaned_Cut_PkEggs_wCTD.csv')
+write.csv(pklarv,'./Ichthyo Data/Cleaned_Cut_PkLarv.csv')
+write.csv(pklarv.ctd,'./Ichthyo Data/Cleaned_Cut_PkLarv_wCTD.csv')
 
 ###to avoid doing all the above gymnastics: if doesn't work, try '../' 
 pksub<-read.csv(file='../Ichthyo Data/Cleaned_Cut_PkEggs.csv',header=TRUE,check.names=TRUE)

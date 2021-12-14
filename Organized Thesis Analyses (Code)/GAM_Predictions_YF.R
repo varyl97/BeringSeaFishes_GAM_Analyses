@@ -261,60 +261,7 @@ symbols(yflarv.ctd$lon[yflarv.ctd$Cper10m2>0],
         inches=0.1,bg=symcol,fg='black',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
 
-#Improved distribution with temperature,salinity 2D model: 
-#plan is to calculate the significant differences in larval biogeography from base model to 2D model
-#to show how inclusion of temperature and salinity improves biogeography understanding
-nlat=120
-nlon=120
-latd=seq(min(yflarv.ctd$lat,na.rm=TRUE),max(yflarv.ctd$lat,na.rm=TRUE),length.out=nlat)
-lond=seq(min(yflarv.ctd$lon,na.rm=TRUE),max(yflarv.ctd$lon,na.rm=TRUE),length.out=nlon)
-
-grid.extent<-expand.grid(lond,latd)
-names(grid.extent)<-c('lon','lat')
-
-grid.extent$dist<-NA
-for(k in 1:nrow(grid.extent)){
-  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
-                          yflarv.ctd$lat,yflarv.ctd$lon)
-  grid.extent$dist[k]<-min(dist)
-}
-
-grid.extent$year<-as.numeric(2008)
-grid.extent$doy<-as.numeric(median(yflarv.ctd$doy,na.rm=TRUE))
-grid.extent$bottom_depth<-NA
-grid.extent$bottom_depth<-as.numeric(median(yflarv.ctd$bottom_depth,na.rm=TRUE))
-grid.extent$pred<-predict(lv.base,newdata=grid.extent)
-grid.extent$se<-predict(lv.base,newdata=grid.extent,se=T)[[2]]
-grid.extent$pred.u<-grid.extent$pred+1.96*grid.extent$se
-grid.extent$pred.l<-grid.extent$pred-1.96*grid.extent$se
-grid.extent$pred[grid.extent$dist>30000]<-NA
-grid.extent$temperature<-as.numeric(mean(yflarv.ctd$temperature))
-grid.extent$salinity<-as.numeric(mean(yflarv.ctd$salinity))
-grid.extent$pred2<-predict(lv.2d,newdata=grid.extent) 
-grid.extent$se2<-predict(lv.2d,newdata=grid.extent,se=T)[[2]]
-grid.extent$pred2.u<-grid.extent$pred2+1.96*grid.extent$se2
-grid.extent$pred2.l<-grid.extent$pred2-1.96*grid.extent$se2
-grid.extent$diff<-grid.extent$pred2-grid.extent$pred #calculate differences between base and 2D
-
-grid.extent$sig.pos<-c(grid.extent$pred2.l>grid.extent$pred.u) #isolate areas where there is a higher predicted CPUE in 2D model 
-grid.extent$sig.neg<-c(grid.extent$pred2.u<grid.extent$pred.l)
-grid.extent$pos.diff<-grid.extent$diff*grid.extent$sig.pos #calculate areas with a significant positive difference in 2D
-grid.extent$neg.diff<-grid.extent$diff*grid.extent$sig.neg
-max.slope<-max(grid.extent$diff,na.rm=T)
-
-windows(height=15,width=15)
-par(mai=c(1,1,0.5,0.9))
-image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
-           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=range(yflarv.ctd$lon,na.rm=TRUE),ylim=range(yflarv.ctd$lat,na.rm=TRUE),
-           main=expression(paste('Yellowfin Sole ',Delta,'Larval Distribution w Temp and Salinity')),
-           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=2.8,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
-contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
-map("worldHires",fill=T,col="seashell2",add=T)
-
-#More Simplistic Predicted Larval Biogeography - just plot based on what the 2D model predicts: 
+#Predicted Larval Biogeography - based on what the 2D model predicts: 
 nlat=120
 nlon=120
 latd=seq(min(yflarv.ctd$lat,na.rm=TRUE),max(yflarv.ctd$lat,na.rm=TRUE),length.out=nlat)
@@ -364,8 +311,10 @@ names(grid.extent)<-c('salinity','temperature')
 grid.extent$dist.sal<-NA
 grid.extent$dist.temp<-NA
 for(k in 1:nrow(grid.extent)){
-  dist.sal<-euclidean.distance(grid.extent$salinity[k],yflarv.ctd$salinity[k])
-  dist.temp<-euclidean.distance(grid.extent$temperature[k],yflarv.ctd$temperature[k])
+  dist.sal<-euclidean.distance(grid.extent$salinity[k],
+                               yflarv.ctd$salinity[yflarv.ctd$Cper10m2>0][k])
+  dist.temp<-euclidean.distance(grid.extent$temperature[k],
+                                yflarv.ctd$temperature[yflarv.ctd$Cper10m2>0][k])
   
   grid.extent$dist.sal[k]<-min(dist.sal)
   grid.extent$dist.temp[k]<-min(dist.temp)
@@ -378,8 +327,8 @@ grid.extent$doy<-as.numeric(median(yflarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(yflarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist.sal>75]<-NA
-grid.extent$pred[grid.extent$dist.temp>75]<-NA #check this
+grid.extent$pred[grid.extent$dist.sal>1.672]<-NA
+grid.extent$pred[grid.extent$dist.temp>12.326]<-NA #based on 3rd quartile
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
@@ -390,4 +339,7 @@ image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(s
            main='Larval Biogeography By Temperature and Salinity',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
-
+symbols(yflarv.ctd$salinity[yflarv.ctd$Cper10m2>0],
+        yflarv.ctd$temperature[yflarv.ctd$Cper10m2>0],
+        circles=log(yflarv.ctd$Cper10m2+1)[yflarv.ctd$Cper10m2>0],
+        inches=0.1,bg=symcol,fg='black',add=T)

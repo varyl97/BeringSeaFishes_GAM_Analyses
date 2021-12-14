@@ -25,7 +25,9 @@ allctd<-allctd[allctd$Salinity>29&allctd$Salinity<36,] #this removes anomalous t
 # Load Larval Data and Clean ----------------------------------------------
 
 #the following lines related to cleaning are based off intel from collaborators familiar with cruises
-pclarvraw<-read.csv(file='./Ichthyo Data/BS_Pacific_Cod_Larvae_CatchwZeros.csv')
+setwd(rwd)
+pclarvraw<-read.csv(file='BS_Pacific_Cod_Larvae_CatchwZeros.csv')
+setwd(gitwd)
 
 pclarvraw<-pclarvraw[pclarvraw$HAUL_ID!='1SS02 81 1 60BON 2',]
 
@@ -68,7 +70,7 @@ pclarvae$DATE<-paste(pclarvae$MONTH,pclarvae$DAY,pclarvae$YEAR,sep="/") #put dat
 pclarv<-pclarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR','MONTH','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]
-
+pclarv<-subset(pclarv,BOTTOM_DEPTH>40&BOTTOM_DEPTH<250)
 names(pclarv)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
                  'Cper1000m3','year','month','lat','lon','doy','vol','bottom_depth','id','count','SS','date')
 
@@ -107,10 +109,10 @@ pclarv.ctd$date<-parse_date_time(pclarv.ctd$date,orders="mdy")
 pclarv.ctd$CTD_date<-parse_date_time(pclarv.ctd$CTD_date,orders="mdy")
 pclarv.ctd$date_diff<-difftime(pclarv.ctd$date,pclarv.ctd$CTD_date,units="hour")
 pclarv.ctd<-pclarv.ctd[which(pclarv.ctd$date_diff>(-6)&pclarv.ctd$date_diff<6),]
-dim(pclarv.ctd) #2731, 25
+dim(pclarv.ctd) #2077, 25
 
-write.csv(pclarv,'Cleaned_Cut_PcLarv.csv')
-write.csv(pclarv.ctd,'Cleaned_Cut_PcLarv_wCTD.csv')
+write.csv(pclarv,'./Ichthyo Data/Cleaned_Cut_PcLarv.csv')
+write.csv(pclarv.ctd,'./Ichthyo Data/Cleaned_Cut_PcLarv_wCTD.csv')
 
 # Loading in cleaned and subset data, avoiding all above gymnastics -------
 

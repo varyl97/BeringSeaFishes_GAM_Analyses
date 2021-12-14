@@ -228,6 +228,9 @@ temps.in<-temps[bd:(length(temps)-bd)]
 aic.pheno<-NA*(temps.in)
 thr.pheno<-as.list(1:(length(temps.in)))
 
+pb<-txtProgressBar(min=0,max=length(temps.in),
+                   style=3,width=50,char="=")
+
 for(i in 1:length(temps.in)){
         pksub$th<-factor(pksub$reg.SST<=temps.in[i])
         thr.pheno[[i]]<-gam((Cper10m2+1)~factor(year)+
@@ -236,7 +239,9 @@ for(i in 1:length(temps.in)){
                                     s(doy,by=th),
                             data=pksub,family=tw(link='log'),method='REML')
         aic.pheno[i]<-AIC(thr.pheno[[i]])
-}
+        setTxtProgressBar(pb,i)
+} 
+close(pb)
 
 best.index.phe<-order(aic.pheno)[1]
 thr.pheno<-thr.pheno[[best.index.phe]]
@@ -460,29 +465,34 @@ lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                      s(bottom_depth,k=5),
              data=pklarv.ctd,family=tw(link='log'),method='REML')
 summary(lv.base)
+AIC(lv.base)
 
 lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                         s(bottom_depth,k=5)+
                         s(salinity),data=pklarv.ctd,family=tw(link='log'),
                 method='REML')
 summary(lv.add.sal)
+AIC(lv.add.sal)
 
 lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                          s(bottom_depth,k=5)+
                          s(temperature),data=pklarv.ctd,family=tw(link='log'),
                  method='REML')
 summary(lv.add.temp)
+AIC(lv.add.temp)
 
 lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                          s(bottom_depth,k=5)+
                          s(temperature)+s(salinity),data=pklarv.ctd,
                  family=tw(link='log'),method='REML')
 summary(lv.temp.sal)
+AIC(lv.temp.sal)
 
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
                    s(temperature,salinity),data=pklarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
+AIC(lv.2d)
 
 #checking based on AIC: 
 aic.base.lv<-AIC(lv.base)

@@ -315,7 +315,7 @@ symbols(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2>0],
         inches=0.1,bg=symcol,fg='black',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
 
-#More Simplistic Predicted Larval Biogeography - just plot based on what the 2D model predicts: 
+#Improved Larval Biogeography: based on what the 2D model predicts: 
 nlat=120
 nlon=120
 latd=seq(min(fhlarv.ctd$lat,na.rm=TRUE),max(fhlarv.ctd$lat,na.rm=TRUE),length.out=nlat)
@@ -365,8 +365,10 @@ names(grid.extent)<-c('salinity','temperature')
 grid.extent$dist.sal<-NA
 grid.extent$dist.temp<-NA
 for(k in 1:nrow(grid.extent)){
-  dist.sal<-euclidean.distance(grid.extent$salinity[k],fhlarv.ctd$salinity[k])
-  dist.temp<-euclidean.distance(grid.extent$temperature[k],fhlarv.ctd$temperature[k])
+  dist.sal<-euclidean.distance(grid.extent$salinity[k],
+                               fhlarv.ctd$salinity[fhlarv.ctd$Cper10m2>0][k])
+  dist.temp<-euclidean.distance(grid.extent$temperature[k],
+                                fhlarv.ctd$temperature[fhlarv.ctd$Cper10m2>0][k])
   
   grid.extent$dist.sal[k]<-min(dist.sal)
   grid.extent$dist.temp[k]<-min(dist.temp)
@@ -379,8 +381,8 @@ grid.extent$doy<-as.numeric(median(fhlarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(fhlarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist.sal>75]<-NA
-grid.extent$pred[grid.extent$dist.temp>75]<-NA #check this
+grid.extent$pred[grid.extent$dist.sal>1.13]<-NA
+grid.extent$pred[grid.extent$dist.temp>6.86]<-NA #threshold based on 3rd quartile
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
@@ -391,7 +393,10 @@ image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(s
            main='Larval Biogeography By Temperature and Salinity',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
-
+symbols(fhlarv.ctd$salinity[fhlarv.ctd$Cper10m2>0],
+        fhlarv.ctd$temperature[fhlarv.ctd$Cper10m2>0],
+        circles=log(fhlarv.ctd$Cper10m2+1)[fhlarv.ctd$Cper10m2>0],
+        inches=0.1,bg=symcol,fg='black',add=T)
 
 
 

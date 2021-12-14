@@ -16,20 +16,20 @@ pklarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkLarv_wCTD.csv',header=TR
 rxlarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_RxLarv_wCTD.csv',header=TRUE,check.names=TRUE)
 yflarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_YfLarv_wCTD.csv',header=TRUE,check.names=TRUE)
 
-aplarv.ctd <- aplarv.ctd %>% mutate(obs=case_when(Cper10m2>1 ~ as.numeric('1'),
-                                    Cper10m2<=1 ~ as.numeric('0')))
-fhlarv.ctd <- fhlarv.ctd %>% mutate(obs=case_when(Cper10m2>1 ~ as.numeric('1'),
-                                                  Cper10m2<=1 ~ as.numeric('0')))
-nrslarv.ctd <- nrslarv.ctd %>% mutate(obs=case_when(Cper10m2>1 ~ as.numeric('1'),
-                                                    Cper10m2<=1 ~ as.numeric('0')))
-pclarv.ctd <- pclarv.ctd %>% mutate(obs=case_when(Cper10m2>1 ~ as.numeric('1'),
-                                                  Cper10m2<=1 ~ as.numeric('0')))
-pklarv.ctd <- pklarv.ctd %>% mutate(obs=case_when(Cper10m2>1 ~ as.numeric('1'),
-                                                  Cper10m2<=1 ~ as.numeric('0')))
-rxlarv.ctd <- rxlarv.ctd %>% mutate(obs=case_when(Cper10m2>1 ~ as.numeric('1'),
-                                                  Cper10m2<=1 ~ as.numeric('0')))
-yflarv.ctd <- yflarv.ctd %>% mutate(obs=case_when(Cper10m2>1 ~ as.numeric('1'),
-                                                  Cper10m2<=1 ~ as.numeric('0')))#making a new variable, "obs", that is binary for presence (1) or absence (0)
+aplarv.ctd <- aplarv.ctd %>% mutate(obs=case_when(Cper10m2>0 ~ as.numeric('1'),
+                                    Cper10m2<=0 ~ as.numeric('0')))
+fhlarv.ctd <- fhlarv.ctd %>% mutate(obs=case_when(Cper10m2>0 ~ as.numeric('1'),
+                                                  Cper10m2<=0 ~ as.numeric('0')))
+nrslarv.ctd <- nrslarv.ctd %>% mutate(obs=case_when(Cper10m2>0 ~ as.numeric('1'),
+                                                    Cper10m2<=0 ~ as.numeric('0')))
+pclarv.ctd <- pclarv.ctd %>% mutate(obs=case_when(Cper10m2>0 ~ as.numeric('1'),
+                                                  Cper10m2<=0 ~ as.numeric('0')))
+pklarv.ctd <- pklarv.ctd %>% mutate(obs=case_when(Cper10m2>0 ~ as.numeric('1'),
+                                                  Cper10m2<=0 ~ as.numeric('0')))
+rxlarv.ctd <- rxlarv.ctd %>% mutate(obs=case_when(Cper10m2>0 ~ as.numeric('1'),
+                                                  Cper10m2<=0 ~ as.numeric('0')))
+yflarv.ctd <- yflarv.ctd %>% mutate(obs=case_when(Cper10m2>0 ~ as.numeric('1'),
+                                                  Cper10m2<=0 ~ as.numeric('0')))#making a new variable, "obs", that is binary for presence (1) or absence (0)
 
 
 # Generalized Additive Model Formulations ---------------------------------
@@ -97,10 +97,8 @@ grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(fhlarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$salinity<-as.numeric(mean(fhlarv.ctd$salinity,na.rm=TRUE))
 grid.extent$temperature<-as.numeric(mean(fhlarv.ctd$temperature,na.rm=TRUE))
-grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
+grid.extent$pred<-predict(lv.2d,newdata=grid.extent,type="response")
 grid.extent$pred[grid.extent$dist>30000]<-NA
-
-symcol<-adjustcolor('grey',alpha=0.5)
 
 windows(height=15,width=15)
 par(mai=c(1,1,0.5,0.9))
@@ -112,11 +110,6 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2.5,
            legend.lab=expression(paste('Presence','- Absence')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
-points(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2==0],fhlarv.ctd$lat[fhlarv.ctd$Cper10m2==0],pch='+',col='white')
-symbols(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2>0],
-        fhlarv.ctd$lat[fhlarv.ctd$Cper10m2>0],
-        circles=log(fhlarv.ctd$Cper10m2+1)[fhlarv.ctd$Cper10m2>0],
-        inches=0.1,bg=symcol,fg='black',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
 
 ## Rex Sole, which had the worst performance of larval models:  
@@ -266,10 +259,8 @@ grid.extent$doy<-as.numeric(median(aplarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(aplarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$temperature<-as.numeric(mean(aplarv.ctd$temperature,na.rm=TRUE))
-grid.extent$pred<-predict(lv.add.temp,newdata=grid.extent)
+grid.extent$pred<-predict(lv.add.temp,newdata=grid.extent,type="response")
 grid.extent$pred[grid.extent$dist>30000]<-NA
-
-symcol<-adjustcolor('grey',alpha=0.5)
 
 windows(height=15,width=15)
 par(mai=c(1,1,0.5,0.9))
@@ -281,11 +272,6 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2.5,
            legend.lab=expression(paste('Presence','- Absence')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
-points(aplarv.ctd$lon[aplarv.ctd$Cper10m2==0],aplarv.ctd$lat[aplarv.ctd$Cper10m2==0],pch='+',col='white')
-symbols(aplarv.ctd$lon[aplarv.ctd$Cper10m2>0],
-        aplarv.ctd$lat[aplarv.ctd$Cper10m2>0],
-        circles=log(aplarv.ctd$Cper10m2+1)[aplarv.ctd$Cper10m2>0],
-        inches=0.1,bg=symcol,fg='black',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
 
 ## Walleye Pollock
@@ -351,10 +337,8 @@ grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(pklarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$temperature<-as.numeric(mean(pklarv.ctd$temperature,na.rm=TRUE))
 grid.extent$salinity<-as.numeric(mean(pklarv.ctd$salinity,na.rm=TRUE))
-grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
+grid.extent$pred<-predict(lv.2d,newdata=grid.extent,type="response")
 grid.extent$pred[grid.extent$dist>30000]<-NA
-
-symcol<-adjustcolor('grey',alpha=0.5)
 
 windows(height=15,width=15)
 par(mai=c(1,1,0.5,0.9))
@@ -366,11 +350,6 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2.5,
            legend.lab=expression(paste('Presence','- Absence')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
-points(pklarv.ctd$lon[pklarv.ctd$Cper10m2==0],pklarv.ctd$lat[pklarv.ctd$Cper10m2==0],pch='+',col='white')
-symbols(pklarv.ctd$lon[pklarv.ctd$Cper10m2>0],
-        pklarv.ctd$lat[pklarv.ctd$Cper10m2>0],
-        circles=log(pklarv.ctd$Cper10m2+1)[pklarv.ctd$Cper10m2>0],
-        inches=0.1,bg=symcol,fg='black',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
 
 ## Yellowfin Sole: 
@@ -436,10 +415,8 @@ grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(yflarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$temperature<-as.numeric(mean(yflarv.ctd$temperature,na.rm=TRUE))
 grid.extent$salinity<-as.numeric(mean(yflarv.ctd$salinity,na.rm=TRUE))
-grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
+grid.extent$pred<-predict(lv.2d,newdata=grid.extent,type="response")
 grid.extent$pred[grid.extent$dist>30000]<-NA
-
-symcol<-adjustcolor('grey',alpha=0.5)
 
 windows(height=15,width=15)
 par(mai=c(1,1,0.5,0.9))
@@ -451,11 +428,6 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2.5,
            legend.lab=expression(paste('Presence','- Absence')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
-points(yflarv.ctd$lon[yflarv.ctd$Cper10m2==0],yflarv.ctd$lat[yflarv.ctd$Cper10m2==0],pch='+',col='white')
-symbols(yflarv.ctd$lon[yflarv.ctd$Cper10m2>0],
-        yflarv.ctd$lat[yflarv.ctd$Cper10m2>0],
-        circles=log(yflarv.ctd$Cper10m2+1)[yflarv.ctd$Cper10m2>0],
-        inches=0.1,bg=symcol,fg='black',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
 
 
@@ -522,10 +494,8 @@ grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(nrslarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$temperature<-as.numeric(mean(nrslarv.ctd$temperature,na.rm=TRUE))
 grid.extent$salinity<-as.numeric(mean(nrslarv.ctd$salinity,na.rm=TRUE))
-grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
+grid.extent$pred<-predict(lv.2d,newdata=grid.extent,type="response")
 grid.extent$pred[grid.extent$dist>30000]<-NA
-
-symcol<-adjustcolor('grey',alpha=0.5)
 
 windows(height=15,width=15)
 par(mai=c(1,1,0.5,0.9))
@@ -537,11 +507,6 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2.5,
            legend.lab=expression(paste('Presence','- Absence')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
-points(nrslarv.ctd$lon[nrslarv.ctd$Cper10m2==0],nrslarv.ctd$lat[nrslarv.ctd$Cper10m2==0],pch='+',col='white')
-symbols(nrslarv.ctd$lon[nrslarv.ctd$Cper10m2>0],
-        nrslarv.ctd$lat[nrslarv.ctd$Cper10m2>0],
-        circles=log(nrslarv.ctd$Cper10m2+1)[nrslarv.ctd$Cper10m2>0],
-        inches=0.1,bg=symcol,fg='black',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
 
 
@@ -608,7 +573,7 @@ grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(pclarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$temperature<-as.numeric(mean(pclarv.ctd$temperature,na.rm=TRUE))
 grid.extent$salinity<-as.numeric(mean(pclarv.ctd$salinity,na.rm=TRUE))
-grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
+grid.extent$pred<-predict(lv.2d,newdata=grid.extent,type="response")
 grid.extent$pred[grid.extent$dist>30000]<-NA
 
 symcol<-adjustcolor('grey',alpha=0.5)
@@ -623,11 +588,6 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2.5,
            legend.lab=expression(paste('Presence','- Absence')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
-points(pclarv.ctd$lon[pclarv.ctd$Cper10m2==0],pclarv.ctd$lat[pclarv.ctd$Cper10m2==0],pch='+',col='white')
-symbols(pclarv.ctd$lon[pclarv.ctd$Cper10m2>0],
-        pclarv.ctd$lat[pclarv.ctd$Cper10m2>0],
-        circles=log(pclarv.ctd$Cper10m2+1)[pclarv.ctd$Cper10m2>0],
-        inches=0.1,bg=symcol,fg='black',add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
 
 

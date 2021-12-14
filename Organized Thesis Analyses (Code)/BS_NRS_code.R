@@ -25,7 +25,9 @@ allctd<-allctd[allctd$Salinity>29&allctd$Salinity<36,] #this removes anomalous t
 # Load Larval Data and Clean ----------------------------------------------
 
 #the following lines related to cleaning are based off intel from collaborators familiar with cruises
-nrslarvraw<-read.csv(file='./Ichthyo Data/BS_NorthernRockSole_Larvae_CatchwZeros_PrimaryNPQ.csv')
+setwd(rwd)
+nrslarvraw<-read.csv(file='BS_NorthernRockSole_Larvae_CatchwZeros_PrimaryNPQ.csv')
+setwd(gitwd)
 
 nrslarvraw<-nrslarvraw[nrslarvraw$HAUL_ID!='1SS02 81 1 60BON 2',]
 
@@ -68,7 +70,7 @@ nrslarvae$DATE<-paste(nrslarvae$MONTH,nrslarvae$DAY,nrslarvae$YEAR,sep="/") #put
 nrslarv<-nrslarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR','MONTH','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]
-
+nrslarv<-subset(nrslarv,BOTTOM_DEPTH>40&BOTTOM_DEPTH<300)
 names(nrslarv)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
                  'Cper1000m3','year','month','lat','lon','doy','vol','bottom_depth','id','count','SS','date')
 

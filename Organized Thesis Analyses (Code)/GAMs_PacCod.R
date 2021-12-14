@@ -111,7 +111,7 @@ map("world",fill=T,col="snow4",add=T)
 windows()
 plot(lv.2d,select=4,scheme=2,main='Larval Log Presence, 2D Temp and Sal Effect',
      too.far=0.025,
-     xlab='Temperature (degC)',ylab='Salinity (psu)')
+     xlab='Salinity (psu)',ylab='Temperature (degC)')
 
 
 #checking based on AIC: 
