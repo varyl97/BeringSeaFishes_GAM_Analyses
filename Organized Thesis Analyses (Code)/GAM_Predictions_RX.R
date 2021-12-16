@@ -43,8 +43,8 @@ windowsFonts(A="Times New Roman") #for axes labels and plot titles, eventually
 #prediction grid
 nlat=120
 nlon=120
-latd=seq(min(rxsub$lat),max(rxsub$lat),length.out=nlat) #center grid over study region 
-lond=seq(min(rxsub$lon),max(rxsub$lon),length.out=nlon)
+latd=seq(52,60,length.out=nlat) #center grid over study region 
+lond=seq(-178,-153.5,length.out=nlon)
 
 grid.extent<-expand.grid(lond,latd)
 names(grid.extent)<-c('lon','lat')
@@ -74,7 +74,7 @@ par(mai=c(1,1,0.5,0.9))
 image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=range(rxsub$lon),ylim=range(rxsub$lat),main='Rex Sole Distribution, Eggs',
+           xlim=range(lond),ylim=range(latd),main='Rex Sole Distribution, Eggs',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
@@ -113,15 +113,15 @@ abline(h=0,col='grey79',lty=2,lwd=1.5)
 windows()
 par(mai=c(1,1,0.5,0.5))
 plot(eg.base,select=2,main='Rex Sole Base Phenology, Eggs',
-     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 6.119)',ylim=c(-2,1.5))
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 5.52)',ylim=c(-2,1.5))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 
 #TEMP EFFECT: Calculate Differences Due to Different Temperature Regimes Based on Best Model --------
 #start with threshold geography model to find differences between two predictions to calculate local slopes 
 nlat=120
 nlon=120
-latd=seq(min(rxsub$lat),max(rxsub$lat),length.out=nlat) #center grid over study region 
-lond=seq(min(rxsub$lon),max(rxsub$lon),length.out=nlon)
+latd=seq(52,60,length.out=nlat) #center grid over study region 
+lond=seq(-178,-153.5,length.out=nlon)
 
 grid.extent<-expand.grid(lond,latd)
 names(grid.extent)<-c('lon','lat')
@@ -162,7 +162,7 @@ windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.5))
 image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
            col=hcl.colors(100,"PRGn"),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), #PRGn diverges more clearly, helping interpretation
-           xlim=range(rxsub$lon),ylim=range(rxsub$lat),main='Change in RX(e) Distribution w Threshold Temperature Effect',
+           xlim=range(lond),ylim=range(latd),main='Change in RX(e) Distribution w Threshold Temperature Effect',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),
            legend.shrink=0.3)
@@ -174,7 +174,7 @@ map("worldHires",fill=T,col="seashell2",add=T)
 windows()
 par(mai=c(1,1,0.5,0.5))
 plot(thr.geo,select=1,main='Rex Sole Threshold Geo Phenology, Eggs',
-     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 7.709)',ylim=c(-2,1.5))
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 7.887)',ylim=c(-2,1.5))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 
 #plot the two phenology smooths together, one from the base model and one from the threshold geography model to see the temp effect: 

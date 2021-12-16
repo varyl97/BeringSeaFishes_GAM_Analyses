@@ -29,7 +29,7 @@ eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
 summary(eg.base)
 
 windows(width=12,height=8)
-plot(eg.base,page=1,
+plot(eg.base,page=1,scheme=2,
      seWithMean=TRUE,scale=0)
 
 windows(width=12,height=8)
@@ -50,9 +50,6 @@ gam.check(eg.base)
 mtext('gam.check Output for Base Egg Rex CPUE',outer=TRUE,cex=1,line=-0.5)
 
 #Phenological Model with Temperature Threshold 
-pb<-txtProgressBar(min=0,max=length(temps.in),
-                    style=3,width=50,char="=") #create a progress bar to make waiting less painful
-
 temps<-sort(unique(reg.sst$SST))
 bd<-4
 temps.in<-temps[bd:(length(temps)-bd)]
@@ -67,9 +64,7 @@ for(i in 1:length(temps.in)){
                         s(doy,by=th),
                       data=rxsub,family=tw(link='log'),method='REML')
   aic.pheno[i]<-AIC(thr.pheno[[i]])
-  setTxtProgressBar(pb,i)
 }
-close(pb)
 
 best.index.phe<-order(aic.pheno)[1]
 thr.pheno<-thr.pheno[[best.index.phe]]
@@ -111,9 +106,7 @@ for(i in 1:length(temps.in)){
                       s(lon,lat,by=th),data=rxsub,
                     family=tw(link='log'),method='REML')
   aic.geo[i]<-AIC(thr.geo[[i]])
-  setTxtProgressBar(pb,i)
 }
-close(pb)
 
 best.index.geo<-order(aic.geo)[1]
 thr.geo<-thr.geo[[best.index.geo]]

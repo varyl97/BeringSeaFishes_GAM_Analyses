@@ -213,22 +213,22 @@ aic.chg # + 344.99
 
 #Rex Sole: 
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale
-var.ratio.phe # positive difference of 0.038, meaning egg MSE was slightly larger than thr phenology model 
+var.ratio.phe # positive difference of 0.033, meaning egg MSE was slightly larger than thr phenology model 
 
 var.ratio.geo<-(summary(eg.base)$scale-summary(thr.geo)$scale)/summary(eg.base)$scale
-var.ratio.geo # +0.171, largest reduction across all 
+var.ratio.geo # +0.188, largest reduction across all 
 
 var.ratio.vcp<-(summary(eg.base)$scale-summary(vc.pheno)$scale)/summary(eg.base)$scale
-var.ratio.vcp # +0.020
+var.ratio.vcp # +0.016
 
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
-var.ratio.vcg # +0.010 #geography models produce largest reduction in MSE
+var.ratio.vcg # +0.101 #geography models produce largest reduction in MSE
 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
 lv.2d.chg # + 0.052
 
 thr.chg<-AIC(eg.base)-AIC(thr.geo)
-thr.chg #708.68
+thr.chg #647.63
 
 lv.chg<-AIC(lv.base)-AIC(lv.2d)
 lv.chg #113.18
