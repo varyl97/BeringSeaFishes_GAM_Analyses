@@ -147,7 +147,7 @@ var.ratio.geo<-(summary(eg.base)$scale-summary(thr.geo)$scale)/summary(eg.base)$
 var.ratio.geo # +0.149, larger reduction than thr phenology 
 
 var.ratio.vcp<-(summary(eg.base)$scale-summary(vc.pheno)$scale)/summary(eg.base)$scale
-var.ratio.vcp # +0.022===
+var.ratio.vcp # +0.022
 
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
 var.ratio.vcg # +0.135 #geography models produce largest reduction in MSE

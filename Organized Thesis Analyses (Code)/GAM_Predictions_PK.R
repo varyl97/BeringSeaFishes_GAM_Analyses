@@ -174,7 +174,7 @@ map("worldHires",fill=T,col="seashell2",add=T)
 windows()
 par(mai=c(1,1,0.5,0.5))
 plot(thr.geo,select=1,main='Walleye Pollock Threshold Geo Phenology, Eggs',
-     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 7.137)',ylim=c(-2,1))
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 7.356)',ylim=c(-2,2))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 
 
