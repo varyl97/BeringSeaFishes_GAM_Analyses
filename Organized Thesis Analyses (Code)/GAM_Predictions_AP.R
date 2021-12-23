@@ -110,11 +110,14 @@ legend('topleft',legend=c(expression(paste("(log(C/(10m"^2,')+1)')),'95% CI'),
 abline(h=0,col='grey79',lty=2,lwd=1.5)
 
 #with base graphics: 
-windows()
-par(mai=c(1,1,0.5,0.5))
+windows(width=20,height=9)
+par(mai=c(1,1,0.5,0.5),mfrow=c(1,2))
 plot(eg.base,select=2,main='Alaska Plaice Base Phenology, Eggs',
-     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 8.232)',ylim=c(-2.5,1))
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 8.232)',ylim=c(-3,3))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+plot(table(apsub$doy[apsub$Cper10m2>0]),ylab='Frequency',xlab='Day of Year',
+     main='Observations',xlim=c(100,180))
+
 
 #TEMP EFFECT: Calculate Differences Due to Different Temperature Regimes Based on Best Model --------
 #start with threshold geography model to find differences between two predictions to calculate local slopes 

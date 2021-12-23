@@ -489,7 +489,7 @@ summary(lv.temp.sal)
 AIC(lv.temp.sal)
 
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
-                   s(temperature,salinity),data=pklarv.ctd,family=tw(link='log'),
+                   s(salinity,temperature),data=pklarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
 AIC(lv.2d)

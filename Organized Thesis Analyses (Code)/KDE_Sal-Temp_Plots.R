@@ -87,6 +87,14 @@ fhts<-ggplot(data=fhlarv.ctd,aes(x=salinity,y=temperature,weight=log(Cper10m2+1)
   labs(x='Salinity',y='Temperature')+ggtitle("Flathead Sole")
 
 
+# Simplified 1-D Weighted KDE Estimates -----------------------------------
+
+yfsal<-ggplot(data=yflarv.ctd)+geom_density(aes(x=salinity,weight=log(Cper10m2+1)))
+yftemp<-ggplot(data=yflarv.ctd)+geom_density(aes(x=temperature,weight=log(Cper10m2+1)))
+ggplotly(yfsal)
+ggpltly(yftemp)
+
+
 # Relic Code -------------------------------------------------------------------
 
 test<-kde2d.weighted(nrslarv.ctd$salinity,nrslarv.ctd$temperature,w=log(nrslarv.ctd$Cper10m2+1))
@@ -98,5 +106,40 @@ ggplot(nrslarv.ctd,aes(x=salinity,y=temperature))+
   geom_contour_filled(aes(x=x,y=y,z=z,fill=stat(level)),data=test.df)+
   xlim(29,35)+ylim(0,12)
 
+
+
+# Box Plots for T,S Comparisons Across Species -----------------------------
+
+yflarv.ctd$species<-as.character('YFS')
+fhlarv.ctd$species<-as.character('FHS')
+aplarv.ctd$species<-as.character('AP')
+pklarv.ctd$species<-as.character('PK')
+pclarv.ctd$species<-as.character('PC')
+nrslarv.ctd$species<-as.character('NRS')
+
+subyf<-yflarv.ctd[c('Cper10m2','salinity','temperature','species')]
+subfh<-fhlarv.ctd[c('Cper10m2','salinity','temperature','species')]
+subap<-aplarv.ctd[c('Cper10m2','salinity','temperature','species')]
+subpk<-pklarv.ctd[c('Cper10m2','salinity','temperature','species')]
+subpc<-pclarv.ctd[c('Cper10m2','salinity','temperature','species')]
+subnrs<-nrslarv.ctd[c('Cper10m2','salinity','temperature','species')]
+
+allspp<-rbind(subyf[subyf$Cper10m2>0,],subfh[subfh$Cper10m2>0,],
+              subap[subap$Cper10m2>0,],subpk[subpk$Cper10m2>0,],
+              subpc[subpc$Cper10m2>0,],subnrs[subnrs$Cper10m2>0,])
+
+bpsal<-boxplot(allspp$salinity~allspp$species,xlab='Species',ylab='Salinity (psu)')
+bpsal
+windows()
+par(oma=c(1,1.1,0.7,0.7))
+boxplot(allspp$salinity~allspp$species,xlab='Species',ylab='Salinity (psu)')
+
+bptemp<-boxplot(allspp$temperature~allspp$species,xlab='Species',
+                ylab=expression(paste("Temperature ("^0, 'C)')))
+bptemp
+windows()
+par(oma=c(1,1.1,0.7,0.7))
+boxplot(allspp$temperature~allspp$species,xlab='Species',
+        ylab=expression(paste("Temperature ("^0, 'C)')))
 
 

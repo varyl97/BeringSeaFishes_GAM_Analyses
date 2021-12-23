@@ -176,7 +176,7 @@ lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
 lv.2d.chg #0.136
 
 AIC(eg.base)-AIC(thr.geo) #620.57
-AIC(lv.base)-AIC(lv.2d) #531.51
+AIC(lv.base)-AIC(lv.2d) #530.67
 
 #Yellowfin Sole: 
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale

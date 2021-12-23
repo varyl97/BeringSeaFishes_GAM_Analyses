@@ -4,6 +4,8 @@
 #varies differently above and below 4.143 *C. The best phenology model was also the threshold formulation
 #where the threshold temperature was 4.175 *C. 
 
+#Only using Larval data for GAM analyses as of 12/20 due to zero inflation of egg data. 
+
 # Preliminary Data Loading and Formatting ---------------------------------
 
 #link yfsub to regional indices:
@@ -312,9 +314,9 @@ grid.extent$dist.sal<-NA
 grid.extent$dist.temp<-NA
 for(k in 1:nrow(grid.extent)){
   dist.sal<-euclidean.distance(grid.extent$salinity[k],
-                               yflarv.ctd$salinity[yflarv.ctd$Cper10m2>0][k])
+                               yflarv.ctd$salinity[k])
   dist.temp<-euclidean.distance(grid.extent$temperature[k],
-                                yflarv.ctd$temperature[yflarv.ctd$Cper10m2>0][k])
+                                yflarv.ctd$temperature[k])
   
   grid.extent$dist.sal[k]<-min(dist.sal)
   grid.extent$dist.temp[k]<-min(dist.temp)
@@ -327,8 +329,8 @@ grid.extent$doy<-as.numeric(median(yflarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(yflarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist.sal>1.672]<-NA
-grid.extent$pred[grid.extent$dist.temp>12.326]<-NA #based on 3rd quartile
+grid.extent$pred[grid.extent$dist.sal>1.152]<-NA
+grid.extent$pred[grid.extent$dist.temp>5.543]<-NA #mean values of dist.sal & dist.temp
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
@@ -342,4 +344,17 @@ image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(s
 symbols(yflarv.ctd$salinity[yflarv.ctd$Cper10m2>0],
         yflarv.ctd$temperature[yflarv.ctd$Cper10m2>0],
         circles=log(yflarv.ctd$Cper10m2+1)[yflarv.ctd$Cper10m2>0],
-        inches=0.1,bg=symcol,fg='black',add=T)
+        inches=0.1,bg="grey55",fg='black',add=T)
+
+
+windows()
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5)) 
+plot(lv.2d,select=4,scheme=2,too.far=0.05)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+symbols(yflarv.ctd$salinity[yflarv.ctd$Cper10m2>0],
+          yflarv.ctd$temperature[yflarv.ctd$Cper10m2>0],
+          circles=log(yflarv.ctd$Cper10m2+1)[yflarv.ctd$Cper10m2>0],
+          inches=0.1,bg="grey55",fg='black',add=T)
+points(yflarv.ctd$salinity[yflarv.ctd$Cper10m2==0],
+       yflarv.ctd$temperature[yflarv.ctd$Cper10m2==0],pch='+',col='white')
+

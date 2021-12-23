@@ -104,7 +104,7 @@ pksub<-pkegg[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                'BOTTOM_DEPTH','id','count','SS','DATE')]
 pksub<-subset(pksub,doy>99&doy<160)
-pksub<-pksub[pksub$LAT>54&pksub$LON>(-173),]
+pksub<-pksub[pksub$LAT>54&pksub$LON>(-173)&pksub$LAT<62,]
 pklarv<-pklarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]

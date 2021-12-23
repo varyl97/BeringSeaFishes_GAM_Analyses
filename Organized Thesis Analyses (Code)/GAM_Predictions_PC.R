@@ -112,9 +112,9 @@ grid.extent$dist.sal<-NA
 grid.extent$dist.temp<-NA
 for(k in 1:nrow(grid.extent)){
   dist.sal<-euclidean.distance(grid.extent$salinity[k],
-                               pclarv.ctd$salinity[pclarv.ctd$Cper10m2>0][k])
+                               pclarv.ctd$salinity[k])
   dist.temp<-euclidean.distance(grid.extent$temperature[k],
-                                pclarv.ctd$temperature[pclarv.ctd$Cper10m2>0][k])
+                                pclarv.ctd$temperature[k]) 
   
   grid.extent$dist.sal[k]<-min(dist.sal)
   grid.extent$dist.temp[k]<-min(dist.temp)
@@ -127,8 +127,8 @@ grid.extent$doy<-as.numeric(median(pclarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(pclarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist.sal>1.917]<-NA
-grid.extent$pred[grid.extent$dist.temp>6.975]<-NA #check this
+grid.extent$pred[grid.extent$dist.sal>1.112]<-NA
+grid.extent$pred[grid.extent$dist.temp>5.321]<-NA #based on means (from summary(grid.extent$dist.sal))
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
@@ -139,8 +139,19 @@ image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(s
            main='Larval Biogeography By Temperature and Salinity',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+#symbols(pclarv.ctd$salinity[pclarv.ctd$Cper10m2>0],   #can add back in when needed 
+ #       pclarv.ctd$temperature[pclarv.ctd$Cper10m2>0],
+  #      circles=log(pclarv.ctd$Cper10m2+1)[pclarv.ctd$Cper10m2>0],
+   #     inches=0.1,bg=symcol,fg='black',add=T)
+
+
+windows()
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5)) 
+plot(lv.2d,select=4,scheme=2,too.far=0.05)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
 symbols(pclarv.ctd$salinity[pclarv.ctd$Cper10m2>0],
         pclarv.ctd$temperature[pclarv.ctd$Cper10m2>0],
         circles=log(pclarv.ctd$Cper10m2+1)[pclarv.ctd$Cper10m2>0],
-        inches=0.1,bg=symcol,fg='black',add=T)
-
+        inches=0.1,bg="grey55",fg='black',add=T)
+points(pclarv.ctd$salinity[pclarv.ctd$Cper10m2==0],
+       pclarv.ctd$temperature[pclarv.ctd$Cper10m2==0],pch='+',col='white')

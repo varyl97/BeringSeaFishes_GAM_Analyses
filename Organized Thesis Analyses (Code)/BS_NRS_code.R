@@ -71,6 +71,7 @@ nrslarv<-nrslarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_I
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR','MONTH','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]
 nrslarv<-subset(nrslarv,BOTTOM_DEPTH>40&BOTTOM_DEPTH<300)
+nrslarv<-subset(nrslarv,LAT<64.5)
 names(nrslarv)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
                  'Cper1000m3','year','month','lat','lon','doy','vol','bottom_depth','id','count','SS','date')
 

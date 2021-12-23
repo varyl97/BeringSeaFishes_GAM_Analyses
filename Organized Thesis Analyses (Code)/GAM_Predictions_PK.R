@@ -86,11 +86,13 @@ symbols(pksub$lon[pksub$Cper10m2>0],
 map("worldHires",fill=T,col="seashell2",add=T)
 
 #with base graphics: 
-windows()
-par(mai=c(1,1,0.5,0.5))
+windows(width=20,height=9)
+par(mai=c(1,1,0.5,0.5),mfrow=c(1,2))
 plot(eg.base,select=2,main='Walleye Pollock Base Phenology, Eggs',
-     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 27.407)',ylim=c(-2,1))
+     seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 6.558)',ylim=c(-3,3))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+plot(table(pksub$doy[pksub$Cper10m2>0]),ylab='Frequency',xlab='Day of Year',
+     main='Observations',xlim=c(100,160))
 
 # Plot Base Phenology Model -----------------------------------------------
 grid.extent2<-data.frame('lon'=rep(-155,100),
@@ -324,9 +326,9 @@ grid.extent$dist.sal<-NA
 grid.extent$dist.temp<-NA
 for(k in 1:nrow(grid.extent)){
   dist.sal<-euclidean.distance(grid.extent$salinity[k],
-                               pklarv.ctd$salinity[pklarv.ctd$Cper10m2>0][k])
+                               pklarv.ctd$salinity[k])
   dist.temp<-euclidean.distance(grid.extent$temperature[k],
-                                pklarv.ctd$temperature[pklarv.ctd$Cper10m2>0][k])
+                                pklarv.ctd$temperature[k])
   
   grid.extent$dist.sal[k]<-min(dist.sal)
   grid.extent$dist.temp[k]<-min(dist.temp)
@@ -339,8 +341,8 @@ grid.extent$doy<-as.numeric(median(pklarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(pklarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist.sal>1.851]<-NA
-grid.extent$pred[grid.extent$dist.temp>6.453]<-NA #based on 3rd quartile values
+grid.extent$pred[grid.extent$dist.sal>1.266]<-NA
+grid.extent$pred[grid.extent$dist.temp>5.193]<-NA #based on mean values
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
@@ -354,4 +356,18 @@ image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(s
 symbols(pklarv.ctd$salinity[pklarv.ctd$Cper10m2>0],
         pklarv.ctd$temperature[pklarv.ctd$Cper10m2>0],
         circles=log(pklarv.ctd$Cper10m2+1)[pklarv.ctd$Cper10m2>0],
-        inches=0.1,bg=symcol,fg='black',add=T)
+        inches=0.1,bg="grey55",fg='black',add=T)
+
+
+windows()
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5)) 
+plot(lv.2d,select=4,scheme=2,too.far=0.05)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+symbols(pklarv.ctd$salinity[pklarv.ctd$Cper10m2>0],
+        pklarv.ctd$temperature[pklarv.ctd$Cper10m2>0],
+        circles=log(pklarv.ctd$Cper10m2+1)[pklarv.ctd$Cper10m2>0],
+        inches=0.1,bg="grey55",fg='black',add=T)
+points(pklarv.ctd$salinity[pklarv.ctd$Cper10m2==0],
+       pklarv.ctd$temperature[pklarv.ctd$Cper10m2==0],pch='+',col='white')
+
+

@@ -115,12 +115,15 @@ legend('topleft',legend=c(expression(paste("(log(C/(10m"^2,')+1)')),'95% CI'),
        col=c('grey1','azure3'),pch=c(NA,15),lty=c(1,NA),lwd=2,cex=1)
 abline(h=0,col='grey79',lty=2,lwd=1.5)
 
-#using base graphics: 
-windows()
-par(mai=c(1,1,0.5,0.5))
+##using base graphics: 
+
+windows(width=20,height=9)
+par(mai=c(1,1,0.5,0.5),mfrow=c(1,2))
 plot(eg.base,select=2,main='Flathead Sole Base Phenology, Eggs',
      seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 8.79)',ylim=c(-3,3))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+plot(table(fhsub$doy[fhsub$Cper10m2>0]),ylab='Frequency',xlab='Day of Year',
+     main='Observations',xlim=c(100,300))
 
 
 #TEMP EFFECT: Calculate Differences Due to Different Temperature Regimes Based on Best Model --------
@@ -366,9 +369,9 @@ grid.extent$dist.sal<-NA
 grid.extent$dist.temp<-NA
 for(k in 1:nrow(grid.extent)){
   dist.sal<-euclidean.distance(grid.extent$salinity[k],
-                               fhlarv.ctd$salinity[fhlarv.ctd$Cper10m2>0][k])
+                               fhlarv.ctd$salinity[k])
   dist.temp<-euclidean.distance(grid.extent$temperature[k],
-                                fhlarv.ctd$temperature[fhlarv.ctd$Cper10m2>0][k])
+                                fhlarv.ctd$temperature[k])
   
   grid.extent$dist.sal[k]<-min(dist.sal)
   grid.extent$dist.temp[k]<-min(dist.temp)
@@ -381,8 +384,8 @@ grid.extent$doy<-as.numeric(median(fhlarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(fhlarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist.sal>1.13]<-NA
-grid.extent$pred[grid.extent$dist.temp>6.86]<-NA #threshold based on 3rd quartile
+grid.extent$pred[grid.extent$dist.sal>0.773]<-NA
+grid.extent$pred[grid.extent$dist.temp>5.232]<-NA #threshold based on means
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
@@ -399,6 +402,16 @@ symbols(fhlarv.ctd$salinity[fhlarv.ctd$Cper10m2>0],
         inches=0.1,bg=symcol,fg='black',add=T)
 
 
+windows()
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5)) 
+plot(lv.2d,select=4,scheme=2,too.far=0.05)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+symbols(fhlarv.ctd$salinity[fhlarv.ctd$Cper10m2>0],
+        fhlarv.ctd$temperature[fhlarv.ctd$Cper10m2>0],
+        circles=log(fhlarv.ctd$Cper10m2+1)[fhlarv.ctd$Cper10m2>0],
+        inches=0.1,bg="grey55",fg='black',add=T)
+points(fhlarv.ctd$salinity[fhlarv.ctd$Cper10m2==0],
+       fhlarv.ctd$temperature[fhlarv.ctd$Cper10m2==0],pch='+',col='white')
 
 
 
