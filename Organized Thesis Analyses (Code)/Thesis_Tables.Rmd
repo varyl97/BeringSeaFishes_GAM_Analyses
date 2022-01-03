@@ -1,0 +1,103 @@
+---
+title: "A Compilation of Tables for a M.Sc. Thesis" 
+author: "Laura Vary"
+date: "12/28/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Spawning Behavior and Larval Water Mass Associations
+
+This document creates tables that will be included in my M.Sc thesis focused on the spawning behavior of Bering Sea fishes and their larval biogeographical patterns. My thesis investigates how these behavioral differences across species impacts multiple early life stages, as early life stages are significantly important for the sustainability of the population. Further, these fishes are exceptionally commercially valuable. 
+
+We'll begin by loading data for eggs, first, and then larvae. 
+
+```{r}
+setwd("C:/Users/varyl/Desktop/GitHub/BeringSeaFishes_GAM_Analyses")
+
+apsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApEggs.csv',header=TRUE,
+                check.names=TRUE) 
+fhsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhEggs.csv',header=TRUE,
+                check.names=TRUE) 
+pksub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkEggs.csv',header=TRUE,
+                check.names=TRUE) 
+rxsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_RxEggs.csv',header=TRUE,
+                check.names=TRUE)
+
+aplarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApLarv_wCTD.csv',
+                     header=TRUE,check.names=TRUE)
+fhlarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhLarv_wCTD.csv',
+                     header=TRUE,check.names=TRUE)
+nrslarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_NrsLarv_wCTD.csv',
+                      header=TRUE,check.names=TRUE)
+pclarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PcLarv_wCTD.csv',
+                     header=TRUE,check.names=TRUE)
+pklarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkLarv_wCTD.csv',
+                     header=TRUE,check.names=TRUE)
+yflarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_YfLarv_wCTD.csv',
+                     header=TRUE,check.names=TRUE) 
+```
+
+## Creating Table 1
+
+Let's begin by trying to make a table with all the species, life stages represented, range of days included, latitude range, longitude range, number of stations, years with positive catches, and all years with data. I'll start by making a dataframe with all this information for each species. 
+
+```{r} 
+#Add species names and life stages represented in the data: 
+apsub$species<-"Alaska Plaice"
+apsub$stage<-"eggs"
+fhsub$species<-"Flathead Sole"
+fhsub$stage<-"eggs"
+pksub$species<-"Walleye Pollock"
+pksub$stage<-"eggs"
+rxsub$species<-"Rex Sole"
+rxsub$stage<-"eggs"
+
+aplarv.ctd$species<-"Alaska Plaice"
+aplarv.ctd$stage<-"larvae"
+fhlarv.ctd$species<-"Flathead Sole"
+fhlarv.ctd$stage<-"larvae"
+nrslarv.ctd$species<-"Northern Rock Sole"
+nrslarv.ctd$stage<-"larvae"
+pclarv.ctd$species<-"Pacific Cod"
+pclarv.ctd$stage<-"larvae"
+pklarv.ctd$species<-"Walleye Pollock"
+pklarv.ctd$stage<-"larvae"
+yflarv.ctd$species<-"Yellowfin Sole"
+yflarv.ctd$stage<-"larvae"
+```
+
+```{r}
+#Summarize the other information I want to include: 
+apetable<-apsub[1,c("species","stage")]
+all_yrs<-sort(unique(apsub$year))
+apetable$all_years<-as.character(paste("1979","1988","1991","1993-2000","2002",
+                                       "2003","2005-2016",sep=", "))
+pos_yrs<-sort(unique(apsub$year[apsub$Cper10m2>0]))
+apetable$pos_years<-as.character(paste("1998","1991","1994","1995","1997",
+                                       "1999","2002","2003","2005-2016",
+                                       sep=", "))
+apetable$doy_range<-as.character(paste(min(apsub$doy),max(apsub$doy),sep="-"))
+apetable$lat_range<-as.character(paste(min(apsub$lat),max(apsub$lat),sep="-"))
+apetable$lon_range<-as.character(paste(min(apsub$lon),max(apsub$lon),sep="to"))
+apetable$num_stns<-as.character(sum(apsub$SS[unique(apsub$year)]))
+
+apltable<-aplarv.ctd[1,c("species","stage")]
+all_yrs<-sort(unique(aplarv.ctd$year))
+apltable$all_years<-as.character("1997-2016")
+pos_yrs<-sort(unique(aplarv.ctd$year[aplarv.ctd$Cper10m2>0]))
+apltable$pos_years<-as.character(paste("2002","2003","2005","2006","2014-2016",
+                                       sep=", "))
+apltable$doy_range<-as.character(paste(min(aplarv.ctd$doy),max(aplarv.ctd$doy),
+                                       sep="-"))
+apltable$lat_range<-as.character(paste(min(aplarv.ctd$lat),max(aplarv.ctd$lat),
+                                       sep="-"))
+apltable$lon_range<-as.character(paste(min(aplarv.ctd$lon),max(aplarv.ctd$lon),
+                                       sep="to"))
+apltable$num_stns<-as.character(sum(aplarv.ctd$SS[unique(aplarv.ctd$year)]))
+
+```
+

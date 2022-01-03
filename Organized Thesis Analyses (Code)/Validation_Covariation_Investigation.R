@@ -216,14 +216,22 @@ var.ratio.vcp<-(summary(eg.base)$scale-summary(vc.pheno)$scale)/summary(eg.base)
 var.ratio.vcp # +0.170
 
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
-var.ratio.vcg # +0.080 #geography models produce largest reduction in MSE
+var.ratio.vcg # +0.080 #phenology models produce largest reduction in MSE
+
+second<-(summary(vc.pheno)$scale-summary(thr.pheno)$scale)/summary(vc.pheno)$scale
+second #0.011
 
 AIC(eg.base)-AIC(thr.pheno) #901.13
+AIC(vc.pheno)-AIC(thr.pheno) #46.55
 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
-lv.2d.chg #0.126
+lv.2d.chg #0.112
 
-AIC(lv.base)-AIC(lv.2d) #381.28
+second<-(summary(lv.temp.sal)$scale-summary(lv.2d)$scale)/summary(lv.temp.sal)$scale
+second #0.038
+
+AIC(lv.base)-AIC(lv.2d) #192.76
+AIC(lv.temp.sal)-AIC(lv.2d) #58.71
 
 
 #Alaska Plaice: 
@@ -265,13 +273,21 @@ var.ratio.vcp # +0.034
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
 var.ratio.vcg # +0.131 #geography models produce largest reduction in MSE
 
+second<-(summary(vc.geo)$scale-summary(thr.geo)$scale)/summary(thr.geo)$scale
+second #0.019
+
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
 lv.2d.chg #0.136
 
-AIC(eg.base)-AIC(thr.geo) #620.57
-AIC(lv.base)-AIC(lv.2d) #530.67
+second<-(summary(lv.temp.sal)$scale-summary(lv.2d)$scale)/summary(lv.temp.sal)$scale
+second
 
-#Yellowfin Sole: 
+AIC(eg.base)-AIC(thr.geo)#620.57
+AIC(vc.geo)-AIC(thr.geo) #76.40
+AIC(lv.base)-AIC(lv.2d) #530.67
+AIC(lv.temp.sal)-AIC(lv.2d) #20.89
+
+#Yellowfin Sole: (retaining only larval data for thesis analyses)
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale
 var.ratio.phe # positive difference of 0.111, meaning egg MSE was slightly larger than thr phenology model 
 
@@ -287,22 +303,35 @@ var.ratio.vcg # +0.032 #geography models produce largest reduction in MSE
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
 lv.2d.chg # + 0.194
 
+second<-(summary(lv.temp.sal)$scale-summary(lv.2d)$scale)/summary(lv.temp.sal)$scale
+second #0.071
+
 AIC(eg.base)-AIC(thr.pheno) #507.03
 AIC(lv.base)-AIC(lv.2d) #596.00
+AIC(lv.temp.sal)-AIC(lv.2d) #190.36
 
 #Pacific Cod (larvae only): 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
 lv.2d.chg #+ 0.094
 
+second<-(summary(lv.temp.sal)$scale-summary(lv.2d)$scale)/summary(lv.temp.sal)$scale
+second #0.057
+
 aic.chg<-AIC(lv.base)-AIC(lv.2d)
 aic.chg # +229.84
+AIC(lv.temp.sal)-AIC(lv.2d) #142.91
 
 #Northern Rock Sole (larvae only): 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
 lv.2d.chg #+ 0.118
 
+second<-(summary(lv.add.temp)$scale-summary(lv.2d)$scale)/summary(lv.add.temp)$scale
+second #0.046
+
 aic.chg<-AIC(lv.base)-AIC(lv.2d)
 aic.chg # + 344.99
+
+AIC(lv.add.temp)-AIC(lv.2d) #118.06
 
 #Rex Sole: (removed larval GAMs from thesis work due to lack of sampling/positive observations)
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale
@@ -316,6 +345,9 @@ var.ratio.vcp # +0.016
 
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
 var.ratio.vcg # +0.101 #geography models produce largest reduction in MSE
+
+var.second<-(summary(vc.geo)$scale-summary(thr.geo)$scale)/summary(vc.geo)$scale
+var.second #0.096
 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
 lv.2d.chg # + 0.052

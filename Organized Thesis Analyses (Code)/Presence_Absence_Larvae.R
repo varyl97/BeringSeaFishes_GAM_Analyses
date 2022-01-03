@@ -75,7 +75,7 @@ legend("bottomleft",legend=c('Base BioGeo','Add Sal','Add Temp',
        col=c( "#482173FF", "#38598CFF","#1E9B8AFF","#FDE725FF"),
        lwd=3,lty=1)
 
-#prediction with the best model: 
+#prediction with the best model: (2d for FHS)
 nlat=120
 nlon=120
 latd=seq(min(fhlarv.ctd$lat,na.rm=TRUE),max(fhlarv.ctd$lat,na.rm=TRUE),length.out=nlat)

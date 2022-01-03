@@ -14,7 +14,7 @@ reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',heade
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(fhsub)){
-  fhsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==fhsub$year[i]]}
+  fhsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==fhsub$year[i]]} #note: fhsub file has reg.SST loaded as of 12/28/2021
 
 #load GAMs
 eg.base<-readRDS("./GAM Models/fh_egg_base.rds")
@@ -399,7 +399,7 @@ image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(s
 symbols(fhlarv.ctd$salinity[fhlarv.ctd$Cper10m2>0],
         fhlarv.ctd$temperature[fhlarv.ctd$Cper10m2>0],
         circles=log(fhlarv.ctd$Cper10m2+1)[fhlarv.ctd$Cper10m2>0],
-        inches=0.1,bg=symcol,fg='black',add=T)
+        inches=0.1,bg='grey',fg='black',add=T)
 
 
 windows()

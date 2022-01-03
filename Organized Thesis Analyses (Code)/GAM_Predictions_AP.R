@@ -13,8 +13,8 @@ aplarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApLarv_wCTD.csv',header=TR
 reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
-for(i in 1:nrow(apsub)){
-  apsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==apsub$year[i]]}
+#for(i in 1:nrow(apsub)){
+  #apsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==apsub$year[i]]} #note, as of 12/28/2021, "Cleaned_Cut_ApEggs.csv" will have reg.SST loaded
 
 #load GAMs
 eg.base<-readRDS("./GAM Models/ap_egg_base.rds")
@@ -322,16 +322,11 @@ sald<-seq(min(aplarv.ctd$salinity,na.rm=T),max(aplarv.ctd$salinity,na.rm=T),leng
 grid.extent<-expand.grid(sald,tempd)
 names(grid.extent)<-c('salinity','temperature')
 
-grid.extent$dist.sal<-NA
-grid.extent$dist.temp<-NA
 for(k in 1:nrow(grid.extent)){
-  dist.sal<-euclidean.distance(grid.extent$salinity[k],
-                               aplarv.ctd$salinity[aplarv.ctd$Cper10m2>0][k])
-  dist.temp<-euclidean.distance(grid.extent$temperature[k],
-                                aplarv.ctd$temperature[aplarv.ctd$Cper10m2>0][k])
-  
-  grid.extent$dist.sal[k]<-min(dist.sal)
-  grid.extent$dist.temp[k]<-min(dist.temp)
+  dist<-euclidean.distance(grid.extent$salinity[k],grid.extent$temperature[k],
+                               aplarv.ctd$salinity,aplarv.ctd$temperature)
+
+  grid.extent$dist[k]<-min(dist)
 }
 
 grid.extent$year<-as.numeric(2005)
@@ -341,8 +336,7 @@ grid.extent$doy<-as.numeric(median(aplarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(aplarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist.sal>3.295]<-NA
-grid.extent$pred[grid.extent$dist.temp>7.539]<-NA #threshold is 3rd quartile for each
+grid.extent$pred[grid.extent$dist>8981.71]<-NA #threshold is mean value from summary(grid.extent$dist)
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
@@ -356,7 +350,7 @@ image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(s
 symbols(aplarv.ctd$salinity[aplarv.ctd$Cper10m2>0],
         aplarv.ctd$temperature[aplarv.ctd$Cper10m2>0],
         circles=log(aplarv.ctd$Cper10m2+1)[aplarv.ctd$Cper10m2>0],
-        inches=0.1,bg=symcol,fg='black',add=T)
+        inches=0.1,bg="grey",fg='black',add=T)
 
 
 

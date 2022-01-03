@@ -14,7 +14,7 @@ reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',heade
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
 for(i in 1:nrow(rxsub)){
-  rxsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==rxsub$year[i]]}
+  rxsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==rxsub$year[i]]} #rxsub file has reg.SST loaded as of 12/28/2021
 
 #load GAMs
 eg.base<-readRDS("./GAM Models/rx_egg_base.rds")
