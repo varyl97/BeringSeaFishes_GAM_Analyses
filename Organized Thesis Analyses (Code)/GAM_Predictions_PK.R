@@ -13,8 +13,8 @@ pklarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkLarv_wCTD.csv',header=TR
 reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
-for(i in 1:nrow(pksub)){
-  pksub$reg.SST[i]<-reg.sst$SST[reg.sst$year==pksub$year[i]]} #note: pksub file has reg.SST loaded as of 12/28/2021
+#for(i in 1:nrow(pksub)){
+ # pksub$reg.SST[i]<-reg.sst$SST[reg.sst$year==pksub$year[i]]} #note: pksub file has reg.SST loaded as of 12/28/2021
 
 #load GAMs
 eg.base<-readRDS("./GAM Models/pk_egg_base.rds")

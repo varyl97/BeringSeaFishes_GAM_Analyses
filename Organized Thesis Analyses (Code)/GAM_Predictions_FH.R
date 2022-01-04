@@ -13,8 +13,8 @@ fhlarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhLarv_wCTD.csv',header=TR
 reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
-for(i in 1:nrow(fhsub)){
-  fhsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==fhsub$year[i]]} #note: fhsub file has reg.SST loaded as of 12/28/2021
+#for(i in 1:nrow(fhsub)){
+  #fhsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==fhsub$year[i]]} #note: fhsub file has reg.SST loaded as of 12/28/2021
 
 #load GAMs
 eg.base<-readRDS("./GAM Models/fh_egg_base.rds")
@@ -365,16 +365,11 @@ sald<-seq(min(fhlarv.ctd$salinity,na.rm=T),max(fhlarv.ctd$salinity,na.rm=T),leng
 grid.extent<-expand.grid(sald,tempd)
 names(grid.extent)<-c('salinity','temperature')
 
-grid.extent$dist.sal<-NA
-grid.extent$dist.temp<-NA
+grid.extent$dist<-NA
 for(k in 1:nrow(grid.extent)){
-  dist.sal<-euclidean.distance(grid.extent$salinity[k],
-                               fhlarv.ctd$salinity[k])
-  dist.temp<-euclidean.distance(grid.extent$temperature[k],
-                                fhlarv.ctd$temperature[k])
-  
-  grid.extent$dist.sal[k]<-min(dist.sal)
-  grid.extent$dist.temp[k]<-min(dist.temp)
+  dist<-euclidean.distance(grid.extent$salinity[k],grid.extent$temperature[k],
+                               fhlarv.ctd$salinity,fhlarv.ctd$temperature)
+  grid.extent$dist[k]<-min(dist)
 }
 
 grid.extent$year<-as.numeric(2005)
@@ -384,8 +379,7 @@ grid.extent$doy<-as.numeric(median(fhlarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(fhlarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist.sal>0.773]<-NA
-grid.extent$pred[grid.extent$dist.temp>5.232]<-NA #threshold based on means
+grid.extent$pred[grid.extent$dist>0.237]<-NA #threshold based on means
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))

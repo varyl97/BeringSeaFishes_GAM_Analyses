@@ -1,6 +1,6 @@
 ###Alaska Plaice BS Code: 
 ###CTD Loading: ################################################################
-allctd<-read.csv(file="All_CTD_Data_8302021.csv")
+allctd<-read.csv(file="./Environmental Data/All_CTD_Data_8302021.csv")
 names(allctd)
 allctd<-allctd[c('Latitude','Longitude','Date','Time','Pressure','Depth',
                  'Temperature','Conductivity','Salinity','Sigma.T',
@@ -16,8 +16,10 @@ allctd<-allctd[allctd$Salinity>29&allctd$Salinity<36,]
 ##PLAICE: 
 
 ###loading data, subsetting and cleaning properly 
+setwd(rwd)
 apeggraw<-read.csv(file='BS_PlaiceEggCatch.csv',header=TRUE,check.names=TRUE)
 aplarvraw<-read.csv(file='BS_PlaiceLarvaeCatch.csv',header=TRUE,check.names=TRUE)
+setwd(gitwd)
 
 apeggraw<-apeggraw[apeggraw$HAUL_ID!='1SS02 81 1 60BON 2',]
 aplarvraw<-aplarvraw[aplarvraw$HAUL_ID!='1SS02 81 1 60BON 2',]
@@ -90,7 +92,6 @@ apsub<-subset(apsub,doy>99&doy<182)
 aplarv<-aplarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]
-
 names(apsub)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
                 'Cper1000m3','year','month','lat','lon','doy','vol','bottom_depth','id','count','SS','date')
 names(aplarv)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
@@ -99,7 +100,7 @@ names(aplarv)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
 apsub$SSB<-NA
 aplarv$SSB<-NA
 
-SSBdf<-read.csv(file='SSB_allsp.csv',header=TRUE,check.names=TRUE)
+SSBdf<-read.csv(file='./Ichthyo Data/SSB_allsp.csv',header=TRUE,check.names=TRUE)
 SSBdf$SSB<-as.numeric(SSBdf$SSB)
 apSSB<-SSBdf[SSBdf$Species=='alaska plaice',]
 apSSB<-apSSB[c('Year','SSB')]
