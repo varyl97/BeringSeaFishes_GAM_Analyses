@@ -80,12 +80,14 @@ close(pb)
 best.index.phe<-order(aic.pheno)[1] #now we're telling R to give us the model with the best (lowest) AIC value 
 thr.pheno<-thr.pheno[[best.index.phe]]
 
-windows()
-plot(temps.in,aic.pheno,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.pheno)),
-     main='Temperature Threshold Flexible Phenology',ylab='AIC Index',
-     xlab='Temperature (degC)')
-abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
-abline(v=temps.in[best.index.phe],lty=2,lwd=2,col='steelblue3') #this plot gives us a visual representation of every model tested and their respective AIC values 
+windows(width=15,height=9)
+plot(temps.in,aic.pheno,type='b',lwd=1.2,ylim=range(c(AIC(eg.base),aic.pheno)),
+     main='AIC Scores Across Experimental Models with Varied Threshold T',ylab='AIC Scores',
+     xlab=expression(paste('Temperature ('^0,'C)')))
+abline(h=AIC(eg.base),lty=2,lwd=1.2,col='sienna3')
+abline(v=temps.in[best.index.phe],lty=2,lwd=1.2,col='steelblue3') #this plot gives us a visual representation of every model tested and their respective AIC values 
+legend("bottomleft",lty=c(2,2),lwd=c(1.2,1.2),col=c("sienna3","steelblue3"),
+       legend=c("Base Model","Best Tested Thr.Phe Model"),cex=0.8)
 
 summary(thr.pheno) #again, only care about the model with the best AIC value 
 

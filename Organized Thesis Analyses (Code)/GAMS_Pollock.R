@@ -134,11 +134,16 @@ for(i in 1:length(temps.in)){
 best.index.geo<-order(aic.geo)[1]
 thr.geo<-thr.geo[[best.index.geo]]
 
-windows()
-plot(temps.in,aic.geo,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.geo)),
-     main='Temperature Threshold Flex Geography',xlab="Temperature (degC)")
-abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
-abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
+windows(width=15,height=8)
+plot(temps.in,aic.geo,type='b',lwd=1.2,ylim=range(c(AIC(eg.base),aic.geo)),
+     main='AIC Scores Across Tested Thr.Geo Models with Varying Threshold T',
+     xlab=expression(paste("Temperature ("^0,"C)")),
+     ylab='AIC Scores')
+abline(h=AIC(eg.base),lty=2,lwd=1.2,col='sienna3')
+abline(v=temps.in[best.index.geo],lty=2,lwd=1.2,col='steelblue3')
+legend("bottomleft",cex=0.9,lty=c(2,2),lwd=c(1.2,1.2),col=c('sienna3',
+                                                            'steelblue3'),
+       legend=c("Base","Best Tested Model"))
 
 summary(thr.geo)
 
@@ -221,6 +226,7 @@ eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
              data=pksub,family=tw(link='log'),method='REML')
 
 summary(eg.base)
+AIC(eg.base)
 
 temps<-sort(unique(reg.sst$SST))
 bd<-4
@@ -246,6 +252,7 @@ close(pb)
 best.index.phe<-order(aic.pheno)[1]
 thr.pheno<-thr.pheno[[best.index.phe]]
 summary(thr.pheno)
+AIC(thr.pheno)
 
 temps<-sort(unique(reg.sst$SST))
 bd<-4
@@ -265,16 +272,19 @@ for(i in 1:length(temps.in)){
 best.index.geo<-order(aic.geo)[1]
 thr.geo<-thr.geo[[best.index.geo]]
 summary(thr.geo)
+AIC(thr.geo)
 
 vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
                       s(doy,by=reg.SST),data=pksub,family=tw(link='log'),
               method='REML')
 summary(vc.pheno)
+AIC(vc.pheno)
 
 vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
                     s(lon,lat,by=reg.SST),data=pksub,family=tw(link='log'),
             method='REML')
 summary(vc.geo)
+AIC(vc.geo)
 
 #Save for reloading later!!
 saveRDS(eg.base,file="./GAM Models/pk_egg_base.rds")
@@ -287,6 +297,8 @@ saveRDS(aic.geo,file="./GAM Models/pk_egg_aic_geo.rds")
 saveRDS(best.index.geo,file="./GAM Models/pk_egg_best_index_geo.rds")
 saveRDS(vc.pheno,file="./GAM Models/pk_egg_vc_pheno.rds")
 saveRDS(vc.geo,file="./GAM Models/pk_egg_vc_geo.rds")
+saveRDS(aic.geo,file="./GAM Models/pk_egg_aic_geo_list.rds")
+saveRDS(aic.pheno,file="./GAM Models/pk_egg_aic_pheno_list.rds")
 
 eg.base<-readRDS("./GAM Models/pk_egg_base.rds")
 thr.pheno<-readRDS("./GAM Models/pk_egg_thr_pheno.rds")

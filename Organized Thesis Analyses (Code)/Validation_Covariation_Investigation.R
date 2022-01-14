@@ -200,7 +200,7 @@ corrplot(nrs,method="color",title="Northern Rock",col=col(15),tl.col="black",
          mar=c(1,0,1,1.5),type="upper",addCoef.col='grey',cl.pos='n')
 mtext('Larval Data',outer=TRUE,line=3)
 
-# Compare Reduction in Mean Square Error  ---------------------------------
+# Compare Reduction in Mean Square Error and Akaike Information Criterion  ------------------------------
 #This section looks at the reduction in MSE that occurs when models vary from the base formulation. 
 #For eggs, variation means flexible phenology and/or geography and regional SST
 #For larvae, variation means the inclusion of in situ temperature and salinity values 
@@ -236,21 +236,22 @@ AIC(lv.temp.sal)-AIC(lv.2d) #58.71
 
 #Alaska Plaice: 
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale
-var.ratio.phe # positive difference of 0.035, meaning egg MSE was slightly larger than thr phenology model 
+var.ratio.phe # positive difference of 0.075, meaning egg MSE was slightly larger than thr phenology model 
 
 var.ratio.geo<-(summary(eg.base)$scale-summary(thr.geo)$scale)/summary(eg.base)$scale
-var.ratio.geo # +0.149, larger reduction than thr phenology 
+var.ratio.geo # +0.105, larger reduction than thr phenology 
 
 var.ratio.vcp<-(summary(eg.base)$scale-summary(vc.pheno)$scale)/summary(eg.base)$scale
-var.ratio.vcp # +0.022
+var.ratio.vcp # +0.034
 
 var.ratio.vcg<-(summary(eg.base)$scale-summary(vc.geo)$scale)/summary(eg.base)$scale
-var.ratio.vcg # +0.135 #geography models produce largest reduction in MSE
+var.ratio.vcg # +0.106 #winning model, very slight improvement over thr.geo
 
-var.second<-(summary(vc.geo)$scale-summary(thr.geo)$scale)/summary(thr.geo)$scale
-var.second #0.017
+var.second<-(summary(thr.geo)$scale-summary(vc.geo)$scale)/summary(thr.geo)$scale
+var.second #0.002
 
-AIC(eg.base)-AIC(thr.geo) #note change in AIC score - 463.75
+AIC(eg.base)-AIC(vc.geo)#note change in AIC score - 428.45
+AIC(thr.geo)-AIC(vc.geo) #8.40
 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
 lv.2d.chg #0.151
@@ -277,15 +278,15 @@ second<-(summary(vc.geo)$scale-summary(thr.geo)$scale)/summary(thr.geo)$scale
 second #0.019
 
 lv.2d.chg<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
-lv.2d.chg #0.136
+lv.2d.chg #0.140
 
 second<-(summary(lv.temp.sal)$scale-summary(lv.2d)$scale)/summary(lv.temp.sal)$scale
-second
+second #0.013
 
 AIC(eg.base)-AIC(thr.geo)#620.57
 AIC(vc.geo)-AIC(thr.geo) #76.40
-AIC(lv.base)-AIC(lv.2d) #530.67
-AIC(lv.temp.sal)-AIC(lv.2d) #20.89
+AIC(lv.base)-AIC(lv.2d) #519.74
+AIC(lv.temp.sal)-AIC(lv.2d) #37.58
 
 #Yellowfin Sole: (retaining only larval data for thesis analyses)
 var.ratio.phe<-(summary(eg.base)$scale-summary(thr.pheno)$scale)/summary(eg.base)$scale

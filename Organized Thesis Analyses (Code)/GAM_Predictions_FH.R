@@ -25,6 +25,7 @@ thr.geo<-readRDS("./GAM Models/fh_egg_thr_geo.rds")
 best.index.geo<-readRDS("./GAM Models/fh_egg_best_index_geo.rds")
 vc.pheno<-readRDS("./GAM Models/fh_egg_vc_pheno.rds")
 vc.geo<-readRDS("./GAM Models/fh_egg_vc_geo.rds") #only using eg.base, thr.pheno, and thr.geo below. 
+aic.pheno<-readRDS("./GAM Models/fh_egg_aic_pheno_list.rds")#list of tested model AIC scores across various threshold temps
 
 lv.base<-readRDS("./GAM Models/fh_larv_base.rds")
 lv.add.sal<-readRDS("./GAM Models/fh_larv_addsal.rds")
@@ -126,7 +127,7 @@ plot(table(fhsub$doy[fhsub$Cper10m2>0]),ylab='Frequency',xlab='Day of Year',
      main='Observations',xlim=c(100,300))
 
 
-#TEMP EFFECT: Calculate Differences Due to Different Temperature Regimes Based on Best Model --------
+#RELIC: temp effect: Calculate Differences Due to Different Temperature Regimes Based on Best Model --------
 #start with threshold geography model to find differences between two predictions to calculate local slopes 
 nlat=120
 nlon=120
@@ -188,7 +189,7 @@ plot(thr.geo,select=1,main='Flathead Sole Threshold Geo Phenology, Eggs',
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 
 
-#plot the two phenology smooths together, one from the base model and one from the threshold geography model to see the temp effect: 
+#RELIC: plot the two phenology smooths together, one from the base model and one from the threshold geography model to see the temp effect: 
 col<-adjustcolor('tomato4',alpha.f=0.3)
 
 windows()
@@ -199,10 +200,10 @@ abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
 plot(thr.geo,select=1,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-1.5,3))
 legend('topright',legend=c('Base','Threshold Geography'),col=c(NA,col),lwd=c(2,2),cex=0.8)
-mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
+mtext(c("Day of Year",expression(paste("Anomalies in log(C/10m"^2,"+1)"))),side=c(1,2),line=2.5)
 
 #Plot Threshold Phenology (best model after new iteration, 12/13/2021):
-col<-adjustcolor('tomato4',alpha.f=0.3)
+col<-adjustcolor('goldenrod4',alpha=0.6)
 
 windows()
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
@@ -211,11 +212,27 @@ plot(thr.pheno,select=4,main='Flathead Sole Phenology, Threshold Effect',seWithM
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
 plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-3,3))
-legend('topright',legend=c('Below 2.12*C','Above 2.12*C'),col=c('grey25',col),lwd=c(2,2),cex=0.8)
-mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
+legend('topright',legend=c('Below 2.28*C','Above 2.28*C'),col=c('grey25',col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year",expression(paste("Anomalies in log(C/10m"^2,"+1)"))),side=c(1,2),line=2.5)
 
 
 # Plot Geography from Phenology Model -----------------------------------------------
+nlat=120
+nlon=120
+latd=seq(min(fhsub$lat),max(fhsub$lat),length.out=nlat) #center grid over study region 
+lond=seq(min(fhsub$lon),max(fhsub$lon),length.out=nlon)
+
+grid.extent<-expand.grid(lond,latd)
+names(grid.extent)<-c('lon','lat')
+
+#calculate distance to each positive observation
+grid.extent$dist<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
+                          fhsub$lat,fhsub$lon)
+  grid.extent$dist[k]<-min(dist)
+}
+
 grid.extent$year<-as.numeric(2013) #for base, just pick a year that has coverage
 grid.extent$doy<-as.numeric(median(fhsub$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
@@ -226,16 +243,23 @@ grid.extent$th<-as.character("TRUE")
 grid.extent$pred<-predict(thr.pheno,newdata=grid.extent)
 grid.extent$pred[grid.extent$dist>30000]<-NA 
 
+col<-adjustcolor("grey28",alpha=0.3)
+
 windows(height=15,width=15)
 par(mai=c(1,1,0.5,0.9))
 image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=TRUE),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=range(fhsub$lon),ylim=range(fhsub$lat),main='Flathead Sole Distribution, Th.Ph, Eggs',
+           xlim=range(fhsub$lon),ylim=range(fhsub$lat),main='Flathead Sole Egg Distribution',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
-map("worldHires",fill=T,col="seashell2",add=T)
+points(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2==0],fhlarv.ctd$lat[fhlarv.ctd$Cper10m2==0],pch='+',col='white')
+symbols(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2>0],
+        fhlarv.ctd$lat[fhlarv.ctd$Cper10m2>0],
+        circles=log(fhlarv.ctd$Cper10m2+1)[fhlarv.ctd$Cper10m2>0],
+        inches=0.1,bg=col,fg='black',add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
 
 #RELIC: For added information: threshold phenology prediction (this was the best model to explain phenology; In new iteration (12/7/2021, this is best model)
 grid.extent3<-data.frame('lon'=rep(-155,100),'lat'=rep(51,100),'doy'=seq(min(fhsub$doy),max(fhsub$doy),length=100),
@@ -343,16 +367,24 @@ grid.extent$salinity<-as.numeric(mean(fhlarv.ctd$salinity))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
 grid.extent$pred[grid.extent$dist>30000]<-NA 
 
+col<-adjustcolor("grey28",alpha=0.3)
+
 windows(height=15,width=15)
 par(mai=c(1,1,0.5,0.9))
 image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(fhlarv.ctd$lon,na.rm=TRUE),ylim=range(fhlarv.ctd$lat,na.rm=TRUE),
            main='Predicted Larval Biogeography, 2D Model',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+points(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2==0],
+       fhlarv.ctd$lat[fhlarv.ctd$Cper10m2==0],pch="+",col="white")
+symbols(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2>0],
+        fhlarv.ctd$lat[fhlarv.ctd$Cper10m2>0],
+        circles=log(fhlarv.ctd$Cper10m2+1)[fhlarv.ctd$Cper10m2>0],
+        inches=0.1,bg=col,add=T)
 map("worldHires",fill=T,col="seashell2",add=T)
 
 #Larval Catch Predictions on a Temperature-Salinity Diagram: 
@@ -379,17 +411,19 @@ grid.extent$doy<-as.numeric(median(fhlarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(fhlarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist>0.237]<-NA #threshold based on means
+grid.extent$pred[grid.extent$dist>mean(grid.extent$dist)]<-NA #threshold based on means
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
 image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
-           col=hcl.colors(100,"PRGn"),xlab='Salinity (psu)',
+           col=hcl.colors(100,"Lajolla",rev=T),xlab='Salinity (psu)',
            ylab=expression(paste("Temperature ("^0, 'C)')),
            xlim=range(fhlarv.ctd$salinity,na.rm=T),ylim=range(fhlarv.ctd$temperature,na.rm=T),
            main='Larval Biogeography By Temperature and Salinity',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+points(fhlarv.ctd$salinity[fhlarv.ctd$Cper10m2==0],
+       fhlarv.ctd$temperature[fhlarv.ctd$Cper10m2==0],pch="+",col="white")
 symbols(fhlarv.ctd$salinity[fhlarv.ctd$Cper10m2>0],
         fhlarv.ctd$temperature[fhlarv.ctd$Cper10m2>0],
         circles=log(fhlarv.ctd$Cper10m2+1)[fhlarv.ctd$Cper10m2>0],

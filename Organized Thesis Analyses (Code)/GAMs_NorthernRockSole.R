@@ -14,6 +14,7 @@ lv.base<-gam((Cper10m2+1)~factor(year)+s(doy)+s(lon,lat)+
                s(bottom_depth,k=5),
              data=nrslarv.ctd,family=tw(link='log'),method='REML')
 summary(lv.base)
+AIC(lv.base)
 
 windows(width=12,height=8)
 par(mfrow=c(2,2))
@@ -34,6 +35,7 @@ lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                   s(salinity),data=nrslarv.ctd,family=tw(link='log'),
                 method='REML')
 summary(lv.add.sal)
+AIC(lv.add.sal)
 
 windows(width=12,height=8)
 plot(lv.add.sal,page=1,scale=0,shade=TRUE,shade.col="skyblue4",
@@ -51,6 +53,7 @@ lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(temperature),data=nrslarv.ctd,family=tw(link='log'),
                  method='REML')
 summary(lv.add.temp)
+AIC(lv.add.temp)
 
 windows()
 plot(lv.add.temp,page=1,shade=TRUE,shade.col="skyblue4",
@@ -69,6 +72,7 @@ lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(temperature)+s(salinity),data=nrslarv.ctd,
                  family=tw(link='log'),method='REML')
 summary(lv.temp.sal)
+AIC(lv.temp.sal)
 
 windows()
 plot(lv.temp.sal,page=1,shade=TRUE,shade.col='skyblue4',
@@ -98,6 +102,7 @@ lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
              s(salinity,temperature),data=nrslarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
+AIC(lv.2d)
 
 windows()
 par(mfrow=c(1,2))

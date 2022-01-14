@@ -111,6 +111,8 @@ pclarv.ctd$date_diff<-difftime(pclarv.ctd$date,pclarv.ctd$CTD_date,units="hour")
 pclarv.ctd<-pclarv.ctd[which(pclarv.ctd$date_diff>(-6)&pclarv.ctd$date_diff<6),]
 dim(pclarv.ctd) #2077, 25
 
+pclarv.ctd<-subset(pclarv.ctd,lat<62)
+
 write.csv(pclarv,'./Ichthyo Data/Cleaned_Cut_PcLarv.csv')
 write.csv(pclarv.ctd,'./Ichthyo Data/Cleaned_Cut_PcLarv_wCTD.csv')
 

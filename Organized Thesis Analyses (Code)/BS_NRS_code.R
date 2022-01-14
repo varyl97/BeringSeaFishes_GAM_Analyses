@@ -112,6 +112,8 @@ nrslarv.ctd$date_diff<-difftime(nrslarv.ctd$date,nrslarv.ctd$CTD_date,units="hou
 nrslarv.ctd<-nrslarv.ctd[which(nrslarv.ctd$date_diff>(-6)&nrslarv.ctd$date_diff<6),]
 dim(nrslarv.ctd) #2626, 25
 
+nrslarv.ctd<-subset(nrslarv.ctd,lat<62)
+
 write.csv(nrslarv,'./Ichthyo Data/Cleaned_Cut_NrsLarv.csv')
 write.csv(nrslarv.ctd,'./Ichthyo Data/Cleaned_Cut_NrsLarv_wCTD.csv')
 

@@ -13,8 +13,8 @@ rxlarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_RxLarv_wCTD.csv',header=TR
 reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',header=TRUE,check.names=TRUE)
 head(reg.sst) #range of regional average: lon: -180 to -151, lat: 50.5 to 67.5
 
-for(i in 1:nrow(rxsub)){
-  rxsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==rxsub$year[i]]} #rxsub file has reg.SST loaded as of 12/28/2021
+#for(i in 1:nrow(rxsub)){
+ # rxsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==rxsub$year[i]]} #rxsub file has reg.SST loaded as of 12/28/2021
 
 #load GAMs
 eg.base<-readRDS("./GAM Models/rx_egg_base.rds")
@@ -25,12 +25,13 @@ thr.geo<-readRDS("./GAM Models/rx_egg_thr_geo.rds")
 best.index.geo<-readRDS("./GAM Models/rx_egg_best_index_geo.rds")
 vc.pheno<-readRDS("./GAM Models/rx_egg_vc_pheno.rds")
 vc.geo<-readRDS("./GAM Models/rx_egg_vc_geo.rds")#only using eg.base, thr.pheno, and thr.geo below. 
+aic.geo<-readRDS("./GAM Models/rx_egg_aic_geo_list.rds")
 
-lv.base<-readRDS("./GAM Models/rx_larvae_base.rds")
-lv.add.sal<-readRDS("./GAM Models/rx_larvae_addsal.rds")
-lv.add.temp<-readRDS("./GAM Models/rx_larvae_addtemp.rds")
-lv.temp.sal<-readRDS("./GAM Models/rx_larvae_addtempsal.rds")
-lv.2d<-readRDS("./GAM Models/rx_larvae_2d.rds")#only using lv.base and lv.2d in this code. 
+#lv.base<-readRDS("./GAM Models/rx_larvae_base.rds")
+#lv.add.sal<-readRDS("./GAM Models/rx_larvae_addsal.rds")
+#lv.add.temp<-readRDS("./GAM Models/rx_larvae_addtemp.rds")
+#lv.temp.sal<-readRDS("./GAM Models/rx_larvae_addtempsal.rds")
+#lv.2d<-readRDS("./GAM Models/rx_larvae_2d.rds") removed larvae from analyses due to lack of data. 
 
 #get map 
 str_name<-"./Environmental Data/expanded_BS_bathy.tif"
@@ -76,7 +77,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(lond),ylim=range(latd),main='Rex Sole Distribution, Eggs',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 points(rxsub$lon[rxsub$Cper10m2==0],rxsub$lat[rxsub$Cper10m2==0],pch='+',col='white')
 symbols(rxsub$lon[rxsub$Cper10m2>0],
@@ -119,7 +120,74 @@ plot(table(rxsub$doy[rxsub$Cper10m2>0]),ylab='Frequency',xlab='Day of Year',
      main='Observations')
 
 #TEMP EFFECT: Calculate Differences Due to Different Temperature Regimes Based on Best Model --------
-#start with threshold geography model to find differences between two predictions to calculate local slopes 
+nlat=120
+nlon=120
+latd=seq(52,60,length.out=nlat) #center grid over study region 
+lond=seq(-178,-153.5,length.out=nlon)
+
+grid.extent<-expand.grid(lond,latd)
+names(grid.extent)<-c('lon','lat')
+
+#calculate distance to each positive observation
+grid.extent$dist<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
+                          rxsub$lat,rxsub$lon)
+  grid.extent$dist[k]<-min(dist)
+}
+
+grid.extent$year<-2008
+grid.extent$doy<-median(rxsub$doy)
+grid.extent$reg.SST<-mean(rxsub$reg.SST[rxsub$reg.SST<temps.in[best.index.geo]])
+
+# Plot egg spatial distributions based on this model -----------------------------------------------
+grid.extent$year<-as.numeric(2008) #just pick a year that has coverage; change this depending on species
+grid.extent$doy<-as.numeric(median(rxsub$doy,na.rm=TRUE))
+grid.extent$bottom_depth<-NA
+grid.extent$bottom_depth<-median(rxsub$bottom_depth,na.rm=TRUE)
+grid.extent$reg.SST<-NA
+grid.extent$th<-"TRUE"
+grid.extent$reg.SST<-mean(rxsub$reg.SST[rxsub$reg.SST<temps.in[best.index.geo]],na.rm=TRUE) 
+grid.extent$pred<-predict(thr.geo,newdata=grid.extent)
+grid.extent$pred[grid.extent$dist>30000]<-NA 
+grid.extent$th<-"FALSE"
+grid.extent$reg.SST<-mean(rxsub$reg.SST[rxsub$reg.SST>temps.in[best.index.geo]],na.rm=T)
+grid.extent$pred2<-predict(thr.geo,newdata=grid.extent)
+grid.extent$pred2[grid.extent$dist>30000]<-NA
+
+symcol<-adjustcolor('grey',alpha=0.5)
+
+windows(height=18,width=35)
+par(mai=c(1,1,0.5,0.9),mfrow=c(1,2))
+image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=range(lond),ylim=range(latd),main='Rex Eggs, Below Threshold',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+#points(apsub$lon[apsub$Cper10m2==0],apsub$lat[apsub$Cper10m2==0],pch='+',col='white')
+#symbols(apsub$lon[apsub$Cper10m2>0],
+#       apsub$lat[apsub$Cper10m2>0],
+#      circles=log(apsub$Cper10m2+1)[apsub$Cper10m2>0],
+#     inches=0.1,bg=symcol,fg='black',add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
+
+image.plot(lond,latd,t(matrix(grid.extent$pred2,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=TRUE),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=range(lond),ylim=range(latd),main='Rex Eggs, Above Threshold',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+#points(apsub$lon[apsub$Cper10m2==0],apsub$lat[apsub$Cper10m2==0],pch='+',col='white')
+#symbols(apsub$lon[apsub$Cper10m2>0],
+#       apsub$lat[apsub$Cper10m2>0],
+#      circles=log(apsub$Cper10m2+1)[apsub$Cper10m2>0],
+#     inches=0.1,bg=symcol,fg='black',add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
+
+#then, use threshold geography model to find differences between two predictions to calculate local slopes 
 nlat=120
 nlon=120
 latd=seq(52,60,length.out=nlat) #center grid over study region 
@@ -163,19 +231,21 @@ max.slope<-max(grid.extent$diff,na.rm=T)
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.5))
 image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
-           col=hcl.colors(100,"PRGn"),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), #PRGn diverges more clearly, helping interpretation
-           xlim=range(lond),ylim=range(latd),main='Change in RX(e) Distribution w Threshold Temperature Effect',
+           col=hcl.colors(100,"Lajolla"),ylab=expression(paste("Latitude ("^0,'N)')),
+           xlab=expression(paste("Longitude ("^0,'E)')), 
+           xlim=range(lond),ylim=range(latd),
+           main=expression(paste('Significant Change Across Threshold (2.28'^0,'C)')),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),
            legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)#would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
-map("worldHires",fill=T,col="seashell2",add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
 
 #now add in the Phenology effect from this model (again, using this model because it produced most deviance explained and lowest AIC): 
 #using base graphics here, no need to overlay anything
 windows()
 par(mai=c(1,1,0.5,0.5))
-plot(thr.geo,select=1,main='Rex Sole Threshold Geo Phenology, Eggs',
+plot(thr.geo,select=1,main='Rex Sole Phenology',
      seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 7.887)',ylim=c(-2,1.5))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 

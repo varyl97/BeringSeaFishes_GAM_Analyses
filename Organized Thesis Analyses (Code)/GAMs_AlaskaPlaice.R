@@ -23,6 +23,7 @@ eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
              data=apsub,family=tw(link='log'),method='REML')
 
 summary(eg.base)
+AIC(eg.base)
 
 windows(width=12,height=8)
 plot(eg.base,shade=FALSE,page=1,
@@ -64,6 +65,7 @@ abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
 abline(v=temps.in[best.index.phe],lty=2,lwd=2,col='steelblue3')
 
 summary(thr.pheno)
+AIC(thr.pheno)
 
 windows(width=12,height=8)
 plot(thr.pheno,shade=FALSE,page=1,
@@ -78,7 +80,7 @@ plot(thr.pheno,select=4,main='Alaska Plaice Phenology, Eggs',seWithMean=TRUE,
      ylim=c(-4.2,2))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
-plot(thr.pheno,select=3,seWithMean=TRUE,shade=FALSE,shade.col=col,ylim=c(-4.2,2))
+plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-4.2,2))
 legend('topright',legend=c('Below','Above'),col=c(NA,col),lwd=c(2,2),cex=0.8)
 mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 
@@ -105,13 +107,18 @@ for(i in 1:length(temps.in)){
 best.index.geo<-order(aic.geo)[1]
 thr.geo<-thr.geo[[best.index.geo]]
 
-windows()
-plot(temps.in,aic.geo,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.geo)),
-     main='Temperature Threshold Flex Geography',xlab="Temperature (degC)")
-abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
-abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
+windows(width=10,height=5)
+plot(temps.in,aic.geo,type='b',lwd=1.2,ylim=range(c(AIC(eg.base),aic.geo)),
+     main='AIC Scores Across Experimental Models with Varied Threshold T',
+     xlab=expression(paste("Temperature ("^0,"C)")),
+     ylab="AIC Scores")
+abline(h=AIC(eg.base),lty=2,lwd=1.2,col='sienna3')
+abline(v=temps.in[best.index.geo],lty=2,lwd=1.2,col='steelblue3')
+legend("bottomright",lty=c(2,2),col=c('sienna3','steelblue3'),
+       legend=c("Base Model","Best Tested Thr.Geo Model"))
 
 summary(thr.geo)
+AIC(thr.geo)
 
 windows(width=12,height=8)
 plot(thr.geo,page=1,scale=0,scheme=2,shade=FALSE,
@@ -137,6 +144,7 @@ vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
                 s(doy,by=reg.SST),data=apsub,family=tw(link='log'),
               method='REML')
 summary(vc.pheno)
+AIC(vc.pheno)
 
 windows(width=12,height=8)
 plot(vc.pheno,shade=FALSE,
@@ -151,7 +159,7 @@ plot(vc.pheno,select=2,main='Alaska Plaice VC Phenology, Eggs',seWithMean=TRUE,
      ylim=c(-25,11))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
-plot(vc.pheno,select=4,seWithMean=TRUE,shade=FALSE,shade.col=col,ylim=c(-25,11))
+plot(vc.pheno,select=4,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-25,11))
 legend('topright',legend=c('Flexible Phenology Smooth','Deviation from Avg.Phenology'),
        col=c(NA,col),lwd=c(2,2),cex=0.8)
 mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
@@ -166,6 +174,7 @@ vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
               s(lon,lat,by=reg.SST),data=apsub,family=tw(link='log'),
             method='REML')
 summary(vc.geo)
+AIC(vc.geo)
 
 windows(width=12,height=8)
 plot(vc.geo,shade=FALSE,
@@ -412,29 +421,34 @@ lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                s(bottom_depth,k=5),
              data=aplarv.ctd,family=tw(link='log'),method='REML')
 summary(lv.base)
+AIC(lv.base)
 
 lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                   s(bottom_depth,k=5)+
                   s(salinity),data=aplarv.ctd,family=tw(link='log'),
                 method='REML')
 summary(lv.add.sal)
+AIC(lv.add.sal)
 
 lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature),data=aplarv.ctd,family=tw(link='log'),
                  method='REML')
 summary(lv.add.temp)
+AIC(lv.add.temp)
 
 lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature)+s(salinity),data=aplarv.ctd,
                  family=tw(link='log'),method='REML')
 summary(lv.temp.sal)
+AIC(lv.temp.sal)
 
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
              s(salinity,temperature),data=aplarv.ctd,family=tw(link='log'),
            method='REML')
 summary(lv.2d)
+AIC(lv.2d)
 
 #SAVE LARVAL MODELS: 
 saveRDS(lv.base,file="./GAM Models/ap_larval_base.rds")

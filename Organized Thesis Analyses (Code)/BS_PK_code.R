@@ -108,7 +108,7 @@ pksub<-pksub[pksub$LAT>54&pksub$LON>(-173)&pksub$LAT<62,]
 pklarv<-pklarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]
-pklarv<-pklarv[pklarv$LAT>53.5&pklarv$LON>(-175),]
+pklarv<-pklarv[pklarv$LAT>53.5&pklarv$LON>(-175)&pklarv$LAT<61.5,]
 names(pksub)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
                 'Cper1000m3','year','month','lat','lon','doy','vol','bottom_depth','id','count','SS','date')
 names(pklarv)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
@@ -195,7 +195,7 @@ pklarv.ctd$date<-parse_date_time(pklarv.ctd$date,orders="mdy")
 pklarv.ctd$CTD_date<-parse_date_time(pklarv.ctd$CTD_date,orders="mdy")
 pklarv.ctd$date_diff<-difftime(pklarv.ctd$date,pklarv.ctd$CTD_date,units="hour")
 pklarv.ctd<-pklarv.ctd[which(pklarv.ctd$date_diff>(-6)&pklarv.ctd$date_diff<6),]
-dim(pklarv.ctd) #2565
+dim(pklarv.ctd) #2360
 
 #Save for later: 
 write.csv(pksub,'./Ichthyo Data/Cleaned_Cut_PkEggs.csv')

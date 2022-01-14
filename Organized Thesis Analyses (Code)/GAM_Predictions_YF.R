@@ -250,18 +250,19 @@ symcol<-adjustcolor('grey',alpha=0.5)
 windows(height=15,width=15)
 par(mai=c(1,1,0.5,0.9))
 image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=range(yflarv.ctd$lon,na.rm=TRUE),ylim=range(yflarv.ctd$lat,na.rm=TRUE),main='Yellowfin Sole Distribution, Larvae',
+           xlim=range(yflarv.ctd$lon,na.rm=TRUE),ylim=range(yflarv.ctd$lat,na.rm=TRUE),
+           main='Yellowfin Sole Distribution, Larvae',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 points(yflarv.ctd$lon[yflarv.ctd$Cper10m2==0],yflarv.ctd$lat[yflarv.ctd$Cper10m2==0],pch='+',col='white')
 symbols(yflarv.ctd$lon[yflarv.ctd$Cper10m2>0],
         yflarv.ctd$lat[yflarv.ctd$Cper10m2>0],
         circles=log(yflarv.ctd$Cper10m2+1)[yflarv.ctd$Cper10m2>0],
         inches=0.1,bg=symcol,fg='black',add=T)
-map("worldHires",fill=T,col="seashell2",add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
 
 #Predicted Larval Biogeography - based on what the 2D model predicts: 
 nlat=120
@@ -291,14 +292,19 @@ grid.extent$pred[grid.extent$dist>30000]<-NA
 windows(height=15,width=15)
 par(mai=c(1,1,0.5,0.9))
 image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(yflarv.ctd$lon,na.rm=TRUE),ylim=range(yflarv.ctd$lat,na.rm=TRUE),
            main='Predicted Larval Biogeography, 2D Model',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
-map("worldHires",fill=T,col="seashell2",add=T)
+points(yflarv.ctd$lon[yflarv.ctd$Cper10m2==0],yflarv.ctd$lat[yflarv.ctd$Cper10m2==0],pch='+',col='white')
+symbols(yflarv.ctd$lon[yflarv.ctd$Cper10m2>0],
+        yflarv.ctd$lat[yflarv.ctd$Cper10m2>0],
+        circles=log(yflarv.ctd$Cper10m2+1)[yflarv.ctd$Cper10m2>0],
+        inches=0.1,bg=symcol,fg='black',add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
 
 #Larval Catch Predictions on a Temperature-Salinity Diagram: 
 #basically applying same strategy, but instead of a long-lat grid, making a temp-sal grid
@@ -310,16 +316,11 @@ sald<-seq(min(yflarv.ctd$salinity,na.rm=T),max(yflarv.ctd$salinity,na.rm=T),leng
 grid.extent<-expand.grid(sald,tempd)
 names(grid.extent)<-c('salinity','temperature')
 
-grid.extent$dist.sal<-NA
-grid.extent$dist.temp<-NA
+grid.extent$dist<-NA
 for(k in 1:nrow(grid.extent)){
-  dist.sal<-euclidean.distance(grid.extent$salinity[k],
-                               yflarv.ctd$salinity[k])
-  dist.temp<-euclidean.distance(grid.extent$temperature[k],
-                                yflarv.ctd$temperature[k])
-  
-  grid.extent$dist.sal[k]<-min(dist.sal)
-  grid.extent$dist.temp[k]<-min(dist.temp)
+  dist<-euclidean.distance(grid.extent$salinity[k],grid.extent$temperature[k],
+                           yflarv.ctd$salinity,yflarv.ctd$temperature)
+  grid.extent$dist[k]<-min(dist)
 }
 
 grid.extent$year<-as.numeric(2005)
@@ -329,22 +330,24 @@ grid.extent$doy<-as.numeric(median(yflarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(yflarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist.sal>1.152]<-NA
-grid.extent$pred[grid.extent$dist.temp>5.543]<-NA #mean values of dist.sal & dist.temp
+grid.extent$pred[grid.extent$dist>mean(grid.extent$dist)]<-NA #mean values of dist.sal & dist.temp
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
 image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
-           col=hcl.colors(100,"PRGn"),xlab='Salinity (psu)',
+           col=hcl.colors(100,"Lajolla",rev=T),xlab='Salinity (psu)',
            ylab=expression(paste("Temperature ("^0, 'C)')),
-           xlim=range(yflarv.ctd$salinity,na.rm=T),ylim=range(yflarv.ctd$temperature,na.rm=T),
+           xlim=range(yflarv.ctd$salinity,na.rm=T),
+           ylim=range(yflarv.ctd$temperature[yflarv.ctd$Cper10m2>0],na.rm=T),
            main='Larval Biogeography By Temperature and Salinity',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+points(yflarv.ctd$salinity[yflarv.ctd$Cper10m2>0],
+       yflarv.ctd$temperature[yflarv.ctd$Cper10m2>0],pch="+",col="white")
 symbols(yflarv.ctd$salinity[yflarv.ctd$Cper10m2>0],
         yflarv.ctd$temperature[yflarv.ctd$Cper10m2>0],
         circles=log(yflarv.ctd$Cper10m2+1)[yflarv.ctd$Cper10m2>0],
-        inches=0.1,bg="grey55",fg='black',add=T)
+        inches=0.1,bg=symcol,fg='black',add=T)
 
 
 windows()

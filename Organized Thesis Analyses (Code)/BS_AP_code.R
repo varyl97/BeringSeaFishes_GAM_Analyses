@@ -92,6 +92,7 @@ apsub<-subset(apsub,doy>99&doy<182)
 aplarv<-aplarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]
+aplarv<-subset(aplarv,lat<62)
 names(apsub)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
                 'Cper1000m3','year','month','lat','lon','doy','vol','bottom_depth','id','count','SS','date')
 names(aplarv)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
@@ -187,11 +188,12 @@ apsub<-subset(apsub,bottom_depth<151)
 apsub.ctd<-subset(apsub.ctd,bottom_depth<151)
 aplarv<-subset(aplarv,bottom_depth<151)
 aplarv.ctd<-subset(aplarv.ctd,bottom_depth<151)
+aplarv.ctd<-subset(aplarv.ctd,lat<62)
 
-write.csv(apsub,'Cleaned_Cut_ApEggs.csv')
-write.csv(apsub.ctd,'Cleaned_Cut_ApEggs_wCTD.csv')
-write.csv(aplarv,'Cleaned_Cut_ApLarv.csv')
-write.csv(aplarv.ctd,'Cleaned_Cut_ApLarv_wCTD.csv')
+write.csv(apsub,'./Ichthyo Data/Cleaned_Cut_ApEggs.csv')
+write.csv(apsub.ctd,'./Ichthyo Data/Cleaned_Cut_ApEggs_wCTD.csv')
+write.csv(aplarv,'./Ichthyo Data/Cleaned_Cut_ApLarv.csv')
+write.csv(aplarv.ctd,'./Ichthyo Data/Cleaned_Cut_ApLarv_wCTD.csv')
 
 
 ###to avoid doing all the above gymnastics: 

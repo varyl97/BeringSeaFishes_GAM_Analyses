@@ -25,6 +25,7 @@ thr.geo<-readRDS("./GAM Models/pk_egg_thr_geo.rds")
 best.index.geo<-readRDS("./GAM Models/pk_egg_best_index_geo.rds")
 vc.pheno<-readRDS("./GAM Models/pk_egg_vc_pheno.rds")
 vc.geo<-readRDS("./GAM Models/pk_egg_vc_geo.rds") #only using eg.base, thr.pheno, and thr.geo below. 
+aic.geo<-readRDS("./GAM Models/pk_egg_aic_geo_list.rds")
 
 lv.base<-readRDS("./GAM Models/pk_larvae_base.rds")
 lv.add.sal<-readRDS("./GAM Models/pk_larvae_addsal.rds")
@@ -76,7 +77,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(grid.extent$lon),ylim=range(grid.extent$lat),main='Walleye Pollock Distribution, Eggs',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 points(pksub$lon[pksub$Cper10m2==0],pksub$lat[pksub$Cper10m2==0],pch='+',col='white')
 symbols(pksub$lon[pksub$Cper10m2>0],
@@ -118,6 +119,71 @@ legend('topleft',legend=c(expression(paste("(log(C/(10m"^2,')+1)')),'95% CI'),
        col=c('grey43','honeydew2'),pch=c(NA,15),lty=c(1,NA),lwd=2,cex=1)
 abline(h=0,col='grey79',lty=2,lwd=1.5)
 
+
+# Spatial distribution from best model: threshold geo ---------------------
+nlat=120
+nlon=120
+latd=seq(min(pksub$lat),61,length.out=nlat) #center grid over study region 
+lond=seq((-173.5),max(pksub$lon),length.out=nlon)
+
+grid.extent<-expand.grid(lond,latd)
+names(grid.extent)<-c('lon','lat')
+
+#calculate distance to each positive observation
+grid.extent$dist<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
+                          pksub$lat,pksub$lon)
+  grid.extent$dist[k]<-min(dist)
+}
+
+grid.extent$year<-as.numeric(2008) 
+grid.extent$doy<-as.numeric(median(pksub$doy,na.rm=TRUE))
+grid.extent$bottom_depth<-NA
+grid.extent$bottom_depth<-median(pksub$bottom_depth,na.rm=TRUE)
+grid.extent$reg.SST<-NA
+grid.extent$reg.SST<-mean(pksub$reg.SST,na.rm=TRUE) 
+grid.extent$th<-"TRUE"
+grid.extent$pred<-predict(eg.base,newdata=grid.extent)
+grid.extent$pred[grid.extent$dist>30000]<-NA 
+grid.extent$th<-"FALSE"
+grid.extent$pred2<-predict(thr.geo,newdata=grid.extent)
+grid.extent$pred2[grid.extent$dist>30000]<-NA
+
+
+symcol<-adjustcolor('grey',alpha=0.5)
+
+windows(height=15,width=32)
+par(mai=c(1,1,0.5,0.9),mfrow=c(1,2))
+image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=range(grid.extent$lon),ylim=range(grid.extent$lat),main='Pollock Eggs, Below Threshold',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+#points(pksub$lon[pksub$Cper10m2==0],pksub$lat[pksub$Cper10m2==0],pch='+',col='white')
+#symbols(pksub$lon[pksub$Cper10m2>0],
+     #   pksub$lat[pksub$Cper10m2>0],
+    #    circles=log(pksub$Cper10m2+1)[pksub$Cper10m2>0],
+   #     inches=0.1,bg=symcol,fg='black',add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
+
+image.plot(lond,latd,t(matrix(grid.extent$pred2,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=range(grid.extent$lon),ylim=range(grid.extent$lat),main='Pollock Eggs, Above Threshold',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+#points(pksub$lon[pksub$Cper10m2==0],pksub$lat[pksub$Cper10m2==0],pch='+',col='white')
+#symbols(pksub$lon[pksub$Cper10m2>0],
+#       pksub$lat[pksub$Cper10m2>0],
+#      circles=log(pksub$Cper10m2+1)[pksub$Cper10m2>0],
+#     inches=0.1,bg=symcol,fg='black',add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
+
+
 #TEMP EFFECT: Calculate Differences Due to Different Temperature Regimes Based on Best Model --------
 #start with threshold geography model to find differences between two predictions to calculate local slopes 
 nlat=120
@@ -138,7 +204,7 @@ for(k in 1:nrow(grid.extent)){
 
 grid.extent$year<-2008
 grid.extent$doy<-median(pksub$doy)
-grid.extent$reg.SST<-mean(pksub$reg.SST[pksub$reg.SST<2.048]) #threshold temp chosen by AIC values
+grid.extent$reg.SST<-mean(pksub$reg.SST[pksub$reg.SST<temps.in[[best.index.geo]]]) #threshold temp chosen by AIC values
 grid.extent$th<-"TRUE"
 grid.extent$bottom_depth<-median(pksub$bottom_depth,na.rm=T)
 grid.extent$pred<-predict(thr.geo,newdata=grid.extent)
@@ -146,7 +212,7 @@ grid.extent$se<-predict(thr.geo,newdata=grid.extent,se=T)[[2]]
 grid.extent$pred.u<-grid.extent$pred+1.96*grid.extent$se #95% CI here
 grid.extent$pred.l<-grid.extent$pred-1.96*grid.extent$se
 grid.extent$pred[grid.extent$dist>30000]<-NA #remove predictions that are too far from positive data values
-grid.extent$reg.SST<-mean(pksub$reg.SST[pksub$reg.SST>2.048])
+grid.extent$reg.SST<-mean(pksub$reg.SST[pksub$reg.SST>temps.in[[best.index.geo]]])
 grid.extent$th<-"FALSE"
 grid.extent$pred2<-predict(thr.geo,newdata=grid.extent)
 grid.extent$se2<-predict(thr.geo,newdata=grid.extent,se=T)[[2]]
@@ -163,22 +229,21 @@ max.slope<-max(grid.extent$diff,na.rm=T)
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.5))
 image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
-           col=hcl.colors(100,"PRGn"),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), #PRGn diverges more clearly, helping interpretation
-           xlim=range(grid.extent$lon),ylim=range(grid.extent$lat),main='Change in PK(e) Distribution w Threshold Temperature Effect',
+           col=hcl.colors(100,"Lajolla",rev=T),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=range(grid.extent$lon),ylim=range(grid.extent$lat),main=expression(paste('Significant Change Across Threshold (2.05'^0,'C)')),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),
            legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)#would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
-map("worldHires",fill=T,col="seashell2",add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
 
 #now add in the Phenology effect from this model (again, using this model because it produced most deviance explained and lowest AIC): 
 #using base graphics here, no need to overlay anything
 windows()
 par(mai=c(1,1,0.5,0.5))
-plot(thr.geo,select=1,main='Walleye Pollock Threshold Geo Phenology, Eggs',
+plot(thr.geo,select=1,main='Walleye Pollock Phenology',
      seWithMean=TRUE,xlab='Day of Year',ylab='Anomalies (edf: 7.356)',ylim=c(-2,2))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
-
 
 #plot the two phenology smooths together, one from the base model and one from the threshold geography model to see the temp effect: 
 col<-adjustcolor('tomato4',alpha.f=0.3)
@@ -265,7 +330,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(pklarv.ctd$lon,na.rm=TRUE),ylim=range(pklarv.ctd$lat,na.rm=TRUE),main='Walleye Pollock Distribution, Larvae',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 points(pklarv.ctd$lon[pklarv.ctd$Cper10m2==0],pklarv.ctd$lat[pklarv.ctd$Cper10m2==0],pch='+',col='white')
 symbols(pklarv.ctd$lon[pklarv.ctd$Cper10m2>0],
@@ -300,17 +365,25 @@ grid.extent$salinity<-as.numeric(mean(pklarv.ctd$salinity))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
 grid.extent$pred[grid.extent$dist>30000]<-NA 
 
+col<-adjustcolor("grey28",alpha=0.3)
+
 windows(height=15,width=15)
 par(mai=c(1,1,0.5,0.9))
 image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"PRGn"),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(pklarv.ctd$lon,na.rm=TRUE),ylim=range(pklarv.ctd$lat,na.rm=TRUE),
            main='Predicted Larval Biogeography, 2D Model',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
-map("worldHires",fill=T,col="seashell2",add=T)
+points(pklarv.ctd$lon[pklarv.ctd$Cper10m2==0],
+       pklarv.ctd$lat[pklarv.ctd$Cper10m2==0],pch="+",col="white")
+symbols(pklarv.ctd$lon[pklarv.ctd$Cper10m2>0],
+        pklarv.ctd$lat[pklarv.ctd$Cper10m2>0],
+        circles=log(pklarv.ctd$Cper10m2+1)[pklarv.ctd$Cper10m2>0],
+        inches=0.1,bg=col,add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
 
 #Larval Catch Predictions on a Temperature-Salinity Diagram: 
 #basically applying same strategy, but instead of a long-lat grid, making a temp-sal grid
@@ -325,13 +398,10 @@ names(grid.extent)<-c('salinity','temperature')
 grid.extent$dist.sal<-NA
 grid.extent$dist.temp<-NA
 for(k in 1:nrow(grid.extent)){
-  dist.sal<-euclidean.distance(grid.extent$salinity[k],
-                               pklarv.ctd$salinity[k])
-  dist.temp<-euclidean.distance(grid.extent$temperature[k],
-                                pklarv.ctd$temperature[k])
+  dist<-euclidean.distance(grid.extent$salinity[k],grid.extent$temperature[k],
+                               pklarv.ctd$salinity,pklarv.ctd$temperature)
   
-  grid.extent$dist.sal[k]<-min(dist.sal)
-  grid.extent$dist.temp[k]<-min(dist.temp)
+  grid.extent$dist[k]<-min(dist)
 }
 
 grid.extent$year<-as.numeric(2005)
@@ -341,22 +411,23 @@ grid.extent$doy<-as.numeric(median(pklarv.ctd$doy,na.rm=TRUE))
 grid.extent$bottom_depth<-NA
 grid.extent$bottom_depth<-as.numeric(median(pklarv.ctd$bottom_depth,na.rm=TRUE))
 grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
-grid.extent$pred[grid.extent$dist.sal>1.266]<-NA
-grid.extent$pred[grid.extent$dist.temp>5.193]<-NA #based on mean values
+grid.extent$pred[grid.extent$dist>mean(grid.extent$dist)]<-NA#based on mean values
 
 windows(width=15,height=15)
 par(mai=c(1,1,0.5,0.9))
 image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
-           col=hcl.colors(100,"PRGn"),xlab='Salinity (psu)',
+           col=hcl.colors(100,"Lajolla"),xlab='Salinity (psu)',
            ylab=expression(paste("Temperature ("^0, 'C)')),
            xlim=range(pklarv.ctd$salinity,na.rm=T),ylim=range(pklarv.ctd$temperature,na.rm=T),
            main='Larval Biogeography By Temperature and Salinity',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+points(pklarv.ctd$salinity[pklarv.ctd$Cper10m2>0],
+       pklarv.ctd$temperature[pklarv.ctd$Cper10m2>0],pch="+",col="white")
 symbols(pklarv.ctd$salinity[pklarv.ctd$Cper10m2>0],
         pklarv.ctd$temperature[pklarv.ctd$Cper10m2>0],
         circles=log(pklarv.ctd$Cper10m2+1)[pklarv.ctd$Cper10m2>0],
-        inches=0.1,bg="grey55",fg='black',add=T)
+        inches=0.1,bg=col,fg='black',add=T)
 
 
 windows()

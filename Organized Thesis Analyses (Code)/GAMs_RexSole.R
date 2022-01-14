@@ -111,11 +111,15 @@ for(i in 1:length(temps.in)){
 best.index.geo<-order(aic.geo)[1]
 thr.geo<-thr.geo[[best.index.geo]]
 
-windows()
-plot(temps.in,aic.geo,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.geo)),
-     main='Temperature Threshold Flex Geography',xlab="Temperature (degC)")
-abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
-abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
+windows(width=15,height=8)
+plot(temps.in,aic.geo,type='b',lwd=1.2,ylim=range(c(AIC(eg.base),aic.geo)),
+     main='AIC Scores Across Experimental Thr.Geo Models with Varying Threshold T',
+     xlab=expression(paste("Temperature ("^0,"C)")),
+     ylab='AIC Scores')
+abline(h=AIC(eg.base),lty=2,lwd=1.2,col='sienna3')
+abline(v=temps.in[best.index.geo],lty=2,lwd=1.2,col='steelblue3')
+legend("bottomleft",lty=c(2,2),lwd=c(1.2,1.2),col=c("sienna3","steelblue3"),
+       legend=c("Base","Best Model Tested"))
 
 summary(thr.geo)
 
