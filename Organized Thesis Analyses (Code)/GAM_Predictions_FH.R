@@ -375,7 +375,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=range(fhlarv.ctd$lon,na.rm=TRUE),ylim=range(fhlarv.ctd$lat,na.rm=TRUE),
-           main='Predicted Larval Biogeography, 2D Model',
+           main='Predicted Larval Biogeography',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
@@ -385,7 +385,7 @@ symbols(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2>0],
         fhlarv.ctd$lat[fhlarv.ctd$Cper10m2>0],
         circles=log(fhlarv.ctd$Cper10m2+1)[fhlarv.ctd$Cper10m2>0],
         inches=0.1,bg=col,add=T)
-map("worldHires",fill=T,col="seashell2",add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
 
 #Larval Catch Predictions on a Temperature-Salinity Diagram: 
 #basically applying same strategy, but instead of a long-lat grid, making a temp-sal grid

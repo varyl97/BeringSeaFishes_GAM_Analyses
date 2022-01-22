@@ -134,16 +134,16 @@ for(i in 1:length(temps.in)){
 best.index.geo<-order(aic.geo)[1]
 thr.geo<-thr.geo[[best.index.geo]]
 
-windows(width=15,height=8)
+windows(width=12,height=6)
 plot(temps.in,aic.geo,type='b',lwd=1.2,ylim=range(c(AIC(eg.base),aic.geo)),
-     main='AIC Scores Across Tested Thr.Geo Models with Varying Threshold T',
+     main='AIC Scores Across Experimental Models with Varied Threshold T',
      xlab=expression(paste("Temperature ("^0,"C)")),
      ylab='AIC Scores')
 abline(h=AIC(eg.base),lty=2,lwd=1.2,col='sienna3')
 abline(v=temps.in[best.index.geo],lty=2,lwd=1.2,col='steelblue3')
 legend("bottomleft",cex=0.9,lty=c(2,2),lwd=c(1.2,1.2),col=c('sienna3',
                                                             'steelblue3'),
-       legend=c("Base","Best Tested Model"))
+       legend=c("Base Model (no threshold)","Best Tested Thr.Geo Model"))
 
 summary(thr.geo)
 
@@ -308,6 +308,7 @@ thr.geo<-readRDS("./GAM Models/pk_egg_thr_geo.rds")
 best.index.geo<-readRDS("./GAM Models/pk_egg_best_index_geo.rds")
 vc.pheno<-readRDS("./GAM Models/pk_egg_vc_pheno.rds")
 vc.geo<-readRDS("./GAM Models/pk_egg_vc_geo.rds")
+aic.geo<-readRDS("./GAM Models/pk_egg_aic_geo_list.rds")
 
 #checking based on AIC: 
 aic.base<-AIC(eg.base)

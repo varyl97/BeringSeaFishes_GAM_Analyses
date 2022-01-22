@@ -1,0 +1,197 @@
+---
+title: "Test Things"
+author: "Laura Vary"
+date: "1/14/2022"
+header-includes: 
+  - \usepackage{placeins}
+output: 
+  pdf_document: 
+    toc: yes
+---
+
+```{r setup, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,cache=FALSE)
+knitr::knit_hooks$set(plot=function(x,options){
+  paste0(knitr::hook_plot_tex(x,options),"\n\\FloatBarrier\n")
+})
+
+setwd("C:/Users/varyl/Desktop/GitHub/BeringSeaFishes_GAM_Analyses")
+library(knitr)
+library(raster)
+library(marmap)
+library(maps)
+library(mgcv)
+library(colorRamps) 
+library(RColorBrewer)
+library(fields)
+library(mapdata)
+source('./Organized Thesis Analyses (Code)/distance.function.R')
+source("./Organized Thesis Analyses (Code)/vis.gam_COLORS.R")
+source("./Organized Thesis Analyses (Code)/euclidean.distance.R")
+```
+
+## This is a document for testing code and subsets of processes. 
+I didn't want to do everything in the streamlined-thesis-analyses until I fix the code there, so moving pieces of that here. 
+
+```{r,echo=FALSE}
+pksub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkEggs.csv',header=TRUE,
+                check.names=TRUE)
+pklarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkLarv_wCTD.csv',
+                     header=TRUE,check.names=TRUE)
+
+reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',
+                  header=TRUE,check.names=TRUE)
+
+str_name<-"./Environmental Data/expanded_BS_bathy.tif"
+bathy<-raster(str_name)
+```
+
+```{r,echo=FALSE}
+lat_range<-c(paste(round(min(pksub$lat),digits=1),round(max(pksub$lat),digits=1),sep="-"))
+lon_range<-c(paste(round(min(pksub$lon),digits=1),round(max(pksub$lon),digits=1),sep=" to "))
+doy_range<-c(paste(min(pksub$doy),max(pksub$doy),sep="-"))
+depth_range<-c(paste(min(pksub$bottom_depth,na.rm=T),
+                     max(pksub$bottom_depth,na.rm=T),sep="-"))
+
+df<-data.frame(lat_range,lon_range,doy_range,depth_range)
+
+kable(df,col.names=c("Lat Range","Lon Range","Day of Year Range",
+                     "Bottom Depth Range"),
+      caption="Descriptive Metrics for Pollock Egg Data",align='c')
+```
+```{r,echo=FALSE}
+lat_range<-c(paste(round(min(pklarv.ctd$lat),digits=1),round(max(pklarv.ctd$lat),digits=1),sep="-"))
+lon_range<-c(paste(round(min(pklarv.ctd$lon),digits=1),round(max(pklarv.ctd$lon),digits=1),sep=" to "))
+doy_range<-c(paste(min(pklarv.ctd$doy),max(pklarv.ctd$doy),sep="-"))
+depth_range<-c(paste(round(min(pklarv.ctd$bottom_depth),digits=1),
+                     round(max(pklarv.ctd$bottom_depth),digits=1),sep="-"))
+
+df<-data.frame(lat_range,lon_range,doy_range,depth_range)
+
+kable(df,col.names=c("Lat Range","Lon Range","Day of Year Range",
+                     "Bottom Depth Range"),
+      caption="Descriptive Metrics for Pollock Larval Data",align='c')
+```
+
+```{r, fig.width=7.5,fig.height=3.5,fig.fullwidth=TRUE,fig.cap="Pollock Eggs", echo=FALSE}
+par(mfrow=c(1,2))
+hist(pksub$doy[pksub$Cper10m2>0],xlab="Day of Year",ylab="Positive Catch Frequencies",main="")
+hist(pksub$year[pksub$Cper10m2>0],xlab="Year",ylab="",main="")
+```
+
+```{r, fig.width=7.5,fig.height=3.5,fig.fullwidth=TRUE,fig.cap="Pollock Larvae", echo=FALSE}
+par(mfrow=c(1,2))
+hist(pklarv.ctd$doy[pklarv.ctd$Cper10m2>0],xlab="Day of Year",ylab="Positive Catch Frequencies",main="")
+hist(pklarv.ctd$year[pklarv.ctd$Cper10m2>0],xlab="Year",ylab="Positive Catch Frequencies",main="")
+```
+
+```{r,echo=FALSE}
+pclarv.ctd<-read.csv('./Ichthyo Data/Cleaned_Cut_PcLarv_wCTD.csv')
+pclarv.ctd<-subset(pclarv.ctd,lat<62)
+
+str_name<-"./Environmental Data/expanded_BS_bathy.tif"
+bathy<-raster(str_name)
+```
+
+These data have been trimmed. The larval data are constrained to depths between 40 and 250 meters and to latitudes south of 62 degrees north. Larvae are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements.
+
+## Descriptive Information: 
+
+```{r,echo=FALSE}
+lat_range<-c(paste(round(min(pclarv.ctd$lat),digits=1),round(max(pclarv.ctd$lat),digits=1),sep="-"))
+lon_range<-c(paste(round(min(pclarv.ctd$lon),digits=1),round(max(pclarv.ctd$lon),digits=1),sep=" to "))
+doy_range<-c(paste(min(pclarv.ctd$doy),max(pclarv.ctd$doy),sep="-"))
+depth_range<-c(paste(round(min(pclarv.ctd$bottom_depth),digits=1),
+                     round(max(pclarv.ctd$bottom_depth),digits=1),sep="-"))
+
+df<-data.frame(lat_range,lon_range,doy_range,depth_range)
+
+kable(df,col.names=c("Lat Range","Lon Range","Day of Year Range",
+                     "Bottom Depth Range"),
+      caption="Descriptive Metrics for Pac Cod Larval Data",align='c')
+```
+
+The following two plots show *the day of year distribution for positive Pac cod larval catch* (left) and *the year distribution for positive Pac cod larval catch* (right). 
+
+```{r, fig.width=7.5,fig.height=3.5,fig.fullwidth=TRUE,fig.cap="Pac Cod Larvae", echo=FALSE}
+par(mfrow=c(1,2))
+hist(pclarv.ctd$doy[pclarv.ctd$Cper10m2>0],xlab="Day of Year",ylab="Positive Catch Frequencies",main="")
+hist(pclarv.ctd$year[pclarv.ctd$Cper10m2>0],xlab="Year",ylab="",main="")
+```
+
+```{r,echo=FALSE}
+yflarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_YfLarv_wCTD.csv',
+                     header=TRUE,check.names=TRUE)
+
+str_name<-"./Environmental Data/expanded_BS_bathy.tif"
+bathy<-raster(str_name)
+```
+
+These data have been trimmed. The larval data are constrained to depths less than 176 meters. Larvae are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements.
+
+## Descriptive Information: 
+
+```{r,echo=FALSE}
+lat_range<-c(paste(round(min(yflarv.ctd$lat),digits=1),round(max(yflarv.ctd$lat),digits=1),sep="-"))
+lon_range<-c(paste(round(min(yflarv.ctd$lon),digits=1),round(max(yflarv.ctd$lon),digits=1),sep=" to "))
+doy_range<-c(paste(min(yflarv.ctd$doy),max(yflarv.ctd$doy),sep="-"))
+depth_range<-c(paste(round(min(yflarv.ctd$bottom_depth),digits=1),
+                     round(max(yflarv.ctd$bottom_depth),digits=1),sep="-"))
+
+df<-data.frame(lat_range,lon_range,doy_range,depth_range)
+
+kable(df,col.names=c("Lat Range","Lon Range","Day of Year Range",
+                     "Bottom Depth Range"),
+      caption="Descriptive Metrics for Yellowfin Sole Larval Data",align='c')
+```
+
+The following two plots show *the day of year distribution for positive yellowfin sole larval catch* (left) and *the year distribution for positive yellowfin sole larval catch* (right). 
+
+```{r, fig.width=7.5,fig.height=3.5,fig.fullwidth=TRUE,fig.cap="Yellowfin Sole Larvae", echo=FALSE}
+par(mfrow=c(1,2))
+hist(yflarv.ctd$doy[yflarv.ctd$Cper10m2>0],xlab="Day of Year",ylab="Positive Catch Frequencies",main="")
+hist(yflarv.ctd$year[yflarv.ctd$Cper10m2>0],xlab="Year",ylab="",main="")
+```
+
+
+```{r,echo=FALSE}
+rxsub<-read.csv('./Ichthyo Data/Cleaned_Cut_RxEggs.csv')
+
+reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',
+                  header=TRUE,check.names=TRUE)
+
+str_name<-"./Environmental Data/expanded_BS_bathy.tif"
+bathy<-raster(str_name)
+```
+
+These data have been trimmed. The data are only constrained to between April and July. The egg data are also joined to regional temperature indices for each year (the reg.sst dataset). 
+
+The regional temperature index data are constrained to (-180, -151) degrees W and (50.5, 67.5) degrees N and reflect the average March temperature for each year across that region. March temperatures are chosen to estimate the conditions spawning rex sole may have experienced, roughly two months before the peak amount of eggs in the water column occurs.  
+
+## Descriptive Information: 
+
+```{r,echo=FALSE}
+lat_range<-c(paste(round(min(rxsub$lat),digits=1),round(max(rxsub$lat),digits=1),sep="-"))
+lon_range<-c(paste(round(min(rxsub$lon),digits=1),round(max(rxsub$lon),digits=1),sep=" to "))
+doy_range<-c(paste(min(rxsub$doy),max(rxsub$doy),sep="-"))
+depth_range<-c(paste(round(min(rxsub$bottom_depth,na.rm=T),digits=1),
+                     round(max(rxsub$bottom_depth,na.rm=T),digits=1),sep="-"))
+
+df<-data.frame(lat_range,lon_range,doy_range,depth_range)
+
+kable(df,col.names=c("Lat Range","Lon Range","Day of Year Range",
+                     "Bottom Depth Range"),
+      caption="Descriptive Metrics for Rex Sole Egg Data",align='c')
+```
+
+The following two plots show *the day of year distribution for positive Rex sole egg catch* (left) and *the year distribution for positive Rex sole egg catch* (right).
+
+```{r, fig.width=7.5,fig.height=3.5,fig.fullwidth=TRUE,fig.cap="Rex Sole Eggs", echo=FALSE}
+par(mfrow=c(1,2))
+hist(pksub$doy[pksub$Cper10m2>0],xlab="Day of Year",ylab="Positive Catch Frequencies",main="")
+hist(pksub$year[pksub$Cper10m2>0],xlab="Year",ylab="",main="")
+```
+
+
+
+Done

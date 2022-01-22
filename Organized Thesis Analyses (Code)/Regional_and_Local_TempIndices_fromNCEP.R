@@ -137,8 +137,21 @@ write.csv(mar.reg.sst,'./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv')
 may.reg.sst<-aggregate(SST~year,data=may.sst,FUN=function(may.sst)(mean=mean(may.sst)))
 write.csv(may.reg.sst,'./Environmental Data/May_SST_RegionalIndex_NCEP_BS.csv')
 
+windows()
+ggplot()+geom_tile(data=sub,aes(x=lon,y=lat,fill=SST))+
+  scale_fill_viridis_c()+geom_map(data=BSmap,map=BSmap,aes(long,lat,map_id=region))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+  labs(x=expression(paste("Longitude ("^0,'W)')),
+       y=expression(paste("Latitude ("^0,'N)')),)
 
-
+windows()
+ggplot()+geom_tile(data=sub1,aes(x=lon,y=lat,fill=SST))+
+  scale_fill_viridis_c()+geom_map(data=BSmap,map=BSmap,aes(long,lat,map_id=region))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+  labs(x=expression(paste("Longitude ("^0,'W)')),
+       y=expression(paste("Latitude ("^0,'N)')))
 
 
 
