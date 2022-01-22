@@ -16,5 +16,8 @@ The "Organized Thesis Analyses (Code)" folder contains all code files, organized
 
 Ichthyoplankton and environmental data were collected by the Alaska Fisheries Science Center Ecosystems and Fisheries-Oceanography Coordinated Investigations program and metadata regarding these cruises can be found [here](https://apps-afsc.fisheries.noaa.gov/icc/index.php). 
 
+Environmental data sources: 
+Regional sea surface indices calculated from the COBE SST dataset housed by NOAA Physical Sciences Laboratory [here](https://psl.noaa.gov/data/gridded/data.cobe.html). 
+
 
 
