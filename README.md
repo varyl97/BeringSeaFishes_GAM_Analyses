@@ -12,7 +12,7 @@ While spawning behavior is one piece of the puzzle regarding recruitment variabi
 ### Organizational Structure and Description of Data
 ---
 
-The "Organized Thesis Analyses (Code)" folder contains all code files, organized by species and ichthyoplankton type (egg or larvae) from initial data loading and cleaning to production of generalized additive models. The "Ichthyo Data" folder contains all raw and cleaned ichthyoplankton data while the "Environmental Data" folder contains cleaned and compiled CTD data as well as local and regional temperature indices for the Bering Sea. Though not fully populated yet, the "Figures" folder will house figures created for the manuscript and thesis. 
+The "Organized Thesis Analyses (Code)" folder contains all code files, organized by species and ichthyoplankton type (egg or larvae) from initial data loading and cleaning to production of generalized additive models. The most holistic code files are the "Streamlined_Species_Analyses" which include a compilation of code, GAM formulations, figure generation, and descriptive tables personalized for each species. The "Ichthyo Data" folder contains all raw and cleaned ichthyoplankton data while the "Environmental Data" folder contains cleaned and compiled CTD data as well as local and regional temperature indices for the Bering Sea. Though not fully populated yet, the "Figures" folder will house figures created for the manuscript and thesis. 
 
 Ichthyoplankton and environmental data were collected by the Alaska Fisheries Science Center Ecosystems and Fisheries-Oceanography Coordinated Investigations program and metadata regarding these cruises can be found [here](https://apps-afsc.fisheries.noaa.gov/icc/index.php). 
 
