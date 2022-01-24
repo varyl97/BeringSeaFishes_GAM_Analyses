@@ -1,0 +1,567 @@
+---
+title: "Streamlined Flathead Sole Analyses & Figures"
+author: "Laura Vary"
+date: "1/23/2022"
+header-includes: 
+  - \usepackage{placeins}
+output: 
+  pdf_document: 
+    toc: yes
+---
+
+```{r setup, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+setwd("C:/Users/varyl/Desktop/GitHub/BeringSeaFishes_GAM_Analyses")
+library(knitr)
+library(raster)
+library(marmap)
+library(maps)
+library(mgcv)
+library(colorRamps) 
+library(RColorBrewer)
+library(fields)
+library(mapdata)
+source('./Organized Thesis Analyses (Code)/distance.function.R')
+source("./Organized Thesis Analyses (Code)/vis.gam_COLORS.R")
+source("./Organized Thesis Analyses (Code)/euclidean.distance.R")
+```
+
+# Flathead Sole: 
+
+## Loading Data: 
+
+Flathead sole: both egg and larval data are included for this species. Flathead sole spawn from February to July, live roughly 21 years, and transform to juveniles at standard lengths between 18 to 21 mm. 
+
+```{r,echo=FALSE}
+fhsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhEggs.csv',header=TRUE,
+                check.names=TRUE)
+fhlarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhLarv_wCTD.csv',
+                     header=TRUE,check.names=TRUE)
+
+reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',
+                  header=TRUE,check.names=TRUE)
+
+str_name<-"./Environmental Data/expanded_BS_bathy.tif"
+bathy<-raster(str_name)
+```
+
+These data have been trimmed. The egg data are constrained to depths between 54 and 221 meters; temporally, the egg data are constrained to above the 99th day of year and below the 283rd day of the year (temporally centered on the spawning period of flathead sole). The egg data are also joined to regional temperature indices for each year (the reg.sst dataset). The larval data are also constrained to depths between 54 and 221 m, above the 100th day of the year and below the 200th day of the year. Larvae are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements. Both eggs and larvae are restricted to latitudes below 61 degrees north. 
+
+The regional temperature index data are constrained to (-180, -151) degrees W and (50.5, 67.5) degrees N and reflect the average March temperature for each year across that region. March temperatures are chosen to estimate the conditions spawning flathead sole may have experienced, roughly two months before the peak amount of eggs in the water column occurs.  
+
+## Descriptive Information: 
+
+```{r,echo=FALSE}
+lat_range<-c(paste(round(min(fhsub$lat),digits=1),round(max(fhsub$lat),digits=1),sep="-"))
+lon_range<-c(paste(round(min(fhsub$lon),digits=1),round(max(fhsub$lon),digits=1),sep=" to "))
+doy_range<-c(paste(min(fhsub$doy),max(fhsub$doy),sep="-"))
+depth_range<-c(paste(round(min(fhsub$bottom_depth),digits=1),
+                     round(max(fhsub$bottom_depth),digits=1),sep="-"))
+
+df<-data.frame(lat_range,lon_range,doy_range,depth_range)
+
+kable(df,col.names=c("Lat Range","Lon Range","Day of Year Range",
+                     "Bottom Depth Range"),
+      caption="Descriptive Metrics for Flathead Sole Egg Data",align='c')
+```
+```{r,echo=FALSE}
+lat_range<-c(paste(round(min(fhlarv.ctd$lat),digits=1),round(max(fhlarv.ctd$lat),digits=1),sep="-"))
+lon_range<-c(paste(round(min(fhlarv.ctd$lon),digits=1),round(max(fhlarv.ctd$lon),digits=1),sep=" to "))
+doy_range<-c(paste(min(fhlarv.ctd$doy),max(fhlarv.ctd$doy),sep="-"))
+depth_range<-c(paste(round(min(fhlarv.ctd$bottom_depth),digits=1),
+                     round(max(fhlarv.ctd$bottom_depth),digits=1),sep="-"))
+
+df<-data.frame(lat_range,lon_range,doy_range,depth_range)
+
+kable(df,col.names=c("Lat Range","Lon Range","Day of Year Range",
+                     "Bottom Depth Range"),
+      caption="Descriptive Metrics for Flathead Sole Larval Data",align='c')
+```
+
+The following two plots show *the day of year distribution for positive Flathead sole egg catch* (left) and *the year distribution for positive Flathead sole egg catch* (right). Analogous plots for larval data are following. 
+
+```{r, fig.width=7.5,fig.height=3,fig.fullwidth=TRUE,fig.cap="Flathead Sole Eggs", echo=FALSE}
+par(mfrow=c(1,2))
+hist(fhsub$doy[fhsub$Cper10m2>0],xlab="Day of Year",ylab="Positive Catch Frequencies",main="")
+hist(fhsub$year[fhsub$Cper10m2>0],xlab="Year",ylab="",main="")
+```
+
+```{r, fig.width=7.5,fig.height=3,fig.fullwidth=TRUE,fig.cap="Flathead Sole Larvae", echo=FALSE}
+par(mfrow=c(1,2))
+hist(fhlarv.ctd$doy[fhlarv.ctd$Cper10m2>0],xlab="Day of Year",ylab="Positive Catch Frequencies",main="")
+hist(fhlarv.ctd$year[fhlarv.ctd$Cper10m2>0],xlab="Year",ylab="Positive Catch Frequencies",main="")
+```
+
+Now we'll move into the GAMs. The following code *is only necessary if the data were re-trimmed and new GAMs need to be run*. In this case, modify markdown document such that "{eval = TRUE}". The other model figures are marked as "eval = FALSE" if they, as of the last model run, do not produce the best model results. **Make sure to save the new models as RDS objects.** 
+
+Flathead sole eggs were best explained by the threshold phenology model, in which the temporal distribution of eggs varied differently below and above 2.29 degrees Celsius. 
+
+## Generalized Additive Models: Flathead Sole Eggs
+
+The base model formulation: 
+```{r, eval=FALSE,echo=FALSE}
+eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
+             data=fhsub,family=tw(link='log'),method='REML')
+```
+
+```{r, eval=FALSE,echo=FALSE}
+plot(eg.base,shade=FALSE,page=1,seWithMean=TRUE,scheme=2,scale=0)
+
+saveRDS(eg.base,file="./GAM Models/fh_egg_base.rds")
+```
+
+```{r}
+eg.base<-readRDS("./GAM Models/fh_egg_base.rds")
+summary(eg.base)
+AIC(eg.base)
+```
+
+```{r, eval=FALSE,echo=FALSE}
+vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
+              s(lon,lat,by=reg.SST),data=fhsub,family=tw(link='log'),
+            method='REML')
+```
+
+```{r, eval=FALSE,echo=FALSE}
+par(mfrow=c(1,2))
+plot(vc.geo,select=1,scheme=2,too.far=0.025,shade=FALSE,
+     seWithMean=TRUE,xlab='Longitude',ylab='Latitude',
+     main='V-C FH Egg Flex Geo, Avg. Variation')
+map("world",fill=T,col="snow4",add=T)
+plot(vc.geo,select=4,scheme=2,too.far=0.025,shade=FALSE,
+     xlab='Longitude',ylab='Latitude',seWithMean=TRUE,
+     main='V-C Flex Geo, Deviation from Avg. Variation')
+map("world",fill=T,col="snow4",add=T)
+
+saveRDS(vc.geo,file="./GAM Models/fh_egg_vc_geo.rds")
+```
+
+```{r,echo=FALSE,include=FALSE}
+vc.geo<-readRDS("./GAM Models/fh_egg_vc_geo.rds")
+summary(vc.geo)
+```
+
+The variable-coefficient phenology formulation (in which temporal (phenological) distribution of eggs vary in relation to regional SST indices). This was the second-best performing model for flathead sole egg variation. 
+```{r, eval=FALSE,echo=FALSE}
+vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
+                s(doy,by=reg.SST),data=fhsub,family=tw(link='log'),
+              method='REML')
+```
+
+```{r, eval=FALSE,echo=FALSE}
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(vc.pheno,select=2,main='Flathead Sole VC Phenology, Eggs',seWithMean=TRUE,
+     ylim=c(-25,11))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(vc.pheno,select=4,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-25,11))
+legend('topright',legend=c('Flexible Phenology Smooth','Deviation from Avg.Phenology'),
+       col=c(NA,col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
+
+saveRDS(vc.pheno,file="./GAM Models/fh_egg_vc_pheno.rds")
+```
+
+```{r}
+vc.pheno<-readRDS("./GAM Models/fh_egg_vc_pheno.rds")
+summary(vc.pheno)
+AIC(vc.pheno)
+```
+
+```{r,echo=FALSE,eval=FALSE}
+aic.geo<-NA*(temps.in)
+thr.geo<-as.list(1:(length(temps.in)))
+
+for(i in 1:length(temps.in)){
+  fhsub$th<-factor(fhsub$reg.SST<=temps.in[i])
+  thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+s(bottom_depth,k=5)+
+                      s(lon,lat,by=th),data=fhsub,
+                    family=tw(link='log'),method='REML')
+  aic.geo[i]<-AIC(thr.geo[[i]])
+}
+
+best.index.geo<-order(aic.geo)[1]
+thr.geo<-thr.geo[[best.index.geo]]
+```
+
+```{r,eval=FALSE,echo=FALSE}
+#saveRDS(aic.geo,file="./GAM Models/fh_egg_aic_geo_list.rds")
+saveRDS(thr.geo,file="./GAM Models/fh_egg_thr_geo.rds")
+saveRDS(best.index.geo,file="./GAM Models/fh_egg_best_index_geo.rds")
+```
+```{r,echo=FALSE}
+thr.geo<-readRDS("./GAM Models/fh_egg_thr_geo.rds")
+best.index.geo<-readRDS("./GAM Models/fh_egg_best_index_geo.rds")
+#aic.geo<-readRDS("./GAM Models/fh_egg_aic_geo_list.rds")
+```
+```{r,eval=FALSE,echo=FALSE}
+summary(thr.geo)
+```
+
+The threshold phenology model formulation (in which the temporal (phenological) distribution of eggs vary differently above and below a threshold temperature. 
+*This is the best model to explain Flathead sole egg variation across years, as of 1/10/2021*. 
+```{r,echo=FALSE}
+temps<-sort(unique(reg.sst$SST))
+bd<-4
+temps.in<-temps[bd:(length(temps)-bd)]
+```
+
+```{r,eval=FALSE}
+aic.pheno<-NA*(temps.in)
+thr.pheno<-as.list(1:(length(temps.in)))
+
+for(i in 1:length(temps.in)){
+  fhsub$th<-factor(fhsub$reg.SST<=temps.in[i])
+  thr.pheno[[i]]<-gam((Cper10m2+1)~factor(year)+
+                        s(lon,lat)+
+                        s(bottom_depth,k=5)+
+                        s(doy,by=th),
+                      data=fhsub,family=tw(link='log'),method='REML')
+  aic.pheno[i]<-AIC(thr.pheno[[i]])
+}
+
+best.index.phe<-order(aic.pheno)[1]
+thr.pheno<-thr.pheno[[best.index.phe]]
+```
+
+
+```{r, eval=FALSE, echo=FALSE}
+saveRDS(aic.pheno,file="./GAM Models/fh_egg_aic_pheno_list.rds")
+saveRDS(thr.pheno,file="./GAM Models/fh_egg_thr_pheno.rds")
+saveRDS(temps.in,file="./GAM Models/fh_egg_temps_in_pheno.rds")
+saveRDS(best.index.phe,file="./GAM Models/fh_egg_best_index_phe.rds")
+```
+
+```{r,echo=FALSE}
+temps.in<-readRDS("./GAM Models/fh_egg_temps_in_pheno.rds") #same for geo and pheno models 
+aic.pheno<-readRDS("./GAM Models/fh_egg_aic_pheno_list.rds") 
+thr.pheno<-readRDS("./GAM Models/fh_egg_thr_pheno.rds")
+best.index.phe<-readRDS("./GAM Models/fh_egg_best_index_phe.rds")
+```
+
+```{r}
+summary(thr.pheno)
+AIC(thr.pheno)
+```
+
+```{r, fig.width=6,fig.height=4,fig.fullwidth=TRUE,echo=FALSE,eval=FALSE}
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(thr.pheno,select=4,main='Flathead Sole Phenology, Eggs',seWithMean=TRUE,
+     ylim=c(-4.2,2))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-4.2,2))
+legend('topright',legend=c('Below','Above'),col=c(NA,col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
+```
+
+To confirm that the threshold phenology model is indeed the best model, we can compare AIC values across all five tested models. 
+```{r, echo=FALSE}
+aic.base<-AIC(eg.base)
+aic.thrph<-AIC(thr.pheno)
+aic.thrge<-AIC(thr.geo)
+aic.vcph<-AIC(vc.pheno)
+aic.vcgeo<-AIC(vc.geo)
+
+aic.fhegg<-data.frame('model'=c('Base','Threshold Pheno','Threshold Geo',
+                                'VC Pheno','VC Geo'),
+                      'AIC_value'=c(aic.base,aic.thrph,aic.thrge,
+                                    aic.vcph,aic.vcgeo))
+```
+
+```{r,fig.fullwidth=TRUE,fig.width=6.5,fig.height=4.5,fig.align='center',echo=FALSE}
+plot(c(1:5),aic.fhegg$AIC_value,main='AIC Results for FHS Egg Models',
+     col=hcl.colors(5,"Zissou 1"),
+     pch=19,cex=2,ylab='AIC Value',xlab='')
+grid(nx=5,ny=14,col="lightgray")
+text(c(1:5),aic.fhegg$AIC_value,labels=round(aic.fhegg$AIC_value),pos=c(4,3,3,2,2))
+legend("topright",legend=c('Base','Threshold Pheno','Threshold Geo',
+                             'VC Pheno','VC Geo'),
+       col=hcl.colors(5,"Zissou 1"),
+       lwd=3,lty=1,cex=0.6)
+```
+
+```{r, fig.width=7.5,fig.height=4,fig.fullwidth=TRUE,fig.align='center', echo=FALSE, eval=FALSE}
+par(mfrow=c(1,2))
+plot(thr.geo,select=4,scheme=2,too.far=0.025,
+     main=paste('Below',round(temps.in[best.index.geo],digits=3),sep=" "),
+     shade=FALSE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
+map("world",fill=T,col="gainsboro",add=T)
+plot(thr.geo,select=3,scheme=2,too.far=0.025,
+     main=paste('Above',round(temps.in[best.index.geo],digits=3),sep=" "),
+     shade=FALSE,seWithMean=TRUE,xlab='Longitude',ylab='Latitude')
+map("world",fill=T,col="gainsboro",add=T)
+```
+
+This is the below threshold (2.29 deg C) and above threshold temporal distribution of flathead eggs (based on the threshold phenology model). 
+```{r,fig.fullwidth=TRUE,fig.align='center',echo=FALSE,fig.width=6,fig.height=4}
+col<-adjustcolor('tomato4',alpha.f=0.3)
+
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(thr.pheno,select=4,main='Flathead Sole Phenology, Threshold Effect',seWithMean=TRUE,
+     ylim=c(-3,3))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-3,3))
+legend('topright',legend=c('Below 2.28*C','Above 2.28*C'),col=c('grey25',col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year",expression(paste("Anomalies in log(C/10m"^2,"+1)"))),side=c(1,2),line=2.5)
+```
+
+```{r, fig.width=6.5,fig.height=4,fig.fullwidth=TRUE,fig.cap='Thr. Pheno AIC scores across varying threshold temperatures, Flathead Sole.',echo=FALSE}
+plot(temps.in,aic.pheno,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.pheno)),
+     main='',ylab='AIC Index',
+     xlab='Temperature (degC)')
+abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
+abline(v=temps.in[best.index.phe],lty=2,lwd=2,col='steelblue3')
+legend("bottomleft",cex=0.6,lty=c(2,2),lwd=c(1.2,1.2),col=c('sienna3',
+                                                            'steelblue3'),
+       legend=c("Base Model (no threshold)","Best Tested Thr.Pheno Model"))
+```
+
+With the threshold phenology model, we can model the spatial distribution of flathead sole eggs through predictions based on this model. Observed, log-transformed (n+1) egg catches are displayed as well. 
+```{r,echo=FALSE}
+nlat=120
+nlon=120
+latd=seq(min(fhsub$lat),max(fhsub$lat),length.out=nlat) #center grid over study region 
+lond=seq(min(fhsub$lon),max(fhsub$lon),length.out=nlon)
+
+grid.extent<-expand.grid(lond,latd)
+names(grid.extent)<-c('lon','lat')
+
+#calculate distance to each positive observation
+grid.extent$dist<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
+                          fhsub$lat,fhsub$lon)
+  grid.extent$dist[k]<-min(dist)
+}
+
+grid.extent$year<-as.numeric(2013) #for base, just pick a year that has coverage
+grid.extent$doy<-as.numeric(median(fhsub$doy,na.rm=TRUE))
+grid.extent$bottom_depth<-NA
+grid.extent$bottom_depth<-median(fhsub$bottom_depth,na.rm=TRUE)
+grid.extent$reg.SST<-NA
+grid.extent$reg.SST<-mean(fhsub$reg.SST,na.rm=TRUE) 
+grid.extent$th<-as.character("TRUE")
+grid.extent$pred<-predict(thr.pheno,newdata=grid.extent)
+grid.extent$pred[grid.extent$dist>30000]<-NA 
+
+symcol<-adjustcolor("grey28",alpha=0.5)
+```
+
+```{r,fig.align='center',fig.width=6.5,fig.height=10,fig.fullwidth=TRUE,echo=FALSE}
+par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
+image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=TRUE),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=c(-180,-155),ylim=c(52,63),main='Flathead Sole Distribution, Th.Ph, Eggs',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
+           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+map("worldHires",fill=T,col="seashell2",add=T)
+
+image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=TRUE),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=c(-180,-155),ylim=c(52,63),main='Flathead Sole Distribution, Th.Ph, Eggs',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
+           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+points(fhsub$lon[fhsub$Cper10m2==0],fhsub$lat[fhsub$Cper10m2==0],pch='+',col='white')
+symbols(fhsub$lon[fhsub$Cper10m2>0],
+        fhsub$lat[fhsub$Cper10m2>0],
+        circles=log(fhsub$Cper10m2+1)[fhsub$Cper10m2>0],
+        inches=0.1,bg=symcol,fg='black',add=T)
+map("worldHires",fill=T,col="seashell2",add=T)
+```
+
+## Larval Generalized Additive Models: 
+The following code *is only necessary if the data were re-trimmed and new GAMs need to be run*. In this case, modify markdown document such that "{eval = TRUE}". The other model figures are marked as "eval = FALSE" if they, as of the last model run, 
+do not produce the best model results. These models are produced using conductivity-temperature-depth derived temperature and salinity measurements. 
+
+We begin with the base larval model: 
+```{r,eval=FALSE,echo=FALSE}
+lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
+               s(bottom_depth,k=5),
+             data=fhlarv.ctd,family=tw(link='log'),method='REML')
+
+saveRDS(lv.base,file="./GAM Models/fh_larv_base.rds")
+```
+
+```{r,include=FALSE}
+lv.base<-readRDS("./GAM Models/fh_larv_base.rds")
+summary(lv.base)
+AIC(lv.base)
+```
+
+```{r,eval=FALSE,echo=FALSE}
+lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
+                  s(bottom_depth,k=5)+
+                  s(salinity),data=fhlarv.ctd,family=tw(link='log'),
+                method='REML')
+
+saveRDS(lv.add.sal,file="./GAM Models/fh_larv_addsal.rds")
+```
+
+```{r,echo=FALSE,include=FALSE}
+lv.add.sal<-readRDS("./GAM Models/fh_larv_addsal.rds")
+summary(lv.add.sal)
+```
+
+```{r,eval=FALSE,echo=FALSE}
+lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
+                   s(bottom_depth,k=5)+
+                   s(temperature),data=fhlarv.ctd,family=tw(link='log'),
+                 method='REML')
+
+saveRDS(lv.add.temp,file="./GAM Models/fh_larv_addtemp.rds")
+```
+
+```{r,include=FALSE,echo=FALSE}
+lv.add.temp<-readRDS("./GAM Models/fh_larv_addtemp.rds")
+summary(lv.add.temp)
+```
+
+Then additive temperature and salinity, in individual additive terms. This is the second-best performing model. 
+```{r,eval=FALSE,echo=FALSE}
+lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
+                   s(bottom_depth,k=5)+
+                   s(temperature)+s(salinity),data=fhlarv.ctd,
+                 family=tw(link='log'),method='REML')
+
+saveRDS(lv.temp.sal,file="./GAM Models/fh_larv_tempsal.rds")
+```
+
+```{r,include=FALSE}
+lv.temp.sal<-readRDS("./GAM Models/fh_larv_tempsal.rds")
+summary(lv.temp.sal)
+AIC(lv.temp.sal)
+```
+
+And finally, the best performing model: the bivariate salinity-temperature additive term: 
+```{r,eval=FALSE,echo=FALSE}
+lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
+             s(salinity,temperature),data=fhlarv.ctd,family=tw(link='log'),
+           method='REML')
+
+saveRDS(lv.2d,file="./GAM Models/fh_larv_2d.rds")
+```
+
+```{r}
+lv.2d<-readRDS("./GAM Models/fh_larv_2d.rds")
+summary(lv.2d)
+AIC(lv.2d)
+```
+
+The following plot is the predicted Flathead sole larval biogeography based on the best performing model, the bivariate salinity-temperature GAM. Observations (log transformed, n+1) are shown as well. 
+```{r,echo=FALSE}
+nlat=120
+nlon=120
+latd=seq(min(fhlarv.ctd$lat,na.rm=TRUE),max(fhlarv.ctd$lat,na.rm=TRUE),length.out=nlat)
+lond=seq(min(fhlarv.ctd$lon,na.rm=TRUE),max(fhlarv.ctd$lon,na.rm=TRUE),length.out=nlon)
+
+grid.extent<-expand.grid(lond,latd)
+names(grid.extent)<-c('lon','lat')
+
+grid.extent$dist<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
+                          fhlarv.ctd$lat,fhlarv.ctd$lon)
+  grid.extent$dist[k]<-min(dist)
+}
+
+grid.extent$year<-as.numeric(2016)
+grid.extent$doy<-as.numeric(median(fhlarv.ctd$doy,na.rm=TRUE))
+grid.extent$bottom_depth<-NA
+grid.extent$bottom_depth<-as.numeric(median(fhlarv.ctd$bottom_depth,na.rm=TRUE))
+grid.extent$temperature<-as.numeric(mean(fhlarv.ctd$temperature))
+grid.extent$salinity<-as.numeric(mean(fhlarv.ctd$salinity))
+grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
+grid.extent$pred[grid.extent$dist>30000]<-NA 
+```
+
+```{r,fig.align='center',fig.fullwidth=TRUE,fig.wdith=5,fig.height=10,echo=FALSE}
+par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
+image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=TRUE),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=c(-180,-155),ylim=c(52,63),
+           main='Predicted FHS Larval Biogeography, 2D Model',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
+           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
+
+image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=TRUE),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=c(-180,-155),ylim=c(52,63),
+           main='Predicted FHS Larval Biogeography, 2D Model',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
+           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+symbols(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2>0],
+        fhlarv.ctd$lat[fhlarv.ctd$Cper10m2>0],
+        circles=log(fhlarv.ctd$Cper10m2+1)[fhlarv.ctd$Cper10m2>0],
+        inches=0.1,bg=symcol,fg='black',add=T)
+points(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2==0],
+        fhlarv.ctd$lat[fhlarv.ctd$Cper10m2==0],pch="+",col="white")
+map("worldHires",fill=T,col="gainsboro",add=T)
+```
+
+With this bivariate model, we can also calculate the predicted anomalous larval catch (more or less than expected) on a salinity-temperature plot. This figure shows that prediction, with observed larval catch (log(n=1)) overlaid. 
+```{r,echo=FALSE}
+ntemp<-100
+nsal<-100
+tempd<-seq(min(fhlarv.ctd$temperature,na.rm=TRUE),max(fhlarv.ctd$temperature,na.rm=TRUE),length.out=ntemp)
+sald<-seq(min(fhlarv.ctd$salinity,na.rm=T),max(fhlarv.ctd$salinity,na.rm=T),length.out=nsal)
+
+grid.extent<-expand.grid(sald,tempd)
+names(grid.extent)<-c('salinity','temperature')
+
+grid.extent$dist<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-euclidean.distance(grid.extent$salinity[k],grid.extent$temperature[k],
+                               fhlarv.ctd$salinity,fhlarv.ctd$temperature)
+  grid.extent$dist[k]<-min(dist)
+}
+
+grid.extent$year<-as.numeric(2005)
+grid.extent$lon<-as.numeric(median(fhlarv.ctd$lon))
+grid.extent$lat<-as.numeric(median(fhlarv.ctd$lat))
+grid.extent$doy<-as.numeric(median(fhlarv.ctd$doy,na.rm=TRUE))
+grid.extent$bottom_depth<-NA
+grid.extent$bottom_depth<-as.numeric(median(fhlarv.ctd$bottom_depth,na.rm=TRUE))
+grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
+grid.extent$pred[grid.extent$dist>mean(grid.extent$dist)]<-NA #threshold based on means
+```
+
+```{r,echo=FALSE,fig.align='center',fig.width=5,fig.height=10}
+par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
+image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
+           col=hcl.colors(100,"Lajolla",rev=TRUE),xlab='Salinity (psu)',
+           ylab=expression(paste("Temperature ("^0, 'C)')),
+           xlim=range(fhlarv.ctd$salinity,na.rm=T),ylim=range(fhlarv.ctd$temperature,na.rm=T),
+           main='Larval Biogeography By Temperature and Salinity',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
+           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+symbols(fhlarv.ctd$salinity[fhlarv.ctd$Cper10m2>0],
+        fhlarv.ctd$temperature[fhlarv.ctd$Cper10m2>0],
+        circles=log(fhlarv.ctd$Cper10m2+1)[fhlarv.ctd$Cper10m2>0],
+        inches=0.1,bg=symcol,fg='black',add=T)
+points(fhlarv.ctd$salinity[fhlarv.ctd$Cper10m2==0],
+        fhlarv.ctd$temperature[fhlarv.ctd$Cper10m2==0],pch="+",col="white")
+```
+
+To again share the improvements of the best performing models from the base models, we can look at the AIC division produces. 
+```{r,echo=FALSE}
+bestdiv<-c((AIC(thr.geo)/AIC(eg.base)),(AIC(lv.2d)/AIC(lv.base)))
+second<-c((AIC(thr.geo)/AIC(vc.geo)),(AIC(lv.2d)/AIC(lv.temp.sal)))
+stage<-c("Eggs","Larvae")
+
+df<-data.frame(stage,bestdiv,second)
+kable(df,col.names=c("","Best Divided By Base","Best Divided By Second Best"),
+      caption="Model Power through AIC Comparisons, Flathead Sole",align='c')
+```
