@@ -30,7 +30,7 @@ source("./Organized Thesis Analyses (Code)/euclidean.distance.R")
 
 ## Purpose of This Document: 
 
-The purpose of this document is to streamline files and associated analyses for the creation of generalized additive models that investigate spawning behavior and larval biogeography among fishes in the Bering Sea. This is mainly an automation document, with the goal of minimizing the back-and-forth between code files should data need to be modified or analyses re-ran. The document is organized by species, with species that have both egg and larval analyses appearing first. 
+The purpose of this document is to streamline files and associated analyses for the creation of generalized additive models that investigate spawning behavior and larval biogeography among fishes in the Bering Sea. This is mainly an automation document, with the goal of minimizing the back-and-forth between code files should data need to be modified or analyses re-ran.  
 
 ## Loading Data: 
 
@@ -41,7 +41,7 @@ apsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApEggs.csv',header=TRUE,
                 check.names=TRUE)
 aplarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApLarv_wCTD.csv',
                      header=TRUE,check.names=TRUE)
-aplarv.ctd<-subset(aplarv.ctd,doy>80&doy<180)
+aplarv.ctd<-subset(aplarv.ctd,doy>80&doy<165)
 
 reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',
                   header=TRUE,check.names=TRUE)
@@ -50,7 +50,7 @@ str_name<-"./Environmental Data/expanded_BS_bathy.tif"
 bathy<-raster(str_name)
 ```
 
-These data have been trimmed. The egg data are constrained to depths <151 meters; temporally, the egg data are constrained to above the 99th day of year and below the 182nd day of the year (temporally centered on the spawning period of plaice). The egg data are also joined to regional temperature indices for each year (the reg.sst dataset). The larval data are constrained to depths <151 meters, between 80 and 180 day of year, and are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements. 
+These data have been trimmed. The egg data are constrained to depths <151 meters; temporally, the egg data are constrained to above the 99th day of year and below the 182nd day of the year (temporally centered on the spawning period of plaice). The egg data are also joined to regional temperature indices for each year (the reg.sst dataset). The larval data are constrained to depths <151 meters, between 80 and 165 day of year, and are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements. 
 
 The regional temperature index data are constrained to (-180, -151) degrees W and (50.5, 67.5) degrees N and reflect the average March temperature for each year across that region. March temperatures are chosen to estimate the conditions spawning plaice may have experienced, roughly two months before eggs appear in the water column.  
 
@@ -343,7 +343,14 @@ contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="gainsboro",add=T)
 ```
 
-```{r,fig.width=6,fig.height=6,fig.fullwidth=TRUE,fig.align='center',echo=FALSE}
+```{r, fig.fullwidth=TRUE,fig.align='center',echo=FALSE,fig.width=6,fig.height=4}
+par(oma=c(1,1,1,0.5))
+plot(thr.geo,select=1,main="Plaice Egg Phenology (thr.geo model)",seWithMean=TRUE,shade=TRUE,
+     shade.col="lightgrey",xlab="Day of Year",ylab="Day of Year Effect")
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+```
+
+```{r, fig.fullwidth=TRUE,fig.align='center',echo=FALSE,fig.width=6,fig.height=4}
 plot(temps.in,aic.geo,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.geo)),
      main='Temperature Threshold Flex Geography',xlab="Temperature (degC)")
 abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
@@ -408,7 +415,7 @@ The following code *is only necessary if the data were re-trimmed and new GAMs n
 do not produce the best model results. These models are produced using conductivity-temperature-depth derived temperature and salinity measurements. 
 
 We begin with the base larval model: 
-```{r,eval=TRUE}
+```{r,eval=T}
 lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                s(bottom_depth,k=5),
              data=aplarv.ctd,family=tw(link='log'),method='REML')
@@ -421,7 +428,7 @@ summary(lv.base)
 ```
 
 Then we add in additive salinity: 
-```{r,eval=TRUE}
+```{r,eval=T}
 lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                   s(bottom_depth,k=5)+
                   s(salinity),data=aplarv.ctd,family=tw(link='log'),
@@ -435,7 +442,7 @@ summary(lv.add.sal)
 ```
 
 Then additive temperature: 
-```{r,eval=TRUE}
+```{r,eval=T}
 lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature),data=aplarv.ctd,family=tw(link='log'),
@@ -449,7 +456,7 @@ summary(lv.add.temp)
 ```
 
 Then additive temperature and salinity, in individual additive terms: 
-```{r,eval=TRUE}
+```{r,eval=T}
 lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature)+s(salinity),data=aplarv.ctd,
@@ -463,7 +470,7 @@ summary(lv.temp.sal)
 ```
 
 And finally, the best performing model: the bivariate salinity-temperature additive term: 
-```{r,eval=TRUE}
+```{r,eval=T}
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
              s(salinity,temperature),data=aplarv.ctd,family=tw(link='log'),
            method='REML')
@@ -545,6 +552,13 @@ symbols(aplarv.ctd$lon[aplarv.ctd$Cper10m2>0],
         inches=0.1,bg=col,fg='black',add=T)
 map("worldHires",fill=T,col="gainsboro",add=T)
 
+```
+
+```{r,fig.align='center',fig.fullwidth=TRUE,fig.width=5,fig.height=5,echo=FALSE}
+par(mai=c(1,1,0.5,0.9))
+plot(lv.2d,select=2,main="Larval Phenology (2D model)",xlab="Day of Year",
+     ylab="Day of Year Effect",seWithMean=TRUE,shade=T,shade.col="lightgrey")
+abline(h=0,lty=2,lwd=1.3,col="mistyrose4")
 ```
 
 With this bivariate model, we can also calculate the predicted anomalous larval catch (more or less than expected) on a salinity-temperature plot. This figure shows that prediction, with observed larval catch (log(n=1)) overlaid. 

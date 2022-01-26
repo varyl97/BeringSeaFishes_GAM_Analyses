@@ -36,14 +36,14 @@ Northern Rock Sole: larval data only are included for this species. NRS spawn fr
 
 ```{r,echo=FALSE}
 nrslarv.ctd<-read.csv('./Ichthyo Data/Cleaned_Cut_NrsLarv_wCTD.csv')
-nrslarv.ctd<-subset(nrslarv.ctd,doy>100&doy<175)
+nrslarv.ctd<-subset(nrslarv.ctd,doy>100&doy<165)
 nrslarv.ctd<-subset(nrslarv.ctd,lat<62)
 
 str_name<-"./Environmental Data/expanded_BS_bathy.tif"
 bathy<-raster(str_name)
 ```
 
-These data have been trimmed. The larval data are constrained to depths between 40 and 300 meters. The data are also restricted to latitudes below 64.5 degrees north. Larvae are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements.
+These data have been trimmed. The larval data are constrained to depths between 40 and 300 meters, to latitudes below 64.5 degrees north, and to days of year between 100 and 165. Larvae are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements.
 
 ## Descriptive Information: 
 
@@ -76,7 +76,7 @@ Now we'll move into the GAMs. The following code *is only necessary if the data 
 Northern rock sole larvae were best explained by the bivariate salinity-temperature model, in which the spatial and temporal distribution of larvae were modeled in association with a smooth containing *in situ* salinity-temperature data. 
 
 We begin with the base larval model: 
-```{r,eval=TRUE,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                s(bottom_depth,k=5),
              data=nrslarv.ctd,family=tw(link='log'),method='REML')
@@ -90,7 +90,7 @@ summary(lv.base)
 AIC(lv.base)
 ```
 
-```{r,eval=T,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                   s(bottom_depth,k=5)+
                   s(salinity),data=nrslarv.ctd,family=tw(link='log'),
@@ -99,12 +99,12 @@ lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 saveRDS(lv.add.sal,file="./GAM Models/nrs_larvae_addsal.rds")
 ```
 
-```{r,echo=T,include=FALSE}
+```{r,echo=F,include=FALSE}
 lv.add.sal<-readRDS("./GAM Models/nrs_larvae_addsal.rds")
 summary(lv.add.sal)
 ```
 
-```{r,eval=T,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature),data=nrslarv.ctd,family=tw(link='log'),
@@ -119,7 +119,7 @@ summary(lv.add.temp)
 ```
 
 Then additive temperature and salinity, in individual additive terms. This is the second-best performing model. 
-```{r,eval=T,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature)+s(salinity),data=nrslarv.ctd,
@@ -135,7 +135,7 @@ AIC(lv.temp.sal)
 ```
 
 And finally, the best performing model: the bivariate salinity-temperature additive term: 
-```{r,eval=T,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
              s(salinity,temperature),data=nrslarv.ctd,family=tw(link='log'),
            method='REML')
@@ -204,6 +204,13 @@ symbols(nrslarv.ctd$lon[nrslarv.ctd$Cper10m2>0],nrslarv.ctd$lat[nrslarv.ctd$Cper
 points(nrslarv.ctd$lon[nrslarv.ctd$Cper10m2>0],nrslarv.ctd$lat[nrslarv.ctd$Cper10m2>0],
        pch="+",col="white")
 map("worldHires",fill=T,col="gainsboro",add=T)
+```
+
+```{r,fig.align='center',fig.fullwidth=TRUE,fig.width=6.5,fig.height=5,echo=FALSE}
+par(mai=c(1,1,0.6,0.9))
+plot(lv.2d,select=2,shade=T,seWithMean=TRUE,shade.col="lightgrey",
+     xlab="Day of Year",ylab="Day of Year Effect")
+abline(h=0,col="mistyrose4",lty=2,lwd=1.3)
 ```
 
 With this bivariate model, we can also calculate the predicted anomalous larval catch (more or less than expected) on a salinity-temperature plot. This figure shows that prediction, with observed larval catch (log(n=1)) overlaid. 

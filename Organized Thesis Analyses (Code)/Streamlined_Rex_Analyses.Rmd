@@ -1,0 +1,401 @@
+---
+title: "Streamlined Rex Sole Analyses & Figures"
+author: "Laura Vary"
+date: "1/24/2022"
+header-includes: 
+  - \usepackage{placeins}
+output: 
+  pdf_document: 
+    toc: yes
+---
+
+```{r setup, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+setwd("C:/Users/varyl/Desktop/GitHub/BeringSeaFishes_GAM_Analyses")
+library(knitr)
+library(raster)
+library(marmap)
+library(maps)
+library(mgcv)
+library(colorRamps) 
+library(RColorBrewer)
+library(fields)
+library(mapdata)
+source('./Organized Thesis Analyses (Code)/distance.function.R')
+source("./Organized Thesis Analyses (Code)/vis.gam_COLORS.R")
+source("./Organized Thesis Analyses (Code)/euclidean.distance.R")
+```
+## Purpose of This Document: 
+
+The purpose of this document is to streamline files and associated analyses for the creation of generalized additive models that investigate spawning behavior and larval biogeography among fishes in the Bering Sea. This is mainly an automation document, with the goal of minimizing the back-and-forth between code files should data need to be modified or analyses re-ran. 
+
+## Loading Data: 
+
+Rex sole: egg data are included for this species; larval data were too sparse to use effectively. Rex sole spawn from October to May, live roughly 24 years, and transform to juveniles at standard lengths $\geq$ 50 mm, which is huge and reflects the long period of time that rex sole larvae are traveling in the water column before settling. 
+
+```{r,echo=FALSE}
+rxsub<-read.csv('./Ichthyo Data/Cleaned_Cut_RxEggs.csv')
+
+reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',
+                  header=TRUE,check.names=TRUE)
+
+str_name<-"./Environmental Data/expanded_BS_bathy.tif"
+bathy<-raster(str_name)
+```
+
+These data have been trimmed. The data are only constrained to between April and July. The egg data are also joined to regional temperature indices for each year (the reg.sst dataset). 
+
+The regional temperature index data are constrained to (-180, -151) degrees W and (50.5, 67.5) degrees N and reflect the average March temperature for each year across that region. March temperatures are chosen to estimate the conditions spawning rex sole may have experienced, roughly two months before the peak amount of eggs in the water column occurs.  
+
+## Descriptive Information: 
+
+```{r,echo=FALSE}
+lat_range<-c(paste(round(min(rxsub$lat),digits=1),round(max(rxsub$lat),digits=1),sep="-"))
+lon_range<-c(paste(round(min(rxsub$lon),digits=1),round(max(rxsub$lon),digits=1),sep=" to "))
+doy_range<-c(paste(min(rxsub$doy),max(rxsub$doy),sep="-"))
+depth_range<-c(paste(round(min(rxsub$bottom_depth),digits=1),
+                     round(max(rxsub$bottom_depth),digits=1),sep="-"))
+
+df<-data.frame(lat_range,lon_range,doy_range,depth_range)
+
+kable(df,col.names=c("Lat Range","Lon Range","Day of Year Range",
+                     "Bottom Depth Range"),
+      caption="Descriptive Metrics for Rex Sole Egg Data",align='c')
+```
+
+The following two plots show *the day of year distribution for positive Rex sole egg catch* (left) and *the year distribution for positive Rex sole egg catch* (right).
+
+```{r, fig.width=7.5,fig.height=3.5,fig.fullwidth=TRUE,fig.cap="Rex Sole Eggs", echo=FALSE}
+par(mfrow=c(1,2))
+hist(rxsub$doy[rxsub$Cper10m2>0],xlab="Day of Year",ylab="Positive Catch Frequencies",main="")
+hist(rxsub$year[rxsub$Cper10m2>0],xlab="Year",ylab="",main="")
+```
+
+Now we'll move into the GAMs. The following code *is only necessary if the data were re-trimmed and new GAMs need to be run*. In this case, modify markdown document such that "{eval = TRUE}". The other model figures are marked as "eval = FALSE" if they, as of the last model run, do not produce the best model results. **Make sure to save the new models as RDS objects.** 
+
+Rex sole eggs were best explained by the threshold geography model, in which the spatial distribution of eggs varied differently below and above 2.29 degrees Celsius. 
+
+## Generalized Additive Models: Rex Eggs
+
+The base model formulation: 
+```{r, eval=FALSE,echo=FALSE}
+eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
+             data=rxsub,family=tw(link='log'),method='REML')
+```
+
+```{r, eval=FALSE,echo=FALSE}
+plot(eg.base,shade=FALSE,page=1,seWithMean=TRUE,scheme=2,scale=0)
+
+saveRDS(eg.base,file="./GAM Models/rx_egg_base.rds")
+```
+
+```{r}
+eg.base<-readRDS("./GAM Models/rx_egg_base.rds")
+summary(eg.base)
+AIC(eg.base)
+```
+
+The variable-coefficient geography formulation (in which geographic egg distributions vary differently in relation to regional SST indices). This was the second best-performing model for rex egg variance. 
+```{r, eval=FALSE,echo=FALSE}
+vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
+              s(lon,lat,by=reg.SST),data=rxsub,family=tw(link='log'),
+            method='REML')
+```
+
+```{r, eval=FALSE,echo=FALSE}
+par(mfrow=c(1,2))
+plot(vc.geo,select=1,scheme=2,too.far=0.025,shade=FALSE,
+     seWithMean=TRUE,xlab='Longitude',ylab='Latitude',
+     main='V-C Rex Egg Flex Geo, Avg. Variation')
+map("world",fill=T,col="gainsboro",add=T)
+plot(vc.geo,select=4,scheme=2,too.far=0.025,shade=FALSE,
+     xlab='Longitude',ylab='Latitude',seWithMean=TRUE,
+     main='V-C Flex Geo, Deviation from Avg. Variation')
+map("world",fill=T,col="gainsboro",add=T)
+
+saveRDS(vc.geo,file="./GAM Models/rx_egg_vc_geo.rds")
+```
+
+```{r,echo=FALSE}
+vc.geo<-readRDS("./GAM Models/rx_egg_vc_geo.rds")
+summary(vc.geo)
+```
+
+```{r, eval=FALSE,echo=FALSE}
+vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
+                s(doy,by=reg.SST),data=rxsub,family=tw(link='log'),
+              method='REML')
+```
+
+```{r, eval=FALSE,echo=FALSE}
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(vc.pheno,select=2,main='Pollock VC Phenology, Eggs',seWithMean=TRUE)
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(vc.pheno,select=4,seWithMean=TRUE,shade=TRUE,shade.col=col)
+legend('topright',legend=c('Flexible Phenology Smooth','Deviation from Avg.Phenology'),
+       col=c(NA,col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
+
+saveRDS(vc.pheno,file="./GAM Models/rx_egg_vc_pheno.rds")
+```
+
+```{r,echo=FALSE,include=FALSE}
+vc.pheno<-readRDS("./GAM Models/rx_egg_vc_pheno.rds")
+summary(vc.pheno)
+AIC(vc.pheno)
+```
+
+The threshold geography model formulation (in which the geographic distribution of eggs vary differently above and below a threshold temperature of 2.29 degrees Celsius): 
+*This is the best model to explain rex egg distribution as of 1/10/2022*
+```{r,eval=FALSE,echo=FALSE}
+aic.geo<-NA*(temps.in)
+thr.geo<-as.list(1:(length(temps.in)))
+
+for(i in 1:length(temps.in)){
+  rxsub$th<-factor(rxsub$reg.SST<=temps.in[i])
+  thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+s(bottom_depth,k=5)+
+                      s(lon,lat,by=th),data=rxsub,
+                    family=tw(link='log'),method='REML')
+  aic.geo[i]<-AIC(thr.geo[[i]])
+}
+
+best.index.geo<-order(aic.geo)[1]
+thr.geo<-thr.geo[[best.index.geo]]
+```
+
+
+```{r,eval=FALSE,echo=FALSE}
+saveRDS(aic.geo,file="./GAM Models/rx_egg_aic_geo_list.rds")
+saveRDS(thr.geo,file="./GAM Models/rx_egg_thr_geo.rds")
+saveRDS(best.index.geo,file="./GAM Models/rx_egg_best_index_geo.rds")
+```
+```{r,echo=FALSE}
+thr.geo<-readRDS("./GAM Models/rx_egg_thr_geo.rds")
+best.index.geo<-readRDS("./GAM Models/rx_egg_best_index_geo.rds")
+aic.geo<-readRDS("./GAM Models/rx_egg_aic_geo_list.rds")
+```
+```{r,echo=FALSE}
+summary(thr.geo)
+```
+
+```{r,eval=FALSE,echo=FALSE}
+temps<-sort(unique(reg.sst$SST))
+bd<-4
+temps.in<-temps[bd:(length(temps)-bd)]
+```
+
+```{r,eval=FALSE}
+aic.pheno<-NA*(temps.in)
+thr.pheno<-as.list(1:(length(temps.in)))
+
+for(i in 1:length(temps.in)){
+  rxsub$th<-factor(rxsub$reg.SST<=temps.in[i])
+  thr.pheno[[i]]<-gam((Cper10m2+1)~factor(year)+
+                        s(lon,lat)+
+                        s(bottom_depth,k=5)+
+                        s(doy,by=th),
+                      data=rxsub,family=tw(link='log'),method='REML')
+  aic.pheno[i]<-AIC(thr.pheno[[i]])
+}
+
+best.index.phe<-order(aic.pheno)[1]
+thr.pheno<-thr.pheno[[best.index.phe]]
+```
+
+
+```{r, eval=FALSE, echo=FALSE}
+saveRDS(aic.pheno,file="./GAM Models/rx_egg_aic_pheno_list.rds")
+saveRDS(thr.pheno,file="./GAM Models/rx_egg_thr_pheno.rds")
+saveRDS(temps.in,file="./GAM Models/rx_egg_temps_in.rds")
+saveRDS(best.index.phe,file="./GAM Models/rx_egg_best_index_phe.rds")
+```
+
+```{r,echo=FALSE}
+temps.in<-readRDS("./GAM Models/rx_egg_temps_in.rds") #same for geo and pheno models 
+#aic.pheno<-readRDS("./GAM Models/rx_egg_aic_pheno_list.rds") 
+thr.pheno<-readRDS("./GAM Models/rx_egg_thr_pheno.rds")
+best.index.phe<-readRDS("./GAM Models/rx_egg_best_index_phe.rds")
+
+print(temps.in[[best.index.geo]])
+```
+
+```{r,echo=FALSE,eval=FALSE}
+summary(thr.pheno)
+AIC(thr.pheno)
+```
+
+```{r, fig.width=6.5,fig.height=4.5,fig.fullwidth=TRUE,echo=FALSE,eval=FALSE}
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(thr.pheno,select=4,main='Rex Sole Phenology, Eggs',seWithMean=TRUE,
+     ylim=c(-4.2,2))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-4.2,2)) 
+legend('topright',legend=c('Below','Above'),col=c(NA,col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
+```
+
+To confirm that the threshold geography model is indeed the best model, we can compare AIC values across all five tested models. 
+```{r, echo=FALSE}
+aic.base<-AIC(eg.base)
+aic.thrph<-AIC(thr.pheno)
+aic.thrge<-AIC(thr.geo)
+aic.vcph<-AIC(vc.pheno)
+aic.vcgeo<-AIC(vc.geo)
+
+aic.rxegg<-data.frame('model'=c('Base','Threshold Pheno','Threshold Geo',
+                                'VC Pheno','VC Geo'),
+                      'AIC_value'=c(aic.base,aic.thrph,aic.thrge,
+                                    aic.vcph,aic.vcgeo))
+```
+
+```{r,fig.fullwidth=TRUE,fig.width=6.5,fig.height=4.5,fig.align='center',echo=FALSE}
+plot(c(1:5),aic.rxegg$AIC_value,main='AIC Results for Rex Egg Models',
+     col=hcl.colors(5,"Zissou 1"),
+     pch=19,cex=2,ylab='AIC Value',xlab='')
+grid(nx=5,ny=14,col="lightgray")
+text(c(1:5),aic.rxegg$AIC_value,labels=round(aic.rxegg$AIC_value),pos=c(4,3,3,2,2))
+legend("bottomleft",legend=c('Base','Threshold Pheno','Threshold Geo',
+                             'VC Pheno','VC Geo'),
+       col=hcl.colors(5,"Zissou 1"),
+       lwd=3,lty=1,cex=0.75)
+```
+
+This is the below threshold (2.29 deg C) and above threshold geographic distribution of Rex eggs. 
+```{r, echo=FALSE}
+nlat=120
+nlon=120
+latd=seq(min(rxsub$lat),max(rxsub$lat),length.out=nlat) #center grid over study region 
+lond=seq(min(rxsub$lon),max(rxsub$lon),length.out=nlon)
+
+grid.extent<-expand.grid(lond,latd)
+names(grid.extent)<-c('lon','lat')
+
+grid.extent$dist<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
+                          rxsub$lat,rxsub$lon)
+  grid.extent$dist[k]<-min(dist)
+}
+
+grid.extent$year<-as.numeric(2007)
+grid.extent$doy<-as.numeric(median(rxsub$doy,na.rm=TRUE))
+grid.extent$bottom_depth<-NA
+grid.extent$bottom_depth<-median(rxsub$bottom_depth,na.rm=TRUE)
+grid.extent$reg.SST<-NA
+grid.extent$th<-"TRUE"
+grid.extent$reg.SST<-mean(rxsub$reg.SST,na.rm=TRUE) 
+grid.extent$pred<-predict(thr.geo,newdata=grid.extent)
+grid.extent$pred[grid.extent$dist>30000]<-NA 
+grid.extent$th<-"FALSE"
+grid.extent$pred2<-predict(thr.geo,newdata=grid.extent)
+grid.extent$pred2[grid.extent$dist>30000]<-NA
+```
+
+```{r,fig.height=10,fig.width=6,fig.align='center',echo=FALSE}
+par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
+image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=c(-180,-155),ylim=c(52,63),main='Rex Eggs, Below Threshold',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
+
+image.plot(lond,latd,t(matrix(grid.extent$pred2,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=c(-180,-155),ylim=c(52,63),main='Rex Eggs, Above Threshold',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
+```
+
+```{r, fig.fullwidth=TRUE,fig.align='center',echo=FALSE,fig.width=6,fig.height=4}
+par(oma=c(1,1,1,0.5))
+plot(thr.geo,select=1,main="Rex Egg Phenology (thr.geo model)",seWithMean=TRUE,shade=TRUE,
+     shade.col="lightgrey",xlab="Day of Year",ylab="Day of Year Effect")
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+```
+
+```{r, fig.width=6.5,fig.height=4,fig.fullwidth=TRUE,echo=FALSE}
+plot(temps.in,aic.geo,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.geo)),
+     main='Temperature Threshold Flex Geography',xlab="Temperature (degC)")
+abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
+abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
+legend("bottomleft",cex=0.6,lty=c(2,2),lwd=c(1.2,1.2),col=c('sienna3',
+                                                            'steelblue3'),
+       legend=c("Base Model (no threshold)","Best Tested Thr.Geo Model"))
+```
+
+With the threshold geography model, we can also see the *significant* differences across the temperature threshold in predicted catch anomalies. This figure shows the prediction of egg catch anomalies below the threshold subtracted from those above the threshold. Thus, more positive values indicate a higher predicted egg catch anomaly above the threshold compared with below the threshold. 
+```{r,echo=FALSE}
+nlat=120
+nlon=120
+latd=seq(52,60,length.out=nlat) #center grid over study region 
+lond=seq(-178,-153.5,length.out=nlon)
+
+grid.extent<-expand.grid(lond,latd)
+names(grid.extent)<-c('lon','lat')
+
+#calculate distance to each positive observation
+grid.extent$dist<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
+                          rxsub$lat,rxsub$lon)
+  grid.extent$dist[k]<-min(dist)
+}
+
+grid.extent$year<-2008
+grid.extent$doy<-median(rxsub$doy)
+grid.extent$reg.SST<-mean(rxsub$reg.SST[rxsub$reg.SST<temps.in[best.index.geo]]) #threshold temp chosen by AIC values
+grid.extent$th<-"TRUE"
+grid.extent$bottom_depth<-median(rxsub$bottom_depth,na.rm=T)
+grid.extent$pred<-predict(thr.geo,newdata=grid.extent)
+grid.extent$se<-predict(thr.geo,newdata=grid.extent,se=T)[[2]]
+grid.extent$pred.u<-grid.extent$pred+1.96*grid.extent$se #95% CI here
+grid.extent$pred.l<-grid.extent$pred-1.96*grid.extent$se
+grid.extent$pred[grid.extent$dist>30000]<-NA #remove predictions that are too far from positive data values
+grid.extent$reg.SST<-mean(rxsub$reg.SST[rxsub$reg.SST>temps.in[best.index.geo]])
+grid.extent$th<-"FALSE"
+grid.extent$pred2<-predict(thr.geo,newdata=grid.extent)
+grid.extent$se2<-predict(thr.geo,newdata=grid.extent,se=T)[[2]]
+grid.extent$pred2.u<-grid.extent$pred2+1.96*grid.extent$se
+grid.extent$pred2.l<-grid.extent$pred2-1.96*grid.extent$se
+grid.extent$diff<-grid.extent$pred2-grid.extent$pred #calculate difference between two regimes
+
+grid.extent$sig.pos<-c(grid.extent$pred2.l>grid.extent$pred.u) #isolate areas where there is a higher predicted CPUE at a higher temperature
+grid.extent$sig.neg<-c(grid.extent$pred2.u<grid.extent$pred.l)
+grid.extent$pos.diff<-grid.extent$diff*grid.extent$sig.pos #calculate areas with a significant positive difference at a higher temperature
+grid.extent$neg.diff<-grid.extent$diff*grid.extent$sig.neg
+max.slope<-max(grid.extent$diff,na.rm=T)
+```
+
+```{r,fig.align='center',fig.width=6.5,fig.height=5,fig.fullwidth=TRUE,echo=FALSE}
+par(mai=c(1,1,0.5,0.5))
+image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
+           col=hcl.colors(100,"Lajolla",rev=T),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), 
+           xlim=range(lond),ylim=range(latd),main=expression(paste('Significant Change Across Threshold (2.29'^0,'C)')),
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),
+           legend.shrink=0.3)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)#would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
+map("worldHires",fill=T,col="gainsboro",add=T)
+```
+
+
+To again share the improvements of the best performing models from the base models, we can look at the AIC division produces. 
+```{r,echo=FALSE}
+bestdiv<-c((AIC(thr.geo)/AIC(eg.base)))
+second<-c((AIC(thr.geo)/AIC(vc.geo)))
+stage<-c("Eggs")
+
+df<-data.frame(stage,bestdiv,second)
+kable(df,col.names=c("","Best Divided By Base","Best Divided By Second Best"),
+      caption="Model Power through AIC Comparisons, Alaska plaice",align='c')
+```

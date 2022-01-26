@@ -1,0 +1,622 @@
+---
+title: "Streamlined Walleye Pollock Analyses & Figures"
+author: "Laura Vary"
+date: "1/24/2022"
+header-includes: 
+  - \usepackage{placeins}
+output: 
+  pdf_document: 
+    toc: yes
+---
+
+```{r setup, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+setwd("C:/Users/varyl/Desktop/GitHub/BeringSeaFishes_GAM_Analyses")
+library(knitr)
+library(raster)
+library(marmap)
+library(maps)
+library(mgcv)
+library(colorRamps) 
+library(RColorBrewer)
+library(fields)
+library(mapdata)
+source('./Organized Thesis Analyses (Code)/distance.function.R')
+source("./Organized Thesis Analyses (Code)/vis.gam_COLORS.R")
+source("./Organized Thesis Analyses (Code)/euclidean.distance.R")
+```
+## Purpose of This Document: 
+
+The purpose of this document is to streamline files and associated analyses for the creation of generalized additive models that investigate spawning behavior and larval biogeography among fishes in the Bering Sea. This is mainly an automation document, with the goal of minimizing the back-and-forth between code files should data need to be modified or analyses re-ran. 
+
+## Loading Data: 
+
+Walleye pollock: both egg and larval data are included for this species. Pollock spawn from February to May, live roughly 12 years, and transform to juveniles at standard lengths between 25 and 40 mm. 
+
+```{r,echo=FALSE}
+pksub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkEggs.csv',header=TRUE,
+                check.names=TRUE)
+pklarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkLarv_wCTD.csv',
+                     header=TRUE,check.names=TRUE)
+pklarv.ctd<-subset(pklarv.ctd,doy>90&doy<165)
+
+reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',
+                  header=TRUE,check.names=TRUE)
+
+str_name<-"./Environmental Data/expanded_BS_bathy.tif"
+bathy<-raster(str_name)
+```
+
+These data have been trimmed. The egg data are constrained to depths between 54 and 221 meters; temporally, the egg data are constrained to above the 99th day of year and below the 160th day of the year (temporally centered on the spawning period of pollock). The egg data are constrained to latitudes between 54 and 62 degrees north and longitudes less than -175 degrees west. The egg data are also joined to regional temperature indices for each year (the reg.sst dataset). The larval data are constrained to latitudes between 53.5 and 61.5 degrees north and longitudes less than -175 degrees west. Larvae are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements and constrained to days of year between doy 90 and 165. 
+
+The regional temperature index data are constrained to (-180, -151) degrees W and (50.5, 67.5) degrees N and reflect the average March temperature for each year across that region. March temperatures are chosen to estimate the conditions spawning pollock may have experienced, roughly two months before the peak amount of eggs in the water column occurs.  
+
+## Descriptive Information: 
+
+```{r,echo=FALSE}
+lat_range<-c(paste(round(min(pksub$lat),digits=1),round(max(pksub$lat),digits=1),sep="-"))
+lon_range<-c(paste(round(min(pksub$lon),digits=1),round(max(pksub$lon),digits=1),sep=" to "))
+doy_range<-c(paste(min(pksub$doy),max(pksub$doy),sep="-"))
+depth_range<-c(paste(min(pksub$bottom_depth,na.rm=T),
+                     max(pksub$bottom_depth,na.rm=T),sep="-"))
+
+df<-data.frame(lat_range,lon_range,doy_range,depth_range)
+
+kable(df,col.names=c("Lat Range","Lon Range","Day of Year Range",
+                     "Bottom Depth Range"),
+      caption="Descriptive Metrics for Pollock Egg Data",align='c')
+```
+```{r,echo=FALSE}
+lat_range<-c(paste(round(min(pklarv.ctd$lat),digits=1),round(max(pklarv.ctd$lat),digits=1),sep="-"))
+lon_range<-c(paste(round(min(pklarv.ctd$lon),digits=1),round(max(pklarv.ctd$lon),digits=1),sep=" to "))
+doy_range<-c(paste(min(pklarv.ctd$doy),max(pklarv.ctd$doy),sep="-"))
+depth_range<-c(paste(round(min(pklarv.ctd$bottom_depth),digits=1),
+                     round(max(pklarv.ctd$bottom_depth),digits=1),sep="-"))
+
+df<-data.frame(lat_range,lon_range,doy_range,depth_range)
+
+kable(df,col.names=c("Lat Range","Lon Range","Day of Year Range",
+                     "Bottom Depth Range"),
+      caption="Descriptive Metrics for Pollock Larval Data",align='c')
+```
+
+The following two plots show *the day of year distribution for positive pollock egg catch* (left) and *the year distribution for positive pollock egg catch* (right). Analogous plots for larval data are following. 
+
+```{r, fig.width=7.5,fig.height=3.5,fig.fullwidth=TRUE,fig.cap="Pollock Eggs", echo=FALSE}
+par(mfrow=c(1,2))
+hist(pksub$doy[pksub$Cper10m2>0],xlab="Day of Year",ylab="Positive Catch Frequencies",main="")
+hist(pksub$year[pksub$Cper10m2>0],xlab="Year",ylab="",main="")
+```
+
+```{r, fig.width=7.5,fig.height=3.5,fig.fullwidth=TRUE,fig.cap="Pollock Larvae", echo=FALSE}
+par(mfrow=c(1,2))
+hist(pklarv.ctd$doy[pklarv.ctd$Cper10m2>0],xlab="Day of Year",ylab="Positive Catch Frequencies",main="")
+hist(pklarv.ctd$year[pklarv.ctd$Cper10m2>0],xlab="Year",ylab="Positive Catch Frequencies",main="")
+```
+
+Now we'll move into the GAMs. The following code *is only necessary if the data were re-trimmed and new GAMs need to be run*. In this case, modify markdown document such that "{eval = TRUE}". The other model figures are marked as "eval = FALSE" if they, as of the last model run, do not produce the best model results. **Make sure to save the new models as RDS objects.** 
+
+Pollock eggs were best explained by the threshold geography model, in which the spatial distribution of eggs varied differently below and above 1.08 degrees Celsius. 
+
+## Generalized Additive Models: Pollock Eggs
+
+The base model formulation: 
+```{r, eval=FALSE,echo=FALSE}
+eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
+             data=pksub,family=tw(link='log'),method='REML')
+```
+
+```{r, eval=FALSE,echo=FALSE}
+plot(eg.base,shade=FALSE,page=1,seWithMean=TRUE,scheme=2,scale=0)
+
+saveRDS(eg.base,file="./GAM Models/pk_egg_base.rds")
+```
+
+```{r}
+eg.base<-readRDS("./GAM Models/pk_egg_base.rds")
+summary(eg.base)
+AIC(eg.base)
+```
+
+The variable-coefficient geography formulation (in which geographic egg distributions vary differently in relation to regional SST indices). This was the second best-performing model for pollock egg variance. 
+```{r, eval=FALSE,echo=FALSE}
+vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
+              s(lon,lat,by=reg.SST),data=pksub,family=tw(link='log'),
+            method='REML')
+```
+
+```{r, eval=FALSE,echo=FALSE}
+par(mfrow=c(1,2))
+plot(vc.geo,select=1,scheme=2,too.far=0.025,shade=FALSE,
+     seWithMean=TRUE,xlab='Longitude',ylab='Latitude',
+     main='V-C FH Egg Flex Geo, Avg. Variation')
+map("world",fill=T,col="snow4",add=T)
+plot(vc.geo,select=4,scheme=2,too.far=0.025,shade=FALSE,
+     xlab='Longitude',ylab='Latitude',seWithMean=TRUE,
+     main='V-C Flex Geo, Deviation from Avg. Variation')
+map("world",fill=T,col="snow4",add=T)
+
+saveRDS(vc.geo,file="./GAM Models/pk_egg_vc_geo.rds")
+```
+
+```{r,echo=FALSE}
+vc.geo<-readRDS("./GAM Models/pk_egg_vc_geo.rds")
+summary(vc.geo)
+```
+
+```{r, eval=FALSE,echo=FALSE}
+vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
+                s(doy,by=reg.SST),data=pksub,family=tw(link='log'),
+              method='REML')
+```
+
+```{r, eval=FALSE,echo=FALSE}
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(vc.pheno,select=2,main='Pollock VC Phenology, Eggs',seWithMean=TRUE)
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(vc.pheno,select=4,seWithMean=TRUE,shade=TRUE,shade.col=col)
+legend('topright',legend=c('Flexible Phenology Smooth','Deviation from Avg.Phenology'),
+       col=c(NA,col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
+
+saveRDS(vc.pheno,file="./GAM Models/pk_egg_vc_pheno.rds")
+```
+
+```{r,echo=FALSE,include=FALSE}
+vc.pheno<-readRDS("./GAM Models/pk_egg_vc_pheno.rds")
+summary(vc.pheno)
+AIC(vc.pheno)
+```
+
+The threshold geography model formulation (in which the geographic distribution of eggs vary differently above and below a threshold temperature of 1.08 degrees Celsius): 
+*This is the best model to explain pollock egg distribution as of 1/10/2022*
+```{r,eval=FALSE,echo=FALSE}
+aic.geo<-NA*(temps.in)
+thr.geo<-as.list(1:(length(temps.in)))
+
+for(i in 1:length(temps.in)){
+  pksub$th<-factor(pksub$reg.SST<=temps.in[i])
+  thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+s(bottom_depth,k=5)+
+                      s(lon,lat,by=th),data=pksub,
+                    family=tw(link='log'),method='REML')
+  aic.geo[i]<-AIC(thr.geo[[i]])
+}
+
+best.index.geo<-order(aic.geo)[1]
+thr.geo<-thr.geo[[best.index.geo]]
+```
+
+
+```{r,eval=FALSE,echo=FALSE}
+saveRDS(aic.geo,file="./GAM Models/pk_egg_aic_geo_list.rds")
+saveRDS(thr.geo,file="./GAM Models/pk_egg_thr_geo.rds")
+saveRDS(best.index.geo,file="./GAM Models/pk_egg_best_index_geo.rds")
+```
+```{r,echo=FALSE}
+thr.geo<-readRDS("./GAM Models/pk_egg_thr_geo.rds")
+best.index.geo<-readRDS("./GAM Models/pk_egg_best_index_geo.rds")
+aic.geo<-readRDS("./GAM Models/pk_egg_aic_geo_list.rds")
+```
+```{r,echo=FALSE}
+summary(thr.geo)
+```
+
+```{r,echo=FALSE}
+temps<-sort(unique(reg.sst$SST))
+bd<-4
+temps.in<-temps[bd:(length(temps)-bd)]
+```
+
+```{r,echo=FALSE,eval=FALSE}
+aic.pheno<-NA*(temps.in)
+thr.pheno<-as.list(1:(length(temps.in)))
+
+for(i in 1:length(temps.in)){
+  pksub$th<-factor(pksub$reg.SST<=temps.in[i])
+  thr.pheno[[i]]<-gam((Cper10m2+1)~factor(year)+
+                        s(lon,lat)+
+                        s(bottom_depth,k=5)+
+                        s(doy,by=th),
+                      data=pksub,family=tw(link='log'),method='REML')
+  aic.pheno[i]<-AIC(thr.pheno[[i]])
+}
+
+best.index.phe<-order(aic.pheno)[1]
+thr.pheno<-thr.pheno[[best.index.phe]]
+```
+
+
+```{r, eval=FALSE, echo=FALSE}
+saveRDS(aic.pheno,file="./GAM Models/pk_egg_aic_pheno_list.rds")
+saveRDS(thr.pheno,file="./GAM Models/pk_egg_thr_pheno.rds")
+saveRDS(temps.in,file="./GAM Models/pk_egg_temps_in.rds")
+saveRDS(best.index.phe,file="./GAM Models/pk_egg_best_index_phe.rds")
+```
+
+```{r,echo=FALSE}
+temps.in<-readRDS("./GAM Models/pk_egg_temps_in.rds") #same for geo and pheno models 
+#aic.pheno<-readRDS("./GAM Models/pk_egg_aic_pheno_list.rds") 
+thr.pheno<-readRDS("./GAM Models/pk_egg_thr_pheno.rds")
+best.index.phe<-readRDS("./GAM Models/pk_egg_best_index_phe.rds")
+```
+
+```{r,echo=FALSE,include=FALSE}
+summary(thr.pheno)
+AIC(thr.pheno)
+```
+
+```{r, fig.width=6.5,fig.height=4.5,fig.fullwidth=TRUE,echo=FALSE,eval=FALSE}
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(thr.pheno,select=4,main='Pollock Phenology, Eggs',seWithMean=TRUE,
+     ylim=c(-4.2,2))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-4.2,2)) 
+legend('topright',legend=c('Below','Above'),col=c(NA,col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
+```
+
+To confirm that the threshold geography model is indeed the best model, we can compare AIC values across all five tested models. 
+```{r, echo=FALSE}
+aic.base<-AIC(eg.base)
+aic.thrph<-AIC(thr.pheno)
+aic.thrge<-AIC(thr.geo)
+aic.vcph<-AIC(vc.pheno)
+aic.vcgeo<-AIC(vc.geo)
+
+aic.pkegg<-data.frame('model'=c('Base','Threshold Pheno','Threshold Geo',
+                                'VC Pheno','VC Geo'),
+                      'AIC_value'=c(aic.base,aic.thrph,aic.thrge,
+                                    aic.vcph,aic.vcgeo))
+```
+
+```{r,fig.fullwidth=TRUE,fig.width=6.5,fig.height=4.5,fig.align='center',echo=FALSE}
+plot(c(1:5),aic.pkegg$AIC_value,main='AIC Results for Pollock Egg Models',
+     col=hcl.colors(5,"Zissou 1"),
+     pch=19,cex=2,ylab='AIC Value',xlab='')
+grid(nx=5,ny=14,col="lightgray")
+text(c(1:5),aic.pkegg$AIC_value,labels=round(aic.pkegg$AIC_value),pos=c(4,4,3,2,2))
+legend("bottomleft",legend=c('Base','Threshold Pheno','Threshold Geo',
+                             'VC Pheno','VC Geo'),
+       col=hcl.colors(5,"Zissou 1"),
+       lwd=3,lty=1,cex=0.75)
+```
+
+This is the below threshold (1.08 deg C) and above threshold geographic distribution of pollock eggs (based on the threshold geography model). 
+```{r,echo=FALSE}
+nlat=120
+nlon=120
+latd=seq(min(pksub$lat),61,length.out=nlat) #center grid over study region 
+lond=seq((-173.5),max(pksub$lon),length.out=nlon)
+
+grid.extent<-expand.grid(lond,latd)
+names(grid.extent)<-c('lon','lat')
+
+grid.extent$dist<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
+                          pksub$lat,pksub$lon)
+  grid.extent$dist[k]<-min(dist)
+}
+
+grid.extent$year<-2008
+grid.extent$doy<-median(pksub$doy)
+grid.extent$reg.SST<-mean(pksub$reg.SST[pksub$reg.SST<temps.in[[best.index.geo]]]) #threshold temp chosen by AIC values
+grid.extent$th<-"TRUE"
+grid.extent$bottom_depth<-median(pksub$bottom_depth,na.rm=T)
+grid.extent$pred<-predict(thr.geo,newdata=grid.extent)
+grid.extent$pred[grid.extent$dist>30000]<-NA
+grid.extent$reg.SST<-mean(pksub$reg.SST[pksub$reg.SST>temps.in[[best.index.geo]]])
+grid.extent$th<-"FALSE"
+grid.extent$pred2<-predict(thr.geo,newdata=grid.extent)
+grid.extent$pred2[grid.extent$dist>30000]<-NA
+```
+
+```{r, fig.fullwidth=TRUE,fig.align='center',echo=FALSE,fig.width=6,fig.height=10}
+par(mfrow=c(1,2),mai=c(1,1,0.5,0.9),mfrow=c(2,1))
+image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=c(-180,-155),ylim=c(52,63),main='Pollock Eggs, Below Threshold',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+map("world",fill=T,col="gainsboro",add=T)
+
+image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=c(-180,-155),ylim=c(52,63),main='Pollock Eggs, Above Threshold',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+map("world",fill=T,col="gainsboro",add=T)
+```
+
+```{r, fig.fullwidth=TRUE,fig.align='center',echo=FALSE,fig.width=6,fig.height=4}
+par(oma=c(1,1,1,0.5))
+plot(thr.geo,select=1,main="Pollock Egg Phenology (thr.geo model)",seWithMean=TRUE,shade=TRUE,
+     shade.col="lightgrey",xlab="Day of Year",ylab="Day of Year Effect")
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+```
+
+```{r,fig.fullwidth=TRUE,fig.align='center',echo=FALSE,fig.width=6.5,fig.height=4,echo=FALSE,eval=FALSE}
+col<-adjustcolor('tomato4',alpha.f=0.3)
+
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
+plot(thr.pheno,select=4,main='Pollock Phenology, Threshold Effect',seWithMean=TRUE,
+     ylim=c(-3,3))
+abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
+par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
+plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-3,3))
+legend('topright',legend=c('Below 1.08*C','Above 1.08*C'),col=c('grey25',col),lwd=c(2,2),cex=0.8)
+mtext(c("Day of Year",expression(paste("Anomalies in log(C/10m"^2,"+1)"))),side=c(1,2),line=2.5)
+```
+
+```{r, fig.width=6.5,fig.height=4,fig.fullwidth=TRUE,echo=FALSE}
+plot(temps.in,aic.geo,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.geo)),
+     main='Temperature Threshold Flex Geography',xlab="Temperature (degC)")
+abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
+abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
+legend("bottomright",cex=0.7,lty=c(2,2),lwd=c(1.2,1.2),col=c('sienna3',
+                                                            'steelblue3'),
+       legend=c("Base Model (no threshold)","Best Tested Thr.Geo Model"))
+```
+
+With the threshold geography model, we can also see the *significant* differences across the temperature threshold in predicted catch anomalies. This figure shows the prediction of egg catch anomalies below the threshold subtracted from those above the threshold. Thus, more positive values indicate a higher predicted egg catch anomaly above the threshold compared with below the threshold. 
+```{r,echo=FALSE}
+nlat=120
+nlon=120
+latd=seq(min(pksub$lat),61,length.out=nlat) #center grid over study region 
+lond=seq((-173.5),max(pksub$lon),length.out=nlon)
+
+grid.extent<-expand.grid(lond,latd)
+names(grid.extent)<-c('lon','lat')
+
+grid.extent$dist<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
+                          pksub$lat,pksub$lon)
+  grid.extent$dist[k]<-min(dist)
+}
+
+grid.extent$year<-2008
+grid.extent$doy<-median(pksub$doy)
+grid.extent$reg.SST<-mean(pksub$reg.SST[pksub$reg.SST<temps.in[[best.index.geo]]]) #threshold temp chosen by AIC values
+grid.extent$th<-"TRUE"
+grid.extent$bottom_depth<-median(pksub$bottom_depth,na.rm=T)
+grid.extent$pred<-predict(thr.geo,newdata=grid.extent)
+grid.extent$se<-predict(thr.geo,newdata=grid.extent,se=T)[[2]]
+grid.extent$pred.u<-grid.extent$pred+1.96*grid.extent$se #95% CI here
+grid.extent$pred.l<-grid.extent$pred-1.96*grid.extent$se
+grid.extent$pred[grid.extent$dist>30000]<-NA #remove predictions that are too far from positive data values
+grid.extent$reg.SST<-mean(pksub$reg.SST[pksub$reg.SST>temps.in[[best.index.geo]]])
+grid.extent$th<-"FALSE"
+grid.extent$pred2<-predict(thr.geo,newdata=grid.extent)
+grid.extent$se2<-predict(thr.geo,newdata=grid.extent,se=T)[[2]]
+grid.extent$pred2.u<-grid.extent$pred2+1.96*grid.extent$se
+grid.extent$pred2.l<-grid.extent$pred2-1.96*grid.extent$se
+grid.extent$diff<-grid.extent$pred2-grid.extent$pred #calculate difference between two regimes
+
+grid.extent$sig.pos<-c(grid.extent$pred2.l>grid.extent$pred.u) #isolate areas where there is a higher predicted CPUE at a higher temperature
+grid.extent$sig.neg<-c(grid.extent$pred2.u<grid.extent$pred.l)
+grid.extent$pos.diff<-grid.extent$diff*grid.extent$sig.pos #calculate areas with a significant positive difference at a higher temperature
+grid.extent$neg.diff<-grid.extent$diff*grid.extent$sig.neg
+max.slope<-max(grid.extent$diff,na.rm=T)
+
+symcol<-adjustcolor("grey28",alpha=0.5)
+```
+
+```{r,fig.align='center',fig.width=6.5,fig.height=4.5,fig.fullwidth=TRUE,echo=FALSE}
+par(mai=c(1,1,0.5,0.5))
+image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
+           col=hcl.colors(100,"Lajolla", rev=TRUE),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), 
+           xlim=c(-180,-155),ylim=c(52,63),main=expression(paste('Significant Change Across Threshold (1.08'^0,'C)')),
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),
+           legend.shrink=0.3)
+contour(bathy,levels=-c(50,200),labcex=0.4,col=symcol,add=T)#would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
+map("worldHires",fill=T,col="gainsboro",add=T)
+```
+
+## Larval Generalized Additive Models: 
+The following code *is only necessary if the data were re-trimmed and new GAMs need to be run*. In this case, modify markdown document such that "{eval = TRUE}". The other model figures are marked as "eval = FALSE" if they, as of the last model run, 
+do not produce the best model results. These models are produced using conductivity-temperature-depth derived temperature and salinity measurements. 
+
+We begin with the base larval model: 
+```{r,eval=T,echo=FALSE}
+lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
+               s(bottom_depth,k=5),
+             data=pklarv.ctd,family=tw(link='log'),method='REML')
+
+saveRDS(lv.base,file="./GAM Models/pk_larvae_base.rds")
+```
+
+```{r}
+lv.base<-readRDS("./GAM Models/pk_larvae_base.rds")
+summary(lv.base)
+AIC(lv.base)
+```
+
+```{r,eval=T,echo=FALSE}
+lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
+                  s(bottom_depth,k=5)+
+                  s(salinity),data=pklarv.ctd,family=tw(link='log'),
+                method='REML')
+
+saveRDS(lv.add.sal,file="./GAM Models/pk_larvae_addsal.rds")
+```
+
+```{r,echo=T,include=FALSE}
+lv.add.sal<-readRDS("./GAM Models/pk_larvae_addsal.rds")
+summary(lv.add.sal)
+```
+
+```{r,eval=T,echo=FALSE}
+lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
+                   s(bottom_depth,k=5)+
+                   s(temperature),data=pklarv.ctd,family=tw(link='log'),
+                 method='REML')
+
+saveRDS(lv.add.temp,file="./GAM Models/pk_larvae_addtemp.rds")
+```
+
+```{r,include=T,echo=FALSE}
+lv.add.temp<-readRDS("./GAM Models/pk_larvae_addtemp.rds")
+summary(lv.add.temp)
+```
+
+Then additive temperature and salinity, in individual additive terms. This is the second-best performing model. 
+```{r,eval=T,echo=FALSE}
+lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
+                   s(bottom_depth,k=5)+
+                   s(temperature)+s(salinity),data=pklarv.ctd,
+                 family=tw(link='log'),method='REML')
+
+saveRDS(lv.temp.sal,file="./GAM Models/pk_larvae_addtempsal.rds")
+```
+
+```{r}
+lv.temp.sal<-readRDS("./GAM Models/pk_larvae_addtempsal.rds")
+summary(lv.temp.sal)
+AIC(lv.temp.sal)
+```
+
+And finally, the best performing model: the bivariate salinity-temperature additive term: 
+```{r,eval=T,echo=FALSE}
+lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
+             s(salinity,temperature),data=pklarv.ctd,family=tw(link='log'),
+           method='REML')
+
+saveRDS(lv.2d,file="./GAM Models/pk_larvae_2d.rds")
+```
+
+```{r}
+lv.2d<-readRDS("./GAM Models/pk_larvae_2d.rds")
+summary(lv.2d)
+AIC(lv.2d)
+```
+
+The following plot is the predicted pollock larval biogeography based on the best performing model, the bivariate salinity-temperature GAM. Observations (log transformed, n+1) are shown as well. 
+```{r,echo=FALSE}
+nlat=120
+nlon=120
+latd=seq(min(pklarv.ctd$lat,na.rm=TRUE),max(pklarv.ctd$lat,na.rm=TRUE),length.out=nlat)
+lond=seq(min(pklarv.ctd$lon,na.rm=TRUE),max(pklarv.ctd$lon,na.rm=TRUE),length.out=nlon)
+
+grid.extent<-expand.grid(lond,latd)
+names(grid.extent)<-c('lon','lat')
+
+grid.extent$dist<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-distance.function(grid.extent$lat[k],grid.extent$lon[k],
+                          pklarv.ctd$lat,pklarv.ctd$lon)
+  grid.extent$dist[k]<-min(dist)
+}
+
+grid.extent$year<-as.numeric(2009)
+grid.extent$doy<-as.numeric(median(pklarv.ctd$doy,na.rm=TRUE))
+grid.extent$bottom_depth<-NA
+grid.extent$bottom_depth<-as.numeric(median(pklarv.ctd$bottom_depth,na.rm=TRUE))
+grid.extent$temperature<-as.numeric(mean(pklarv.ctd$temperature))
+grid.extent$salinity<-as.numeric(mean(pklarv.ctd$salinity))
+grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
+grid.extent$pred[grid.extent$dist>30000]<-NA 
+```
+
+```{r,fig.align='center',fig.fullwidth=TRUE,fig.width=6.5,fig.height=10,echo=FALSE}
+par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
+image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=c(-180,-155),ylim=c(52,63),
+           main='Predicted Larval Biogeography, 2D Model',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+map("worldHires",fill=T,col="gainsboro",add=T)
+
+image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+           ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
+           xlim=c(-180,-155),ylim=c(52,63),
+           main='Predicted Larval Biogeography, 2D Model',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
+symbols(pklarv.ctd$lon[pklarv.ctd$Cper10m2>0],
+        pklarv.ctd$lat[pklarv.ctd$Cper10m2>0],
+        circles=log(pklarv.ctd$Cper10m2+1)[pklarv.ctd$Cper10m2>0],
+        inches=0.1,bg=symcol,fg='black',add=T)
+points(pklarv.ctd$lon[pklarv.ctd$Cper10m2>0],
+        pklarv.ctd$lat[pklarv.ctd$Cper10m2>0],pch="+",col="white")
+map("worldHires",fill=T,col="gainsboro",add=T)
+```
+
+```{r,fig.align='center',fig.fullwidth=TRUE,fig.width=5,fig.height=5,echo=FALSE}
+par(mai=c(1,1,0.5,0.9))
+plot(lv.2d,select=2,main="Larval Phenology (2D model)",xlab="Day of Year",
+     ylab="Day of Year Effect",seWithMean=TRUE,shade=T,shade.col="lightgrey")
+abline(h=0,lty=2,lwd=1.3,col="mistyrose4")
+```
+
+With this bivariate model, we can also calculate the predicted anomalous larval catch (more or less than expected) on a salinity-temperature plot. This figure shows that prediction, with observed larval catch (log(n=1)) overlaid. 
+```{r,echo=FALSE}
+ntemp<-100
+nsal<-100
+tempd<-seq(min(pklarv.ctd$temperature,na.rm=TRUE),max(pklarv.ctd$temperature,na.rm=TRUE),length.out=ntemp)
+sald<-seq(min(pklarv.ctd$salinity,na.rm=T),max(pklarv.ctd$salinity,na.rm=T),length.out=nsal)
+
+grid.extent<-expand.grid(sald,tempd)
+names(grid.extent)<-c('salinity','temperature')
+
+grid.extent$dist.sal<-NA
+grid.extent$dist.temp<-NA
+for(k in 1:nrow(grid.extent)){
+  dist<-euclidean.distance(grid.extent$salinity[k],grid.extent$temperature[k],
+                               pklarv.ctd$salinity,pklarv.ctd$temperature)
+  
+  grid.extent$dist[k]<-min(dist)
+}
+
+grid.extent$year<-as.numeric(2005)
+grid.extent$lon<-as.numeric(median(pklarv.ctd$lon))
+grid.extent$lat<-as.numeric(median(pklarv.ctd$lat))
+grid.extent$doy<-as.numeric(median(pklarv.ctd$doy,na.rm=TRUE))
+grid.extent$bottom_depth<-NA
+grid.extent$bottom_depth<-as.numeric(median(pklarv.ctd$bottom_depth,na.rm=TRUE))
+grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
+grid.extent$pred[grid.extent$dist>mean(grid.extent$dist)]<-NA
+```
+
+```{r,echo=FALSE,fig.align='center',fig.width=6.5,fig.height=5,fig.fullwidth=TRUE}
+par(mai=c(1,1,0.5,0.9))
+image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
+           col=hcl.colors(100,"Lajolla",rev=TRUE),xlab='Salinity (psu)',
+           ylab=expression(paste("Temperature ("^0, 'C)')),
+           xlim=range(pklarv.ctd$salinity,na.rm=T),ylim=range(pklarv.ctd$temperature,na.rm=T),
+           main='Larval Biogeography By Temperature and Salinity',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
+           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+symbols(pklarv.ctd$salinity[pklarv.ctd$Cper10m2>0],
+        pklarv.ctd$temperature[pklarv.ctd$Cper10m2>0],
+        circles=log(pklarv.ctd$Cper10m2+1)[pklarv.ctd$Cper10m2>0],
+        inches=0.1,bg=symcol,fg='black',add=T)
+points(pklarv.ctd$salinity[pklarv.ctd$Cper10m2>0],
+        pklarv.ctd$temperature[pklarv.ctd$Cper10m2>0],pch="+",col="white")
+```
+
+
+To again share the improvements of the best performing models from the base models, we can look at the AIC division produces. 
+```{r,echo=FALSE}
+bestdiv<-c((AIC(thr.geo)/AIC(eg.base)),(AIC(lv.2d)/AIC(lv.base)))
+second<-c((AIC(thr.geo)/AIC(vc.geo)),(AIC(lv.2d)/AIC(lv.temp.sal)))
+stage<-c("Eggs","Larvae")
+
+df<-data.frame(stage,bestdiv,second)
+kable(df,col.names=c("","Best Divided By Base","Best Divided By Second Best"),
+      caption="Model Power through AIC Comparisons, Pollock",align='c')
+```

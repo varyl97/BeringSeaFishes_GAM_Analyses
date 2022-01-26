@@ -37,13 +37,13 @@ Pacific cod: larval data only are included for this species. Pac cod spawn in Ma
 ```{r,echo=FALSE}
 pclarv.ctd<-read.csv('./Ichthyo Data/Cleaned_Cut_PcLarv_wCTD.csv')
 pclarv.ctd<-subset(pclarv.ctd,lat<60)
-pclarv.ctd<-subset(pclarv.ctd,doy>99&doy<175)
+pclarv.ctd<-subset(pclarv.ctd,doy>99&doy<160)
 
 str_name<-"./Environmental Data/expanded_BS_bathy.tif"
 bathy<-raster(str_name)
 ```
 
-These data have been trimmed. The larval data are constrained to depths between 40 and 250 meters and to latitudes south of 62 degrees north. Larvae are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements.
+These data have been trimmed. The larval data are constrained to depths between 40 and 250 meters and to latitudes south of 62 degrees north. Larvae are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements and constrained to days of year between 99 and 160.
 
 ## Descriptive Information: 
 
@@ -76,7 +76,7 @@ Now we'll move into the GAMs. The following code *is only necessary if the data 
 Pac cod larvae were best explained by the bivariate salinity-temperature model, in which the spatial and temporal distribution of larvae were modelled in association with a smooth containing *in situ* salinity-temperature data. 
 
 We begin with the base larval model: 
-```{r,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                s(bottom_depth,k=5),
              data=pclarv.ctd,family=tw(link='log'),method='REML')
@@ -90,7 +90,7 @@ summary(lv.base)
 AIC(lv.base)
 ```
 
-```{r,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                   s(bottom_depth,k=5)+
                   s(salinity),data=pclarv.ctd,family=tw(link='log'),
@@ -104,7 +104,7 @@ lv.add.sal<-readRDS("./GAM Models/pc_larvae_addsal.rds")
 summary(lv.add.sal)
 ```
 
-```{r,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature),data=pclarv.ctd,family=tw(link='log'),
@@ -119,7 +119,7 @@ summary(lv.add.temp)
 ```
 
 Then additive temperature and salinity, in individual additive terms. This is the second-best performing model. 
-```{r,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature)+s(salinity),data=pclarv.ctd,
@@ -135,7 +135,7 @@ AIC(lv.temp.sal)
 ```
 
 And finally, the best performing model: the bivariate salinity-temperature additive term: 
-```{r,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
              s(salinity,temperature),data=pclarv.ctd,family=tw(link='log'),
            method='REML')
@@ -184,7 +184,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=TRUE),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=c(-180,-155),ylim=c(52,63),
-           main='Predicted Pac cod Larval Biogeography, 2D Model',
+           main='Predicted Larval Biogeography, 2D Model',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 symbols(pclarv.ctd$lon[pclarv.ctd$Cper10m2>0],pclarv.ctd$lat[pclarv.ctd$Cper10m2>0],
@@ -198,11 +198,18 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=TRUE),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=c(-180,-155),ylim=c(52,63),
-           main='Predicted Pac cod Larval Biogeography, 2D Model',
+           main='Predicted Larval Biogeography, 2D Model',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="gainsboro",add=T)
+```
+
+```{r,fig.align='center',fig.fullwidth=TRUE,fig.width=6.5,fig.height=5,echo=FALSE}
+par(mai=c(1,1,0.6,0.9))
+plot(lv.2d,select=2,shade=T,seWithMean=TRUE,shade.col="lightgrey",
+     xlab="Day of Year",ylab="Day of Year Effect")
+abline(h=0,col="mistyrose4",lty=2,lwd=1.3)
 ```
 
 With this bivariate model, we can also calculate the predicted anomalous larval catch (more or less than expected) on a salinity-temperature plot. This figure shows that prediction, with observed larval catch (log(n=1)) overlaid. 
@@ -238,7 +245,7 @@ image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(s
            col=hcl.colors(100,"Lajolla",rev=TRUE),xlab='Salinity (psu)',
            ylab=expression(paste("Temperature ("^0, 'C)')),
            xlim=range(pclarv.ctd$salinity,na.rm=T),ylim=range(pclarv.ctd$temperature,na.rm=T),
-           main='PC Larval Biogeography By Temperature and Salinity',
+           main='Larval Biogeography By Temperature and Salinity',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 symbols(pclarv.ctd$salinity[pclarv.ctd$Cper10m2>0],
@@ -246,7 +253,7 @@ symbols(pclarv.ctd$salinity[pclarv.ctd$Cper10m2>0],
         circles=log(pclarv.ctd$Cper10m2+1)[pclarv.ctd$Cper10m2>0],
         inches=0.1,bg=symcol,fg='black',add=T)
 points(pclarv.ctd$salinity[pclarv.ctd$Cper10m2==0],pclarv.ctd$temperature[pclarv.ctd$Cper10m2==0],
-       pch="+",color="white")
+       pch="+",col="white")
 ```
 
 To again share the improvements of the best performing models from the base models, we can look at the AIC division produces. 

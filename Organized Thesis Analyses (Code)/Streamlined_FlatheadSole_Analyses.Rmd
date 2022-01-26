@@ -2,8 +2,6 @@
 title: "Streamlined Flathead Sole Analyses & Figures"
 author: "Laura Vary"
 date: "1/23/2022"
-header-includes: 
-  - \usepackage{placeins}
 output: 
   pdf_document: 
     toc: yes
@@ -39,6 +37,7 @@ fhsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhEggs.csv',header=TRUE,
                 check.names=TRUE)
 fhlarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhLarv_wCTD.csv',
                      header=TRUE,check.names=TRUE)
+fhlarv.ctd<-subset(fhlarv.ctd,doy>100&doy<165)
 
 reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',
                   header=TRUE,check.names=TRUE)
@@ -47,7 +46,7 @@ str_name<-"./Environmental Data/expanded_BS_bathy.tif"
 bathy<-raster(str_name)
 ```
 
-These data have been trimmed. The egg data are constrained to depths between 54 and 221 meters; temporally, the egg data are constrained to above the 99th day of year and below the 283rd day of the year (temporally centered on the spawning period of flathead sole). The egg data are also joined to regional temperature indices for each year (the reg.sst dataset). The larval data are also constrained to depths between 54 and 221 m, above the 100th day of the year and below the 200th day of the year. Larvae are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements. Both eggs and larvae are restricted to latitudes below 61 degrees north. 
+These data have been trimmed. The egg data are constrained to depths between 54 and 221 meters; temporally, the egg data are constrained to above the 99th day of year and below the 283rd day of the year (temporally centered on the spawning period of flathead sole). The egg data are also joined to regional temperature indices for each year (the reg.sst dataset). The larval data are also constrained to depths between 54 and 221 m, above the 100th day of the year and below the 165th day of the year. Larvae are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements. Both eggs and larvae are restricted to latitudes below 61 degrees north. 
 
 The regional temperature index data are constrained to (-180, -151) degrees W and (50.5, 67.5) degrees N and reflect the average March temperature for each year across that region. March temperatures are chosen to estimate the conditions spawning flathead sole may have experienced, roughly two months before the peak amount of eggs in the water column occurs.  
 
@@ -382,7 +381,7 @@ The following code *is only necessary if the data were re-trimmed and new GAMs n
 do not produce the best model results. These models are produced using conductivity-temperature-depth derived temperature and salinity measurements. 
 
 We begin with the base larval model: 
-```{r,eval=FALSE,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                s(bottom_depth,k=5),
              data=fhlarv.ctd,family=tw(link='log'),method='REML')
@@ -396,7 +395,7 @@ summary(lv.base)
 AIC(lv.base)
 ```
 
-```{r,eval=FALSE,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                   s(bottom_depth,k=5)+
                   s(salinity),data=fhlarv.ctd,family=tw(link='log'),
@@ -405,12 +404,12 @@ lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 saveRDS(lv.add.sal,file="./GAM Models/fh_larv_addsal.rds")
 ```
 
-```{r,echo=FALSE,include=FALSE}
+```{r,echo=F,include=FALSE}
 lv.add.sal<-readRDS("./GAM Models/fh_larv_addsal.rds")
 summary(lv.add.sal)
 ```
 
-```{r,eval=FALSE,echo=FALSE}
+```{r,eval=T,echo=FALSE}
 lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature),data=fhlarv.ctd,family=tw(link='log'),
@@ -425,7 +424,7 @@ summary(lv.add.temp)
 ```
 
 Then additive temperature and salinity, in individual additive terms. This is the second-best performing model. 
-```{r,eval=FALSE,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature)+s(salinity),data=fhlarv.ctd,
@@ -441,7 +440,7 @@ AIC(lv.temp.sal)
 ```
 
 And finally, the best performing model: the bivariate salinity-temperature additive term: 
-```{r,eval=FALSE,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
              s(salinity,temperature),data=fhlarv.ctd,family=tw(link='log'),
            method='REML')
@@ -511,6 +510,13 @@ points(fhlarv.ctd$lon[fhlarv.ctd$Cper10m2==0],
 map("worldHires",fill=T,col="gainsboro",add=T)
 ```
 
+```{r,fig.align='center',fig.fullwidth=TRUE,fig.width=6.5,fig.height=5,echo=FALSE}
+par(mai=c(1,1,0.6,0.9))
+plot(lv.2d,select=2,shade=T,seWithMean=TRUE,shade.col="lightgrey",
+     xlab="Day of Year",ylab="Day of Year Effect")
+abline(h=0,col="mistyrose4",lty=2,lwd=1.3)
+```
+
 With this bivariate model, we can also calculate the predicted anomalous larval catch (more or less than expected) on a salinity-temperature plot. This figure shows that prediction, with observed larval catch (log(n=1)) overlaid. 
 ```{r,echo=FALSE}
 ntemp<-100
@@ -538,8 +544,8 @@ grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
 grid.extent$pred[grid.extent$dist>mean(grid.extent$dist)]<-NA #threshold based on means
 ```
 
-```{r,echo=FALSE,fig.align='center',fig.width=5,fig.height=10}
-par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
+```{r,echo=FALSE,fig.align='center',fig.width=6.5,fig.height=6,fig.fullwidth=TRUE}
+par(mai=c(1,1,0.5,0.9))
 image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
            col=hcl.colors(100,"Lajolla",rev=TRUE),xlab='Salinity (psu)',
            ylab=expression(paste("Temperature ("^0, 'C)')),
