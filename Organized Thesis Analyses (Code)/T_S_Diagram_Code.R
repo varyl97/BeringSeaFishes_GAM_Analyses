@@ -7,7 +7,10 @@ library(marelac)
 library(plot3D)
 library(DescTools)
 
-#Load in the CTD data from which temperature and salinity values are obtained: 
+## Construct KDE plots for each larval species for temperature and salinity: 
+
+
+## Load in the CTD data from which temperature and salinity values are obtained: 
 dat<-read.csv('./Environmental Data/All_CTD_Data_8302021.csv',header=TRUE,check.names=TRUE)
 dat<-subset(dat,Depth<11,na.rm=T)
 dat<-dat[dat$Temperature<14,]

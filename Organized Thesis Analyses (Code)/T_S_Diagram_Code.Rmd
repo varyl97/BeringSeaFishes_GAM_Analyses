@@ -1,0 +1,152 @@
+---
+title: "Temp-Sal Diagram Code"
+author: "Laura Vary"
+date: "2/3/2022"
+header-includes: 
+  - \usepackage{placeins}
+output: 
+  pdf_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE,warning=FALSE,echo=FALSE,message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+setwd("C:/Users/varyl/Desktop/GitHub/BeringSeaFishes_GAM_Analyses")
+library(marelac)
+library(plot3D)
+library(DescTools)
+```
+
+## KDE Plots for Temperature and Salinity: 
+This code will produce kernel density estimation plots for each larval species across both temperature and salinity to better estimate central tendencies of T-S associations. 
+```{r,echo=FALSE}
+aplarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApLarv_wCTD.csv',
+                     header=TRUE,check.names=TRUE)
+aplarv.ctd<-subset(aplarv.ctd,doy>80&doy<182)
+
+fhlarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_FhLarv_wCTD.csv',
+                     header=TRUE,check.names=TRUE)
+fhlarv.ctd<-subset(fhlarv.ctd,doy>99)
+
+pclarv.ctd<-read.csv('./Ichthyo Data/Cleaned_Cut_PcLarv_wCTD.csv')
+pclarv.ctd<-subset(pclarv.ctd,lat<60)
+pclarv.ctd<-subset(pclarv.ctd,doy>99&doy<160)
+
+nrslarv.ctd<-read.csv('./Ichthyo Data/Cleaned_Cut_NrsLarv_wCTD.csv')
+nrslarv.ctd<-subset(nrslarv.ctd,doy>100&doy<165)
+nrslarv.ctd<-subset(nrslarv.ctd,lat<62)
+
+pklarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_PkLarv_wCTD.csv',
+                     header=TRUE,check.names=TRUE)
+pklarv.ctd<-subset(pklarv.ctd,doy>90&doy<165)
+
+yflarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_YfLarv_wCTD.csv',
+                     header=TRUE,check.names=TRUE)
+yflarv.ctd<-subset(yflarv.ctd,doy>220)
+```
+
+First, the temperature plots. 
+```{r,echo=FALSE}
+aptden<-density(aplarv.ctd$temperature,
+               weights=(log(aplarv.ctd$Cper10m2+1)/sum(log(aplarv.ctd$Cper10m2+1))),na.rm=T)
+fhtden<-density(fhlarv.ctd$temperature,
+               weights=(log(fhlarv.ctd$Cper10m2+1)/sum(log(fhlarv.ctd$Cper10m2+1))),na.rm=T)
+pctden<-density(pclarv.ctd$temperature,
+               weights=(log(pclarv.ctd$Cper10m2+1)/sum(log(pclarv.ctd$Cper10m2+1))),na.rm=T)
+nrstden<-density(nrslarv.ctd$temperature,
+               weights=(log(nrslarv.ctd$Cper10m2+1)/sum(log(nrslarv.ctd$Cper10m2+1))),na.rm=T)
+pktden<-density(pklarv.ctd$temperature,
+               weights=(log(pklarv.ctd$Cper10m2+1)/sum(log(pklarv.ctd$Cper10m2+1))),na.rm=T)
+yftden<-density(yflarv.ctd$temperature,
+               weights=(log(yflarv.ctd$Cper10m2+1)/sum(log(yflarv.ctd$Cper10m2+1))),na.rm=T)
+```
+
+```{r,echo=FALSE,fig.width=7,fig.height=8,fig.align='center'}
+plot(aptden,type="o",lty=1,lwd=0.75,pch=19,col="steelblue4",xlab='Temperature (*C)',ylab='Density Estimation',
+     main="Larvae Temperature KDE",xlim=c(-3,14),cex=0.8)
+lines(fhtden,type="o",lty=2,lwd=0.75,pch=8,col="orange",cex=0.8)
+lines(pctden,type="o",lty=3,lwd=0.75,pch=18,col="darkolivegreen3",cex=0.8)
+lines(pktden,type="o",lty=4,lwd=0.75,pch=15,col="mediumpurple1",cex=0.8)
+lines(nrstden,type="o",lty=5,lwd=0.75,pch=11,col="palevioletred3",cex=0.8)
+lines(yftden,type="o",lty=6,lwd=0.75,pch=4,col="goldenrod3",cex=0.8)
+legend(x="topleft",legend=c("Plaice","Flathead","Cod","Pollock","Northern Rock","Yellowfin"),
+       col=c("steelblue4","orange","darkolivegreen3","mediumpurple1","palevioletred3",
+             "goldenrod3"),pch=c(19,8,18,15,11,4),
+       lty=1,lwd=2)
+axis(side=1,at=(-2:15))
+```
+
+Then the salinity plots. 
+```{r,echo=FALSE}
+apsden<-density(aplarv.ctd$salinity,
+               weights=(log(aplarv.ctd$Cper10m2+1)/sum(log(aplarv.ctd$Cper10m2+1))),na.rm=T)
+fhsden<-density(fhlarv.ctd$salinity,
+               weights=(log(fhlarv.ctd$Cper10m2+1)/sum(log(fhlarv.ctd$Cper10m2+1))),na.rm=T)
+pcsden<-density(pclarv.ctd$salinity,
+               weights=(log(pclarv.ctd$Cper10m2+1)/sum(log(pclarv.ctd$Cper10m2+1))),na.rm=T)
+nrssden<-density(nrslarv.ctd$salinity,
+               weights=(log(nrslarv.ctd$Cper10m2+1)/sum(log(nrslarv.ctd$Cper10m2+1))),na.rm=T)
+pksden<-density(pklarv.ctd$salinity,
+               weights=(log(pklarv.ctd$Cper10m2+1)/sum(log(pklarv.ctd$Cper10m2+1))),na.rm=T)
+yfsden<-density(yflarv.ctd$salinity,
+               weights=(log(yflarv.ctd$Cper10m2+1)/sum(log(yflarv.ctd$Cper10m2+1))),na.rm=T)
+```
+
+```{r,echo=FALSE,fig.width=7,fig.height=8,fig.align='center'}
+plot(apsden,type="o",lty=1,lwd=0.75,pch=19,col="steelblue4",xlab='Salinity (psu)',ylab='Density Estimation',
+     main="Larvae Salinity KDE",ylim=c(0,2),cex=0.8)
+lines(fhsden,type="o",lty=2,lwd=0.75,pch=8,col="orange",cex=0.8)
+lines(pcsden,type="o",lty=3,lwd=0.75,pch=18,col="darkolivegreen3",cex=0.8)
+lines(pksden,type="o",lty=4,lwd=0.75,pch=15,col="mediumpurple1",cex=0.8)
+lines(nrssden,type="o",lty=5,lwd=0.75,pch=11,col="palevioletred3",cex=0.8)
+lines(yfsden,type="o",lty=6,lwd=0.75,pch=4,col="goldenrod3",cex=0.8)
+legend(x="topleft",legend=c("Plaice","Flathead","Cod","Pollock","Northern Rock","Yellowfin"),
+       col=c("steelblue4","orange","darkolivegreen3","mediumpurple1","palevioletred3",
+             "goldenrod3"),pch=c(19,8,18,15,11,4),
+       lty=1,lwd=2)
+```
+
+## T-S Diagram with all species: 
+This needs some work, but will ultimately show the central tendencies of larvae to associate with certain temperature-salinity values. 
+```{r,echo=FALSE,include=FALSE}
+dat<-read.csv('./Environmental Data/All_CTD_Data_8302021.csv',header=TRUE,check.names=TRUE)
+dat<-subset(dat,Depth<11,na.rm=T)
+dat<-dat[dat$Temperature<14,]
+dat<-dat[dat$Salinity>29&dat$Salinity<36,]
+
+
+mint=min(dat$Temperature,na.rm=T)
+maxt=max(dat$Temperature,na.rm=T)
+mins=min(dat$Salinity,na.rm=T)
+maxs=max(dat$Salinity,na.rm=T)
+
+temp<-seq(from=mint,to=maxt,length.out=180)
+sal<-seq(from=mins,to=maxs,length.out=180)
+
+sigma.c<-outer(sal,temp,FUN=function(S,t)sw_dens(S=S,t=t)-1000)
+sigma.c
+
+colr<-adjustcolor("grey",alpha=0.3)
+```
+
+```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE}
+par(mai=c(1,1,0.5,0.9))
+contour2D(x=sal,y=temp,z=sigma.c,lwd=1.6,lty=3,main='Temperature-Salinity Diagram',col='black',
+          xlab=expression('Salinity (psu)'),ylab=expression('Temperature ('*~degree*C*')'))
+DrawEllipse(x=31.675,y=5.95,radius.x=0.15,radius.y=0.3,rot=0, border='steelblue4',col=colr,lwd=3)#x axis = salinity, y axis = temperature
+DrawEllipse(x=31.925,y=5.85,radius.x=0.25,radius.y=1.7,rot=0,border='orange',col=colr,lwd=3)
+DrawEllipse(x=31.675,y=5.05,radius.x=0.05,radius.y=0.5,rot=0,border='darkolivegreen3',col=colr,lwd=3)
+DrawEllipse(x=32,y=5.6,radius.x=0.6,radius.y=1.2,border='mediumpurple1',col=colr,lwd=3)
+DrawEllipse(x=31.925,y=5.25,radius.x=0.35,radius.y=1.5,border='palevioletred3',col=colr,lwd=3)
+DrawEllipse(x=31.45,y=9.6,radius.x=0.5,radius.y=0.8,border='goldenrod3',col=colr,lwd=3)
+legend(x="bottomleft",legend=c("Plaice","Flathead","Cod","Pollock","Northern Rock","Yellowfin"),
+       col=c("steelblue4","orange","darkolivegreen3","mediumpurple1","palevioletred3",
+             "goldenrod3"),pch=16,bg='snow1')
+```
+
+
+
+
+
+

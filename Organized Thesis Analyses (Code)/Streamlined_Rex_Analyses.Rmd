@@ -20,9 +20,14 @@ library(marmap)
 library(maps)
 library(mgcv)
 library(colorRamps) 
+library(dplyr)
 library(RColorBrewer)
 library(fields)
 library(mapdata)
+library(ggplot2)
+library(ggmap)
+library(ggpubr)
+library(scales)
 source('./Organized Thesis Analyses (Code)/distance.function.R')
 source("./Organized Thesis Analyses (Code)/vis.gam_COLORS.R")
 source("./Organized Thesis Analyses (Code)/euclidean.distance.R")
@@ -43,6 +48,8 @@ reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',
 
 str_name<-"./Environmental Data/expanded_BS_bathy.tif"
 bathy<-raster(str_name)
+
+bathybath<-as.bathy(bathy)
 ```
 
 These data have been trimmed. The data are only constrained to between April and July. The egg data are also joined to regional temperature indices for each year (the reg.sst dataset). 
@@ -55,8 +62,8 @@ The regional temperature index data are constrained to (-180, -151) degrees W an
 lat_range<-c(paste(round(min(rxsub$lat),digits=1),round(max(rxsub$lat),digits=1),sep="-"))
 lon_range<-c(paste(round(min(rxsub$lon),digits=1),round(max(rxsub$lon),digits=1),sep=" to "))
 doy_range<-c(paste(min(rxsub$doy),max(rxsub$doy),sep="-"))
-depth_range<-c(paste(round(min(rxsub$bottom_depth),digits=1),
-                     round(max(rxsub$bottom_depth),digits=1),sep="-"))
+depth_range<-c(paste(round(min(rxsub$bottom_depth,na.rm=T),digits=1),
+                     round(max(rxsub$bottom_depth,na.rm=T),digits=1),sep="-"))
 
 df<-data.frame(lat_range,lon_range,doy_range,depth_range)
 
@@ -71,6 +78,170 @@ The following two plots show *the day of year distribution for positive Rex sole
 par(mfrow=c(1,2))
 hist(rxsub$doy[rxsub$Cper10m2>0],xlab="Day of Year",ylab="Positive Catch Frequencies",main="")
 hist(rxsub$year[rxsub$Cper10m2>0],xlab="Year",ylab="",main="")
+```
+
+The following plots show rex egg catch distributions (Catch per unit effort, or per 10m$^2$) across five year increments from 1979 to 2016. 
+```{r,echo=FALSE,eval=FALSE}
+rxysub<-rxsub%>%mutate(yearbin=case_when(year<=1984~'1979-1984',
+                                         year<=1989&year>1984~'1985-1989',
+                                         year<=1994&year>1989~'1990-1994',
+                                         year<=1999&year>1994~'1995-1999',
+                                         year<=2004&year>1999~'2000-2004',
+                                         year<=2009&year>2004~'2005-2009',
+                                         year<=2014&year>2009~'2010-2014',
+                                         year<=2019&year>2014~'2015-2016'))
+rxypos<-rxysub[rxysub$Cper10m2>0,]
+rxyz<-rxysub[rxysub$Cper10m2==0,]
+rxypos$logcpue<-log(rxypos$Cper10m2+1)
+
+tmp1<-sort(unique(rxysub$yearbin))
+
+rxy1<-rxypos[rxypos$yearbin==tmp1[[1]],]
+rxz1<-rxyz[rxyz$yearbin==tmp1[[1]],]
+
+rxy2<-rxypos[rxypos$yearbin==tmp1[[2]],]
+rxz2<-rxyz[rxyz$yearbin==tmp1[[2]],]
+
+rxy3<-rxypos[rxypos$yearbin==tmp1[[3]],]
+rxz3<-rxyz[rxyz$yearbin==tmp1[[3]],]
+
+rxy4<-rxypos[rxypos$yearbin==tmp1[[4]],]
+rxz4<-rxyz[rxyz$yearbin==tmp1[[4]],]
+
+rxy5<-rxypos[rxypos$yearbin==tmp1[[5]],]
+rxz5<-rxyz[rxyz$yearbin==tmp1[[5]],]
+
+rxy6<-rxypos[rxypos$yearbin==tmp1[[6]],]
+rxz6<-rxyz[rxyz$yearbin==tmp1[[6]],]
+
+rxy7<-rxypos[rxypos$yearbin==tmp1[[7]],]
+rxz7<-rxyz[rxyz$yearbin==tmp1[[7]],]
+
+rxy8<-rxypos[rxypos$yearbin==tmp1[[8]],]
+rxz8<-rxyz[rxyz$yearbin==tmp1[[8]],]
+
+bathybath<-as.bathy(bathy)
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,eval=FALSE}
+year1<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=rxz1,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=rxy1,aes(x=lon,y=lat,size=logcpue),
+                        fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  labs(title="Rex Sole Eggs, 1979-1984",shape="Log (CPUE + 1)")+ylab("Latitude")+xlab("Longitude")
+
+year2<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=rxz2,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=rxy2,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="1985-1989")+ylab("Latitude")+xlab("Longitude")
+
+year3<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=rxz3,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=rxy3,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="1990-1994")+ylab("Latitude")+xlab("Longitude")
+
+year4<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=rxz4,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=rxy4,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="1995-1999")+ylab("Latitude")+xlab("Longitude")
+
+year5<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=rxz5,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=rxy5,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="2000-2004")+ylab("Latitude")+xlab("Longitude")
+
+year6<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=rxz6,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=rxy6,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="2005-2009")+ylab("Latitude")+xlab("Longitude")
+
+year7<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=rxz7,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=rxy7,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="2010-2014")+ylab("Latitude")+xlab("Longitude")
+
+year8<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=rxz8,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=rxy8,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="2015-2016")+ylab("Latitude")+xlab("Longitude")
+```
+
+```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=FALSE}
+ggarrange(year1,year2,year3,year4,nrow=2,ncol=2,common.legend=TRUE,legend="bottom")
+```
+
+```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=FALSE}
+ggarrange(year5,year6,year7,year8,ncol=2,nrow=2,common.legend=TRUE,legend="bottom")
 ```
 
 Now we'll move into the GAMs. The following code *is only necessary if the data were re-trimmed and new GAMs need to be run*. In this case, modify markdown document such that "{eval = TRUE}". The other model figures are marked as "eval = FALSE" if they, as of the last model run, do not produce the best model results. **Make sure to save the new models as RDS objects.** 
@@ -148,7 +319,7 @@ summary(vc.pheno)
 AIC(vc.pheno)
 ```
 
-The threshold geography model formulation (in which the geographic distribution of eggs vary differently above and below a threshold temperature of 2.29 degrees Celsius): 
+The threshold geography model formulation (in which the geographic distribution of eggs vary differently above and below a threshold temperature of 2.28 degrees Celsius): 
 *This is the best model to explain rex egg distribution as of 1/10/2022*
 ```{r,eval=FALSE,echo=FALSE}
 aic.geo<-NA*(temps.in)
@@ -218,14 +389,18 @@ temps.in<-readRDS("./GAM Models/rx_egg_temps_in.rds") #same for geo and pheno mo
 #aic.pheno<-readRDS("./GAM Models/rx_egg_aic_pheno_list.rds") 
 thr.pheno<-readRDS("./GAM Models/rx_egg_thr_pheno.rds")
 best.index.phe<-readRDS("./GAM Models/rx_egg_best_index_phe.rds")
-
-print(temps.in[[best.index.geo]])
 ```
 
 ```{r,echo=FALSE,eval=FALSE}
 summary(thr.pheno)
 AIC(thr.pheno)
 ```
+
+Best threshold temperature: 
+```{r,echo=FALSE}
+print(temps.in[[best.index.geo]])
+```
+
 
 ```{r, fig.width=6.5,fig.height=4.5,fig.fullwidth=TRUE,echo=FALSE,eval=FALSE}
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
@@ -264,7 +439,7 @@ legend("bottomleft",legend=c('Base','Threshold Pheno','Threshold Geo',
        lwd=3,lty=1,cex=0.75)
 ```
 
-This is the below threshold (2.29 deg C) and above threshold geographic distribution of Rex eggs. 
+This is the below threshold (2.28 deg C) and above threshold geographic distribution of Rex eggs. 
 ```{r, echo=FALSE}
 nlat=120
 nlon=120
@@ -298,18 +473,18 @@ grid.extent$pred2[grid.extent$dist>30000]<-NA
 ```{r,fig.height=10,fig.width=6,fig.align='center',echo=FALSE}
 par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
 image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=c(-180,-155),ylim=c(52,63),main='Rex Eggs, Below Threshold',
+           xlim=c(-180,-155),ylim=c(52,63),main='Below',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
            legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="gainsboro",add=T)
 
 image.plot(lond,latd,t(matrix(grid.extent$pred2,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=c(-180,-155),ylim=c(52,63),main='Rex Eggs, Above Threshold',
+           xlim=c(-180,-155),ylim=c(52,63),main='Above',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
            legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
@@ -317,8 +492,8 @@ map("worldHires",fill=T,col="gainsboro",add=T)
 ```
 
 ```{r, fig.fullwidth=TRUE,fig.align='center',echo=FALSE,fig.width=6,fig.height=4}
-par(oma=c(1,1,1,0.5))
-plot(thr.geo,select=1,main="Rex Egg Phenology (thr.geo model)",seWithMean=TRUE,shade=TRUE,
+par(oma=c(0.5,1,0.25,0.5))
+plot(thr.geo,select=1,main="",seWithMean=TRUE,shade=TRUE,
      shade.col="lightgrey",xlab="Day of Year",ylab="Day of Year Effect")
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 ```
@@ -376,13 +551,13 @@ grid.extent$neg.diff<-grid.extent$diff*grid.extent$sig.neg
 max.slope<-max(grid.extent$diff,na.rm=T)
 ```
 
-```{r,fig.align='center',fig.width=6.5,fig.height=5,fig.fullwidth=TRUE,echo=FALSE}
+```{r,fig.align='center',fig.width=5,fig.height=3.67,fig.fullwidth=TRUE,echo=FALSE}
 par(mai=c(1,1,0.5,0.5))
 image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
-           col=hcl.colors(100,"Lajolla",rev=T),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), 
-           xlim=range(lond),ylim=range(latd),main=expression(paste('Significant Change Across Threshold (2.29'^0,'C)')),
+           col=hcl.colors(100,"Lajolla"),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), 
+           xlim=c(-180,-155),ylim=c(52,63),main=expression(paste('Significant Change Across Threshold (2.29'^0,'C)')),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),
+           legend.lab=expression(paste("Change in CPUE Anomalies")),
            legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)#would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
 map("worldHires",fill=T,col="gainsboro",add=T)
@@ -399,3 +574,60 @@ df<-data.frame(stage,bestdiv,second)
 kable(df,col.names=c("","Best Divided By Base","Best Divided By Second Best"),
       caption="Model Power through AIC Comparisons, Alaska plaice",align='c')
 ```
+
+Reduction in MSE (%):  
+```{r,echo=FALSE}
+var.ratio.geo<-(summary(eg.base)$scale-summary(thr.geo)$scale)/summary(eg.base)$scale
+perc<-var.ratio.geo*100
+print(perc)
+```
+
+## Appendices: 
+
+The following two plots investigate the two distinct phenological peaks of rex sole eggs to evaluate spatial differences in distribution between the two peaks. 
+
+
+```{r,echo=FALSE}
+rxd1<-rxsub[rxsub$Cper10m2>0&rxsub$doy>164&rxsub$doy<176&rxsub$reg.SST<temps.in[[best.index.phe]],]
+rxd1$logcpue<-log(rxd1$Cper10m2+1)
+rxdz1<-rxsub[rxsub$Cper10m2==0&rxsub$doy>164&rxsub$doy<176&rxsub$reg.SST<temps.in[[best.index.phe]],]
+
+rxd2<-rxsub[rxsub$Cper10m2>0&rxsub$doy>189&rxsub$doy<201&rxsub$reg.SST>temps.in[[best.index.phe]],]
+rxd2$logcpue<-log(rxd2$Cper10m2+1)
+rxdz2<-rxsub[rxsub$Cper10m2==0&rxsub$doy>189&rxsub$doy<201&rxsub$reg.SST>temps.in[[best.index.phe]],]
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+set1<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=rxdz1,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=rxd1,aes(x=lon,y=lat,size=logcpue),
+                        fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  labs(title="Rex, DOY 165-175",
+       shape="Log (CPUE + 1)")+ylab("Latitude")+xlab("Longitude")
+
+set2<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=rxdz2,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=rxd2,aes(x=lon,y=lat,size=logcpue),
+                        fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  labs(title="DOY 190-200",
+       shape="Log (CPUE + 1)")+ylab("Latitude")+xlab("Longitude")
+```
+
+```{r,fig.fullwidth=T,fig.align='center',fig.width=8,fig.height=10,echo=F}
+ggarrange(set1,set2,common.legend=T,legend="bottom")
+```
+

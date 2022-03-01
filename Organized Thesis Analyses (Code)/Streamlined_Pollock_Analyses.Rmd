@@ -22,7 +22,12 @@ library(mgcv)
 library(colorRamps) 
 library(RColorBrewer)
 library(fields)
+library(dplyr)
 library(mapdata)
+library(ggplot2)
+library(ggmap)
+library(ggpubr)
+library(scales)
 source('./Organized Thesis Analyses (Code)/distance.function.R')
 source("./Organized Thesis Analyses (Code)/vis.gam_COLORS.R")
 source("./Organized Thesis Analyses (Code)/euclidean.distance.R")
@@ -49,7 +54,7 @@ str_name<-"./Environmental Data/expanded_BS_bathy.tif"
 bathy<-raster(str_name)
 ```
 
-These data have been trimmed. The egg data are constrained to depths between 54 and 221 meters; temporally, the egg data are constrained to above the 99th day of year and below the 160th day of the year (temporally centered on the spawning period of pollock). The egg data are constrained to latitudes between 54 and 62 degrees north and longitudes less than -175 degrees west. The egg data are also joined to regional temperature indices for each year (the reg.sst dataset). The larval data are constrained to latitudes between 53.5 and 61.5 degrees north and longitudes less than -175 degrees west. Larvae are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements and constrained to days of year between doy 90 and 165. 
+These data have been trimmed. The egg data are constrained to depths between 54 and 221 meters; temporally, the egg data are constrained to above the 99th day of year and below the 160th day of the year (temporally centered on the spawning period of pollock). The egg data are constrained to latitudes between 54 and 62 degrees north and longitudes less than -175 degrees west. The egg data are also joined to regional temperature indices for each year (the reg.sst dataset). The larval data are constrained to latitudes between 53.5 and 61.5 degrees north and longitudes less than -175 degrees west. Larvae are linked to CTD-derived, $in$ $situ$ temperature and salinity measurements and constrained to days of year between doy 90 and 159. 
 
 The regional temperature index data are constrained to (-180, -151) degrees W and (50.5, 67.5) degrees N and reflect the average March temperature for each year across that region. March temperatures are chosen to estimate the conditions spawning pollock may have experienced, roughly two months before the peak amount of eggs in the water column occurs.  
 
@@ -95,6 +100,260 @@ par(mfrow=c(1,2))
 hist(pklarv.ctd$doy[pklarv.ctd$Cper10m2>0],xlab="Day of Year",ylab="Positive Catch Frequencies",main="")
 hist(pklarv.ctd$year[pklarv.ctd$Cper10m2>0],xlab="Year",ylab="Positive Catch Frequencies",main="")
 ```
+The following plots show pollock egg and larval catch distributions (Catch per unit effort, or per 10m$^2$) across five year increments from 1979 to 2016. 
+
+```{r,echo=FALSE,eval=FALSE}
+pkysub<-pksub%>%mutate(yearbin=case_when(year<=1984~'1979-1984',
+                                         year<=1989&year>1984~'1985-1989',
+                                         year<=1994&year>1989~'1990-1994',
+                                         year<=1999&year>1994~'1995-1999',
+                                         year<=2004&year>1999~'2000-2004',
+                                         year<=2009&year>2004~'2005-2009',
+                                         year<=2014&year>2009~'2010-2014',
+                                         year<=2019&year>2014~'2015-2016'))
+pkypos<-pkysub[pkysub$Cper10m2>0,]
+pkyz<-pkysub[pkysub$Cper10m2==0,]
+pkypos$logcpue<-log(pkypos$Cper10m2+1)
+
+tmp1<-sort(unique(pkysub$yearbin))
+
+pky1<-pkypos[pkypos$yearbin==tmp1[[1]],]
+pkz1<-pkyz[pkyz$yearbin==tmp1[[1]],]
+
+pky2<-pkypos[pkypos$yearbin==tmp1[[2]],]
+pkz2<-pkyz[pkyz$yearbin==tmp1[[2]],]
+
+pky3<-pkypos[pkypos$yearbin==tmp1[[3]],]
+pkz3<-pkyz[pkyz$yearbin==tmp1[[3]],]
+
+pky4<-pkypos[pkypos$yearbin==tmp1[[4]],]
+pkz4<-pkyz[pkyz$yearbin==tmp1[[4]],]
+
+pky5<-pkypos[pkypos$yearbin==tmp1[[5]],]
+pkz5<-pkyz[pkyz$yearbin==tmp1[[5]],]
+
+pky6<-pkypos[pkypos$yearbin==tmp1[[6]],]
+pkz6<-pkyz[pkyz$yearbin==tmp1[[6]],]
+
+pky7<-pkypos[pkypos$yearbin==tmp1[[7]],]
+pkz7<-pkyz[pkyz$yearbin==tmp1[[7]],]
+
+pky8<-pkypos[pkypos$yearbin==tmp1[[8]],]
+pkz8<-pkyz[pkyz$yearbin==tmp1[[8]],]
+
+bathybath<-as.bathy(bathy)
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,eval=FALSE}
+year1<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=pkz1,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=pky1,aes(x=lon,y=lat,size=logcpue),
+                        fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  labs(title="Pollock Eggs, 1979-1984",shape="Log (CPUE + 1)")+ylab("Latitude")+xlab("Longitude")
+
+year2<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=pkz2,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=pky2,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="1985-1989")+ylab("Latitude")+xlab("Longitude")
+
+year3<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=pkz3,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=pky3,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="1990-1994")+ylab("Latitude")+xlab("Longitude")
+
+year4<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=pkz4,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=pky4,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="1995-1999")+ylab("Latitude")+xlab("Longitude")
+
+year5<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=pkz5,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=pky5,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="2000-2004")+ylab("Latitude")+xlab("Longitude")
+
+year6<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=pkz6,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=pky6,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="2005-2009")+ylab("Latitude")+xlab("Longitude")
+
+year7<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=pkz7,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=pky7,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="2010-2014")+ylab("Latitude")+xlab("Longitude")
+
+year8<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=pkz8,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=pky8,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="2015-2016")+ylab("Latitude")+xlab("Longitude")
+```
+
+
+```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=FALSE}
+ggarrange(year1,year2,year3,year4,nrow=2,ncol=2,common.legend=TRUE,legend="bottom")
+```
+
+```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=FALSE}
+ggarrange(year5,year6,year7,year8,ncol=2,nrow=2,common.legend=TRUE,legend="bottom")
+```
+
+
+```{r,echo=FALSE,eval=FALSE}
+pkylarv<-pklarv.ctd%>%mutate(yearbin=case_when(year<=2002~'1997-2002',
+                                               year<=2007&year>2002~'2003-2007',
+                                               year<=2012&year>2007~'2008-2012',
+                                               year<=2017&year>2012~'2013-2016'))
+
+pkylpos<-pkylarv[pkylarv$Cper10m2>0,]
+pkylpos$logcpue<-log(pkylpos$Cper10m2+1)
+pkylz<-pkylarv[pkylarv$Cper10m2==0,]
+
+tmp2<-sort(unique(pkylarv$yearbin))
+
+pkyl1<-pkylpos[pkylpos$yearbin==tmp2[[1]],]
+pkylz1<-pkylz[pkylz$yearbin==tmp2[[1]],]
+
+pkyl2<-pkylpos[pkylpos$yearbin==tmp2[[2]],]
+pkylz2<-pkylz[pkylz$yearbin==tmp2[[2]],]
+
+pkyl3<-pkylpos[pkylpos$yearbin==tmp2[[3]],]
+pkylz3<-pkylz[pkylz$yearbin==tmp2[[3]],]
+
+pkyl4<-pkylpos[pkylpos$yearbin==tmp2[[4]],]
+pkylz4<-pkylz[pkylz$yearbin==tmp2[[4]],]
+```
+
+
+```{r,echo=FALSE,warning=FALSE,eval=FALSE}
+yearl1<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=pkylz1,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=pkyl1,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE+1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="Pollock Larvae, 1997-2002")+ylab("Latitude")+xlab("Longitude")
+
+yearl2<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=pkylz2,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=pkyl2,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE+1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="2003-2007")+ylab("Latitude")+xlab("Longitude")
+
+yearl3<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=pkylz3,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=pkyl3,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE+1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="2008-2012")+ylab("Latitude")+xlab("Longitude")
+
+yearl4<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=pkylz4,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=pkyl4,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE+1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  labs(title="2013-2016")+ylab("Latitude")+xlab("Longitude")
+```
+
+```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=FALSE}
+ggarrange(yearl1,yearl2,yearl3,yearl4,ncol=2,nrow=2,common.legend=TRUE,legend="bottom")
+```
 
 Now we'll move into the GAMs. The following code *is only necessary if the data were re-trimmed and new GAMs need to be run*. In this case, modify markdown document such that "{eval = TRUE}". The other model figures are marked as "eval = FALSE" if they, as of the last model run, do not produce the best model results. **Make sure to save the new models as RDS objects.** 
 
@@ -131,7 +390,7 @@ vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
 par(mfrow=c(1,2))
 plot(vc.geo,select=1,scheme=2,too.far=0.025,shade=FALSE,
      seWithMean=TRUE,xlab='Longitude',ylab='Latitude',
-     main='V-C FH Egg Flex Geo, Avg. Variation')
+     main='V-C pk Egg Flex Geo, Avg. Variation')
 map("world",fill=T,col="snow4",add=T)
 plot(vc.geo,select=4,scheme=2,too.far=0.025,shade=FALSE,
      xlab='Longitude',ylab='Latitude',seWithMean=TRUE,
@@ -179,8 +438,8 @@ thr.geo<-as.list(1:(length(temps.in)))
 
 for(i in 1:length(temps.in)){
   pksub$th<-factor(pksub$reg.SST<=temps.in[i])
-  thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+s(bottom_depth,k=5)+
-                      s(lon,lat,by=th),data=pksub,
+  thr.geo[[i]]<-gam((Cper10m2+1)~factor(year)+s(doy)+
+                      s(bottom_depth,k=5)+s(lon,lat,by=th),data=pksub,
                     family=tw(link='log'),method='REML')
   aic.geo[i]<-AIC(thr.geo[[i]])
 }
@@ -316,20 +575,20 @@ grid.extent$pred2[grid.extent$dist>30000]<-NA
 ```
 
 ```{r, fig.fullwidth=TRUE,fig.align='center',echo=FALSE,fig.width=6,fig.height=10}
-par(mfrow=c(1,2),mai=c(1,1,0.5,0.9),mfrow=c(2,1))
+par(mfrow=c(2,1),mai=c(1,1,0.5,0.9))
 image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=c(-180,-155),ylim=c(52,63),main='Pollock Eggs, Below Threshold',
+           xlim=c(-180,-155),ylim=c(52,63),main='Below',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
            legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("world",fill=T,col="gainsboro",add=T)
 
-image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+image.plot(lond,latd,t(matrix(grid.extent$pred2,nrow=length(latd),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=c(-180,-155),ylim=c(52,63),main='Pollock Eggs, Above Threshold',
+           xlim=c(-180,-155),ylim=c(52,63),main='Above',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
            legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
@@ -337,8 +596,8 @@ map("world",fill=T,col="gainsboro",add=T)
 ```
 
 ```{r, fig.fullwidth=TRUE,fig.align='center',echo=FALSE,fig.width=6,fig.height=4}
-par(oma=c(1,1,1,0.5))
-plot(thr.geo,select=1,main="Pollock Egg Phenology (thr.geo model)",seWithMean=TRUE,shade=TRUE,
+par(oma=c(0.5,1,0.25,0.5))
+plot(thr.geo,select=1,main="",seWithMean=TRUE,shade=TRUE,
      shade.col="lightgrey",xlab="Day of Year",ylab="Day of Year Effect")
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 ```
@@ -410,16 +669,23 @@ max.slope<-max(grid.extent$diff,na.rm=T)
 symcol<-adjustcolor("grey28",alpha=0.5)
 ```
 
-```{r,fig.align='center',fig.width=6.5,fig.height=4.5,fig.fullwidth=TRUE,echo=FALSE}
+```{r,fig.align='center',fig.width=5,fig.height=3.67,fig.fullwidth=TRUE,echo=FALSE}
 par(mai=c(1,1,0.5,0.5))
 image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
-           col=hcl.colors(100,"Lajolla", rev=TRUE),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), 
-           xlim=c(-180,-155),ylim=c(52,63),main=expression(paste('Significant Change Across Threshold (1.08'^0,'C)')),
+           col=hcl.colors(100,"Lajolla"),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), 
+           xlim=c(-180,-155),ylim=c(52,63),main=expression(paste('')),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),
+           legend.lab="Change in CPUE Anomalies",
            legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col=symcol,add=T)#would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
 map("worldHires",fill=T,col="gainsboro",add=T)
+```
+
+Reduction in MSE (%):  
+```{r,echo=FALSE}
+var.ratio.geo<-(summary(eg.base)$scale-summary(thr.geo)$scale)/summary(eg.base)$scale
+perc<-var.ratio.geo*100
+print(perc)
 ```
 
 ## Larval Generalized Additive Models: 
@@ -427,7 +693,7 @@ The following code *is only necessary if the data were re-trimmed and new GAMs n
 do not produce the best model results. These models are produced using conductivity-temperature-depth derived temperature and salinity measurements. 
 
 We begin with the base larval model: 
-```{r,eval=T,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.base<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                s(bottom_depth,k=5),
              data=pklarv.ctd,family=tw(link='log'),method='REML')
@@ -441,7 +707,7 @@ summary(lv.base)
 AIC(lv.base)
 ```
 
-```{r,eval=T,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                   s(bottom_depth,k=5)+
                   s(salinity),data=pklarv.ctd,family=tw(link='log'),
@@ -450,12 +716,12 @@ lv.add.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
 saveRDS(lv.add.sal,file="./GAM Models/pk_larvae_addsal.rds")
 ```
 
-```{r,echo=T,include=FALSE}
+```{r,echo=F,include=FALSE}
 lv.add.sal<-readRDS("./GAM Models/pk_larvae_addsal.rds")
 summary(lv.add.sal)
 ```
 
-```{r,eval=T,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.add.temp<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature),data=pklarv.ctd,family=tw(link='log'),
@@ -470,7 +736,7 @@ summary(lv.add.temp)
 ```
 
 Then additive temperature and salinity, in individual additive terms. This is the second-best performing model. 
-```{r,eval=T,echo=FALSE}
+```{r,eval=F,echo=FALSE}
 lv.temp.sal<-gam((Cper10m2+1)~factor(year)+s(doy,k=7)+s(lon,lat)+
                    s(bottom_depth,k=5)+
                    s(temperature)+s(salinity),data=pklarv.ctd,
@@ -488,7 +754,7 @@ AIC(lv.temp.sal)
 And finally, the best performing model: the bivariate salinity-temperature additive term: 
 ```{r,eval=T,echo=FALSE}
 lv.2d<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy,k=7)+s(bottom_depth)+
-             s(salinity,temperature),data=pklarv.ctd,family=tw(link='log'),
+             te(salinity,temperature),data=pklarv.ctd,family=tw(link='log'),
            method='REML')
 
 saveRDS(lv.2d,file="./GAM Models/pk_larvae_2d.rds")
@@ -530,7 +796,7 @@ grid.extent$pred[grid.extent$dist>30000]<-NA
 ```{r,fig.align='center',fig.fullwidth=TRUE,fig.width=6.5,fig.height=10,echo=FALSE}
 par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
 image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=c(-180,-155),ylim=c(52,63),
            main='Predicted Larval Biogeography, 2D Model',
@@ -540,7 +806,7 @@ contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="gainsboro",add=T)
 
 image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
-                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla",rev=T),
+                              ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=c(-180,-155),ylim=c(52,63),
            main='Predicted Larval Biogeography, 2D Model',
@@ -556,9 +822,9 @@ points(pklarv.ctd$lon[pklarv.ctd$Cper10m2>0],
 map("worldHires",fill=T,col="gainsboro",add=T)
 ```
 
-```{r,fig.align='center',fig.fullwidth=TRUE,fig.width=5,fig.height=5,echo=FALSE}
-par(mai=c(1,1,0.5,0.9))
-plot(lv.2d,select=2,main="Larval Phenology (2D model)",xlab="Day of Year",
+```{r,fig.align='center',fig.fullwidth=TRUE,fig.width=6,fig.height=4,echo=FALSE}
+par(mai=c(1,1,1,0.5))
+plot(lv.2d,select=2,main="Larval Phenology",xlab="Day of Year",
      ylab="Day of Year Effect",seWithMean=TRUE,shade=T,shade.col="lightgrey")
 abline(h=0,lty=2,lwd=1.3,col="mistyrose4")
 ```
@@ -592,10 +858,10 @@ grid.extent$pred<-predict(lv.2d,newdata=grid.extent)
 grid.extent$pred[grid.extent$dist>mean(grid.extent$dist)]<-NA
 ```
 
-```{r,echo=FALSE,fig.align='center',fig.width=6.5,fig.height=5,fig.fullwidth=TRUE}
-par(mai=c(1,1,0.5,0.9))
+```{r,echo=FALSE,fig.align='center',fig.width=6.5,fig.height=10,fig.fullwidth=TRUE}
+par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
 image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
-           col=hcl.colors(100,"Lajolla",rev=TRUE),xlab='Salinity (psu)',
+           col=hcl.colors(100,"Lajolla"),xlab='Salinity (psu)',
            ylab=expression(paste("Temperature ("^0, 'C)')),
            xlim=range(pklarv.ctd$salinity,na.rm=T),ylim=range(pklarv.ctd$temperature,na.rm=T),
            main='Larval Biogeography By Temperature and Salinity',
@@ -607,6 +873,14 @@ symbols(pklarv.ctd$salinity[pklarv.ctd$Cper10m2>0],
         inches=0.1,bg=symcol,fg='black',add=T)
 points(pklarv.ctd$salinity[pklarv.ctd$Cper10m2>0],
         pklarv.ctd$temperature[pklarv.ctd$Cper10m2>0],pch="+",col="white")
+
+image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
+           col=hcl.colors(100,"Lajolla"),xlab='Salinity (psu)',
+           ylab=expression(paste("Temperature ("^0, 'C)')),
+           xlim=range(pklarv.ctd$salinity,na.rm=T),ylim=range(pklarv.ctd$temperature,na.rm=T),
+           main='Larval Biogeography By Temperature and Salinity',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 ```
 
 
