@@ -64,7 +64,7 @@ yftden<-density(yflarv.ctd$temperature,
 
 ```{r,echo=FALSE,fig.width=7,fig.height=8,fig.align='center'}
 plot(aptden,type="o",lty=1,lwd=0.75,pch=19,col="steelblue4",xlab='Temperature (*C)',ylab='Density Estimation',
-     main="Larvae Temperature KDE",xlim=c(-3,14),cex=0.8)
+     main="Temperature",xlim=c(-3,14),cex=0.8)
 lines(fhtden,type="o",lty=2,lwd=0.75,pch=8,col="orange",cex=0.8)
 lines(pctden,type="o",lty=3,lwd=0.75,pch=18,col="darkolivegreen3",cex=0.8)
 lines(pktden,type="o",lty=4,lwd=0.75,pch=15,col="mediumpurple1",cex=0.8)
@@ -95,7 +95,7 @@ yfsden<-density(yflarv.ctd$salinity,
 
 ```{r,echo=FALSE,fig.width=7,fig.height=8,fig.align='center'}
 plot(apsden,type="o",lty=1,lwd=0.75,pch=19,col="steelblue4",xlab='Salinity (psu)',ylab='Density Estimation',
-     main="Larvae Salinity KDE",ylim=c(0,2),cex=0.8)
+     main="Salinity",ylim=c(0,2),cex=0.8)
 lines(fhsden,type="o",lty=2,lwd=0.75,pch=8,col="orange",cex=0.8)
 lines(pcsden,type="o",lty=3,lwd=0.75,pch=18,col="darkolivegreen3",cex=0.8)
 lines(pksden,type="o",lty=4,lwd=0.75,pch=15,col="mediumpurple1",cex=0.8)

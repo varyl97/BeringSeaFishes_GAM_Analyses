@@ -88,85 +88,25 @@ yfylarv<-yflarv.ctd%>%mutate(yearbin=case_when(year<=2002~'1997-2002',
 yfylpos<-yfylarv[yfylarv$Cper10m2>0,]
 yfylpos$logcpue<-log(yfylpos$Cper10m2+1)
 yfylz<-yfylarv[yfylarv$Cper10m2==0,]
-
-tmp2<-sort(unique(yfylarv$yearbin))
-
-yfyl1<-yfylpos[yfylpos$yearbin==tmp2[[1]],]
-yfylz1<-yfylz[yfylz$yearbin==tmp2[[1]],]
-
-yfyl2<-yfylpos[yfylpos$yearbin==tmp2[[2]],]
-yfylz2<-yfylz[yfylz$yearbin==tmp2[[2]],]
-
-yfyl3<-yfylpos[yfylpos$yearbin==tmp2[[3]],]
-yfylz3<-yfylz[yfylz$yearbin==tmp2[[3]],]
-
-yfyl4<-yfylpos[yfylpos$yearbin==tmp2[[4]],]
-yfylz4<-yfylz[yfylz$yearbin==tmp2[[4]],]
 ```
 
-
-```{r,echo=FALSE,warning=FALSE}
-yearl1<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=yfylz1,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=yfyl1,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE+1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="Yellowfin Sole Larvae, 1997-2002")+ylab("Latitude")+xlab("Longitude")
-
-yearl2<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=yfylz2,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=yfyl2,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE+1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="2003-2007")+ylab("Latitude")+xlab("Longitude")
-
-yearl3<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=yfylz3,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=yfyl3,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE+1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="2008-2012")+ylab("Latitude")+xlab("Longitude")
-
-yearl4<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=yfylz4,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=yfyl4,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE+1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="2013-2016")+ylab("Latitude")+xlab("Longitude")
-```
 
 ```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE}
-ggarrange(yearl1,yearl2,yearl3,yearl4,ncol=2,nrow=2,common.legend=TRUE,legend="bottom")
+autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+  scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
+                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
+  geom_point(data=yfylz,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=yfylpos,aes(x=lon,y=lat,size=logcpue),
+                               fill="#993300",shape=21,alpha=0.8)+
+  scale_size_continuous("Log (CPUE+1)",range=c(0,9),breaks=pretty_breaks(9))+
+  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position="bottom",legend.direction="horizontal",
+        legend.text=element_text(size=8))+
+  scale_shape_manual(values=('No Catch'=8))+
+  facet_wrap(~yearbin)+
+  labs(title="Yellowfin Sole Larvae")+ylab("Latitude")+xlab("Longitude")
 ```
-
 
 ## Larval Generalized Additive Models: 
 
@@ -347,9 +287,11 @@ image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(s
            col=hcl.colors(100,"Lajolla"),xlab='Salinity (psu)',
            ylab=expression(paste("Temperature ("^0, 'C)')),
            xlim=range(yflarv.ctd$salinity,na.rm=T),ylim=range(yflarv.ctd$temperature,na.rm=T),
-           main='Larval Biogeography By Temperature and Salinity',
+           main='',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("(log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+contour(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
+        levels=c(2.2,2.8),col='white',add=T)
 
 image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
            col=hcl.colors(100,"Lajolla"),xlab='Salinity (psu)',
@@ -366,6 +308,52 @@ points(yflarv.ctd$salinity[yflarv.ctd$Cper10m2==0],
         yflarv.ctd$temperature[yflarv.ctd$Cper10m2==0],pch="+",col="white")
 ```
 
+Now I'll calculate a specific range of temperature, salinity, and both temperature and salinity to evaluate breadth of environmental tolerances. 
+
+```{r,echo=FALSE}
+grid.extent<-grid.extent[!is.na(grid.extent$pred),] #remove NAs to get proper percentage of predictions
+
+clip<-as.numeric(0.6*dim(grid.extent)[[1]]) #define nrows = to 60% of prediction grid 
+
+grid.sort<-grid.extent%>%arrange(desc(pred))
+
+grid.clip<-grid.sort%>%slice_head(n=clip) #clip top 70% of prediction grid 
+head(grid.clip)
+
+write.csv(grid.clip,'./Ichthyo Data/Yfs_larv_clip_60.csv')
+```
+
+```{r,echo=FALSE,fig.align='center',fig.width=8,fig.height=6,fig.fullwidth=TRUE}
+temp<-ggplot(grid.extent,aes(x=temperature,y=pred))+geom_point()+geom_smooth(method="loess")+
+  theme_bw()+theme(axis.text.x=element_text(angle=45,hjust=1))+
+  labs(title="Predictions vs. Temperature",x='Temperature',y='Prediction')+
+  scale_x_continuous(breaks=round(seq(min(grid.extent$temperature),max(grid.extent$temperature),by=0.75),1))
+
+sal<-ggplot(grid.extent,aes(x=salinity,y=pred))+geom_point()+geom_smooth(method="loess")+
+  theme_bw()+labs(title="Predictions vs. Salinity",x='Salinity',y='Prediction')+
+  scale_x_continuous(breaks=round(seq(min(grid.extent$salinity),max(grid.extent$salinity),by=0.5),1))
+
+par(mai=c(1,1,0.5,0.9))
+ggarrange(temp,sal)
+```
+
+```{r,echo=FALSE,fig.align='center',fig.width=9,fig.height=6,fig.fullwidth=TRUE}
+temp1<-ggplot(grid.extent,aes(x=temperature,y=pred))+geom_bin2d(bins=60)+
+  theme_bw()+theme(axis.text.x=element_text(angle=45,hjust=1.2))+
+  labs(title="Predictions vs. Temperature",x='Temperature',y='Prediction')+
+  scale_fill_continuous(type='viridis')+
+  scale_x_continuous(breaks=round(seq(min(grid.extent$temperature),max(grid.extent$temperature),by=0.75),1))
+
+sal1<-ggplot(grid.extent,aes(x=salinity,y=pred))+geom_bin2d(bins=60)+
+  theme_bw()+
+  labs(title="Predictions vs. Salinity",x='Salinity',y='Prediction')+
+  scale_fill_continuous(type='viridis')+
+  scale_x_continuous(breaks=round(seq(min(grid.extent$salinity),max(grid.extent$salinity),by=0.5),1))
+
+par(mai=c(1,1,0.5,0.9))
+ggarrange(temp1,sal1)
+```
+
 
 To again share the improvements of the best performing models from the base models, we can look at the AIC division produces. 
 ```{r,echo=FALSE}
@@ -377,3 +365,11 @@ df<-data.frame(stage,bestdiv,second)
 kable(df,col.names=c("","Best Divided By Base","Best Divided By Second Best"),
       caption="Model Power through AIC Comparisons, Yellowfin Sole",align='c')
 ```
+
+Reduction in MSE (%):  
+```{r,echo=FALSE}
+var.ratio.lv<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
+perc<-var.ratio.lv*100
+print(perc)
+```
+

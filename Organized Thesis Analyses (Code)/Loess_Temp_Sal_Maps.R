@@ -281,16 +281,25 @@ contour(lond,latd,sst.pred,levels=c(-1.5),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
 
-## Spring months iteration: Apr - May - June: 
+###### Spring & Summer months iteration: Apr - May - June - July: 
 #years: 1997, 2000, 2002, 2005-2017 
 #sea surface temperature: 
 
-muctd<-muCTD
+muctd<-read.csv(file="./Environmental Data/Split_CTD_MeanTopTempSal.csv",
+                header=T,check.names=T)
 head(muctd)
-spring<-muctd[muctd$Month>3&muctd$Month<7,]
+muctd$Month<-str_sub(muctd$Date,start=1,end=1)
+
+#for plotting: 
+str_name<-"./Environmental Data/expanded_BS_bathy.tif"
+bathy<-raster(str_name)
+bathybath<-as.bathy(bathy)
+
+
+sprsum<-muctd[muctd$Month>3&muctd$Month<8,]
 
 #1997
-spr97<-spring[spring$Year==1997,] 
+spr97<-sprsum[sprsum$Year==1997,] 
 spr97<-spr97[!is.na(spr97$mean_temp),]
 
 zlim<-range(spr97$mean_temp,na.rm=T)
@@ -309,22 +318,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 1997',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='1997',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey73',add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
-
+mtext("SST (*C)",side=4,line=0.75)
 
 #2000
-spr00<-spring[spring$Year==2000,] 
+spr00<-sprsum[sprsum$Year==2000,] 
 spr00<-spr00[!is.na(spr00$mean_temp),]
 
 zlim<-range(spr00$mean_temp,na.rm=T)
@@ -343,22 +353,24 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2000',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2000',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col="grey73",add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 
 #2002
-spr02<-spring[spring$Year==2002,] 
+spr02<-sprsum[sprsum$Year==2002,] 
 spr02<-spr02[!is.na(spr02$mean_temp),]
 
 zlim<-range(spr02$mean_temp,na.rm=T)
@@ -377,21 +389,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2002',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2002',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),col="grey73",add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 #2005
-spr05<-spring[spring$Year==2005,] 
+spr05<-sprsum[sprsum$Year==2005,] 
 spr05<-spr05[!is.na(spr05$mean_temp),]
 
 zlim<-range(spr05$mean_temp,na.rm=T)
@@ -410,21 +424,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2005',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2005',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col="grey73",add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 #2006
-spr06<-spring[spring$Year==2006,] 
+spr06<-sprsum[sprsum$Year==2006,] 
 spr06<-spr06[!is.na(spr06$mean_temp),]
 
 zlim<-range(spr06$mean_temp,na.rm=T)
@@ -443,21 +459,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2006',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2006',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey73',add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 #2007
-spr07<-spring[spring$Year==2007,] 
+spr07<-sprsum[sprsum$Year==2007,] 
 spr07<-spr07[!is.na(spr07$mean_temp),]
 
 zlim<-range(spr07$mean_temp,na.rm=T)
@@ -476,21 +494,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2007',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2007',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col="grey73",add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 #2008
-spr08<-spring[spring$Year==2008,] 
+spr08<-sprsum[sprsum$Year==2008,] 
 spr08<-spr08[!is.na(spr08$mean_temp),]
 
 zlim<-range(spr08$mean_temp,na.rm=T)
@@ -509,21 +529,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2008',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2008',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey73',add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 #2009
-spr09<-spring[spring$Year==2009,] #had most observations
+spr09<-sprsum[sprsum$Year==2009,] #had most observations
 spr09<-spr09[!is.na(spr09$mean_temp),]
 
 zlim<-range(spr09$mean_temp,na.rm=T)
@@ -542,21 +564,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2009',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2009',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey73',add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 #2010
-spr10<-spring[spring$Year==2010,] #had most observations
+spr10<-sprsum[sprsum$Year==2010,] #had most observations
 spr10<-spr10[!is.na(spr10$mean_temp),]
 
 zlim<-range(spr10$mean_temp,na.rm=T)
@@ -575,21 +599,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2010',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2010',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey73',add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 #2011
-spr11<-spring[spring$Year==2011,] #had most observations
+spr11<-sprsum[sprsum$Year==2011,] #had most observations
 spr11<-spr11[!is.na(spr11$mean_temp),]
 
 zlim<-range(spr11$mean_temp,na.rm=T)
@@ -608,21 +634,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2011',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2011',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey73',add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 #2012
-spr12<-spring[spring$Year==2012,] #had most observations
+spr12<-sprsum[sprsum$Year==2012,] #had most observations
 spr12<-spr12[!is.na(spr12$mean_temp),]
 
 zlim<-range(spr12$mean_temp,na.rm=T)
@@ -641,21 +669,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2012',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2012',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey73',add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 #2013
-spr13<-spring[spring$Year==2013,] #had most observations
+spr13<-sprsum[sprsum$Year==2013,] #had most observations
 spr13<-spr13[!is.na(spr13$mean_temp),]
 
 zlim<-range(spr13$mean_temp,na.rm=T)
@@ -674,22 +704,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2013',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2013',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey73',add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
-
+mtext("SST (*C)",side=4,line=0.75)
 
 #2014
-spr14<-spring[spring$Year==2014,] 
+spr14<-sprsum[sprsum$Year==2014,] 
 spr14<-spr14[!is.na(spr14$mean_temp),]
 
 zlim<-range(spr14$mean_temp,na.rm=T)
@@ -708,21 +739,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2014',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2014',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey73',add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 #2015
-spr15<-spring[spring$Year==2015,] #had most observations
+spr15<-sprsum[sprsum$Year==2015,] #had most observations
 spr15<-spr15[!is.na(spr15$mean_temp),]
 
 zlim<-range(spr15$mean_temp,na.rm=T)
@@ -741,21 +774,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2015',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2015',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey73',add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 #2016
-spr16<-spring[spring$Year==2016,] 
+spr16<-sprsum[sprsum$Year==2016,] 
 spr16<-spr16[!is.na(spr16$mean_temp),]
 
 zlim<-range(spr16$mean_temp,na.rm=T)
@@ -774,21 +809,23 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2016',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2016',
       xlim=c(-180,-155),ylim=c(52,63))
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey73',add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 #2017
-spr17<-spring[spring$Year==2017,] #had most observations
+spr17<-sprsum[sprsum$Year==2017,] #had most observations
 spr17<-spr17[!is.na(spr17$mean_temp),]
 
 zlim<-range(spr17$mean_temp,na.rm=T)
@@ -807,28 +844,30 @@ for(j in 1:nrow(predict.grid)){
 
 sst.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2017',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2017',
       xlim=c(-180,-155),ylim=c(60,70))
+contour(bathy,levels=-c(50,200),labcex=0.4,col='grey73',add=T)
 contour(lond,latd,sst.pred,levels=c(0),add=T,lwd=2)
 contour(lond,latd,sst.pred,levels=c(3),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"Viridis"),
            legend.shrink=0.3,legend.width=1)
+mtext("SST (*C)",side=4,line=0.75)
 
 ### Mean Salinity: 
 
 #years: 1997, 2000, 2002, 2005-2017 
 muctd<-muCTD
 head(muctd)
-spring<-muctd[muctd$Month>3&muctd$Month<7,]
+sprsum<-muctd[muctd$Month>3&muctd$Month<8,]
 
 #1997
-spr97<-spring[spring$Year==1997,] 
+spr97<-sprsum[sprsum$Year==1997,] 
 spr97<-spr97[!is.na(spr97$mean_sal),]
 
 zlim<-range(spr97$mean_sal,na.rm=T)
@@ -847,21 +886,21 @@ for(j in 1:nrow(predict.grid)){
 
 sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 1997',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='1997',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
-
+mtext("SSS (psu)",side=4,line=1.25)
 
 #2000
-spr00<-spring[spring$Year==2000,] 
+spr00<-sprsum[sprsum$Year==2000,] 
 spr00<-spr00[!is.na(spr00$mean_sal),]
 
 zlim<-range(spr00$mean_sal,na.rm=T)
@@ -880,21 +919,21 @@ for(j in 1:nrow(predict.grid)){
 
 sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2000',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2000',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
-
+mtext("SSS (psu)",side=4,line=1.25)
 
 #2002
-spr02<-spring[spring$Year==2002,] 
+spr02<-sprsum[sprsum$Year==2002,] 
 spr02<-spr02[!is.na(spr02$mean_sal),]
 
 zlim<-range(spr02$mean_sal,na.rm=T)
@@ -913,20 +952,21 @@ for(j in 1:nrow(predict.grid)){
 
 sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2002',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2002',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
+mtext("SSS (psu)",side=4,line=1.25)
 
 #2005
-spr05<-spring[spring$Year==2005,] 
+spr05<-sprsum[sprsum$Year==2005,] 
 spr05<-spr05[!is.na(spr05$mean_sal),]
 
 zlim<-range(spr05$mean_sal,na.rm=T)
@@ -945,20 +985,21 @@ for(j in 1:nrow(predict.grid)){
 
 sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2005',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2005',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
+mtext("SSS (psu)",side=4,line=1.25)
 
 #2006
-spr06<-spring[spring$Year==2006,] 
+spr06<-sprsum[sprsum$Year==2006,] 
 spr06<-spr06[!is.na(spr06$mean_sal),]
 
 zlim<-range(spr06$mean_sal,na.rm=T)
@@ -978,19 +1019,20 @@ for(j in 1:nrow(predict.grid)){
 sss.pred<-predict(loess,newdata=predict.grid)
 
 windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2006',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2006',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
+mtext("SSS (psu)",side=4,line=1.25)
 
 #2007
-spr07<-spring[spring$Year==2007,] 
+spr07<-sprsum[sprsum$Year==2007,] 
 spr07<-spr07[!is.na(spr07$mean_sal),]
 
 zlim<-range(spr07$mean_sal,na.rm=T)
@@ -1009,52 +1051,54 @@ for(j in 1:nrow(predict.grid)){
 
 sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2007',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2007',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
+mtext("SSS (psu)",side=4,line=1.25)
 
-#2008
-spr08<-spring[spring$Year==2008,] 
-spr08<-spr08[!is.na(spr08$mean_sal),]
+#2008 - didn't give anything useful... lack of data
+#spr08<-sprsum[sprsum$Year==2008,] 
+#spr08<-spr08[!is.na(spr08$mean_sal),]
 
-zlim<-range(spr08$mean_sal,na.rm=T)
+#zlim<-range(spr08$mean_sal,na.rm=T)
 
-loess<-loess(mean_sal~Longitude*Latitude,data=spr08,span=0.35,degree=2)
-lond<-seq(min(spr08$Longitude,na.rm=T),max(spr08$Longitude,na.rm=T),length=100)
-latd<-seq(min(spr08$Latitude,na.rm=T),max(spr08$Latitude,na.rm=T),length=100)
-predict.grid<-expand.grid(lond,latd)
-names(predict.grid)<-c("Longitude","Latitude")
+#loess<-loess(mean_sal~Longitude*Latitude,data=spr08,span=0.35,degree=2)
+#lond<-seq(min(spr08$Longitude,na.rm=T),max(spr08$Longitude,na.rm=T),length=100)
+#latd<-seq(min(spr08$Latitude,na.rm=T),max(spr08$Latitude,na.rm=T),length=100)
+#predict.grid<-expand.grid(lond,latd)
+#names(predict.grid)<-c("Longitude","Latitude")
 
-for(j in 1:nrow(predict.grid)){
-  predict.grid$dist<-min(distance.function(predict.grid$Latitude[j],
-                                           predict.grid$Longitude[j],
-                                           spr08$Latitude[j],
-                                           spr08$Longitude[j]))}
+#for(j in 1:nrow(predict.grid)){
+ # predict.grid$dist<-min(distance.function(predict.grid$Latitude[j],
+                #                           predict.grid$Longitude[j],
+                #                           spr08$Latitude[j],
+                #                           spr08$Longitude[j]))}
 
-sss.pred<-predict(loess,newdata=predict.grid)
+#sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
-image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
-      ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2008',
-      xlim=c(-180,-155),ylim=c(52,63))
-contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
-map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
-image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
-           legend.shrink=0.3,legend.width=1)
+#windows(width=6,height=5)
+#par(oma=c(1,1,1,4))
+#image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
+ #     ylab=expression(paste("Latitude ("^0,'N)')),
+  #    xlab=expression(paste("Longitude ("^0,'E)')),main='2008',
+   #   xlim=c(-180,-155),ylim=c(52,63))
+#contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
+#map("worldHires",fill=T,col="gainsboro",add=T)
+#par(oma=c(1,1,1,1.5))
+#image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
+ #          legend.shrink=0.3,legend.width=1)
+#mtext("SSS (psu)",side=4,line=1.25)
 
 #2009
-spr09<-spring[spring$Year==2009,] #had most observations
+spr09<-sprsum[sprsum$Year==2009,] #had most observations
 spr09<-spr09[!is.na(spr09$mean_sal),]
 
 zlim<-range(spr09$mean_sal,na.rm=T)
@@ -1073,20 +1117,21 @@ for(j in 1:nrow(predict.grid)){
 
 sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2009',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2009',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
+mtext("SSS (psu)",line=1.25,side=4)
 
 #2010
-spr10<-spring[spring$Year==2010,] #had most observations
+spr10<-sprsum[sprsum$Year==2010,] #had most observations
 spr10<-spr10[!is.na(spr10$mean_sal),]
 
 zlim<-range(spr10$mean_sal,na.rm=T)
@@ -1105,20 +1150,21 @@ for(j in 1:nrow(predict.grid)){
 
 sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2010',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2010',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
+mtext("SSS (psu)",side=4,line=1.25)
 
 #2011
-spr11<-spring[spring$Year==2011,] #had most observations
+spr11<-sprsum[sprsum$Year==2011,] #had most observations
 spr11<-spr11[!is.na(spr11$mean_sal),]
 
 zlim<-range(spr11$mean_sal,na.rm=T)
@@ -1137,20 +1183,21 @@ for(j in 1:nrow(predict.grid)){
 
 sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2011',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2011',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
+mtext("SSS (psu)",line=1.25,side=4)
 
 #2012
-spr12<-spring[spring$Year==2012,] #had most observations
+spr12<-sprsum[sprsum$Year==2012,] #had most observations
 spr12<-spr12[!is.na(spr12$mean_sal),]
 
 zlim<-range(spr12$mean_sal,na.rm=T)
@@ -1169,20 +1216,21 @@ for(j in 1:nrow(predict.grid)){
 
 sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2012',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2012',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
+mtext("SSS (psu)",side=4,line=1.25)
 
 #2013
-spr13<-spring[spring$Year==2013,] #had most observations
+spr13<-sprsum[sprsum$Year==2013,] #had most observations
 spr13<-spr13[!is.na(spr13$mean_sal),]
 
 zlim<-range(spr13$mean_sal,na.rm=T)
@@ -1201,21 +1249,22 @@ for(j in 1:nrow(predict.grid)){
 
 sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2013',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2013',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
+mtext("SSS (psu)",side=4,line=1.25)
 
 
 #2014
-spr14<-spring[spring$Year==2014,] 
+spr14<-sprsum[sprsum$Year==2014,] 
 spr14<-spr14[!is.na(spr14$mean_sal),]
 
 zlim<-range(spr14$mean_sal,na.rm=T)
@@ -1235,19 +1284,20 @@ for(j in 1:nrow(predict.grid)){
 sss.pred<-predict(loess,newdata=predict.grid)
 
 windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2014',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2014',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
+mtext("SSS (psu)",side=4,line=1.25)
 
 #2015
-spr15<-spring[spring$Year==2015,] #had most observations
+spr15<-sprsum[sprsum$Year==2015,] #had most observations
 spr15<-spr15[!is.na(spr15$mean_sal),]
 
 zlim<-range(spr15$mean_sal,na.rm=T)
@@ -1266,20 +1316,21 @@ for(j in 1:nrow(predict.grid)){
 
 sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2015',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2015',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
+mtext("SSS (psu)",side=4,line=1.25)
 
 #2016
-spr16<-spring[spring$Year==2016,] 
+spr16<-sprsum[sprsum$Year==2016,] 
 spr16<-spr16[!is.na(spr16$mean_sal),]
 
 zlim<-range(spr16$mean_sal,na.rm=T)
@@ -1298,20 +1349,21 @@ for(j in 1:nrow(predict.grid)){
 
 sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2016',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2016',
       xlim=c(-180,-155),ylim=c(52,63))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
+mtext("SSS (psu)",side=4,line=1.25)
 
 #2017
-spr17<-spring[spring$Year==2017,] #had most observations
+spr17<-sprsum[sprsum$Year==2017,] #had most observations
 spr17<-spr17[!is.na(spr17$mean_sal),]
 
 zlim<-range(spr17$mean_sal,na.rm=T)
@@ -1330,17 +1382,18 @@ for(j in 1:nrow(predict.grid)){
 
 sss.pred<-predict(loess,newdata=predict.grid)
 
-windows(width=18,height=15)
-par(oma=c(1,1,1,2.5))
+windows(width=6,height=5)
+par(oma=c(1,1,1,4))
 image(lond,latd,sss.pred,col=hcl.colors(100,"SunsetDark",rev=T),zlim=zlim,
       ylab=expression(paste("Latitude ("^0,'N)')),
-      xlab=expression(paste("Longitude ("^0,'E)')),main='Spring 2017',
+      xlab=expression(paste("Longitude ("^0,'E)')),main='2017',
       xlim=c(-180,-155),ylim=c(60,70))
 contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=2)
 map("worldHires",fill=T,col="gainsboro",add=T)
-par(oma=c(0.7,2,0,0))
+par(oma=c(1,1,1,1.5))
 image.plot(legend.only=T,zlim=zlim,col=hcl.colors(100,"SunsetDark",rev=T),
            legend.shrink=0.3,legend.width=1)
+mtext("SSS (psu)",line=1.25,side=4)
 
 
 

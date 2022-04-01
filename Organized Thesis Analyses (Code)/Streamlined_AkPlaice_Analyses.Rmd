@@ -104,7 +104,7 @@ hist(aplarv.ctd$year[aplarv.ctd$Cper10m2>0],xlab="Year",ylab="",main="")
 ```
 
 The following plots show Plaice egg and larval catch distributions (Catch per unit effort, or per 10m$^2$) across five year increments from 1979 to 2016. 
-```{r,echo=FALSE,eval=FALSE}
+```{r,echo=FALSE,eval=TRUE}
 apysub<-apsub%>%mutate(yearbin=case_when(year<=1984~'1979-1984',
                                          year<=1989&year>1984~'1985-1989',
                                          year<=1994&year>1989~'1990-1994',
@@ -117,161 +117,28 @@ apypos<-apysub[apysub$Cper10m2>0,]
 apyz<-apysub[apysub$Cper10m2==0,]
 apypos$logcpue<-log(apypos$Cper10m2+1)
 
-tmp1<-sort(unique(apysub$yearbin))
-
-apy1<-apypos[apypos$yearbin==tmp1[[1]],]
-apz1<-apyz[apyz$yearbin==tmp1[[1]],]
-
-apy2<-apypos[apypos$yearbin==tmp1[[2]],]
-apz2<-apyz[apyz$yearbin==tmp1[[2]],]
-
-apy3<-apypos[apypos$yearbin==tmp1[[3]],]
-apz3<-apyz[apyz$yearbin==tmp1[[3]],]
-
-apy4<-apypos[apypos$yearbin==tmp1[[4]],]
-apz4<-apyz[apyz$yearbin==tmp1[[4]],]
-
-apy5<-apypos[apypos$yearbin==tmp1[[5]],]
-apz5<-apyz[apyz$yearbin==tmp1[[5]],]
-
-apy6<-apypos[apypos$yearbin==tmp1[[6]],]
-apz6<-apyz[apyz$yearbin==tmp1[[6]],]
-
-apy7<-apypos[apypos$yearbin==tmp1[[7]],]
-apz7<-apyz[apyz$yearbin==tmp1[[7]],]
-
-apy8<-apypos[apypos$yearbin==tmp1[[8]],]
-apz8<-apyz[apyz$yearbin==tmp1[[8]],]
-
 bathybath<-as.bathy(bathy)
 ```
 
-```{r,echo=FALSE,warning=FALSE,message=FALSE,eval=FALSE}
-year1<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=TRUE}
+autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
   scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
                        colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=apz1,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=apy1,aes(x=lon,y=lat,size=logcpue),
+  geom_point(data=apyz,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=apypos,aes(x=lon,y=lat,size=logcpue),
                         fill="#993300",shape=21,alpha=0.8)+
   scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
   theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
         legend.position="bottom",legend.direction="horizontal",
         legend.text=element_text(size=8))+
-  labs(title="Plaice Eggs, 1979-1984",shape="Log (CPUE + 1)")+ylab("Latitude")+xlab("Longitude")
+  facet_wrap(~yearbin)+
+  labs(title="Plaice Eggs",shape="Log (CPUE + 1)")+ylab("Latitude")+xlab("Longitude")
 
-year2<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=apz2,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=apy2,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="Plaice Eggs, 1985-1989")+ylab("Latitude")+xlab("Longitude")
-
-year3<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=apz3,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=apy3,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="Plaice Eggs, 1990-1994")+ylab("Latitude")+xlab("Longitude")
-
-year4<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=apz4,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=apy4,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="Plaice Eggs, 1995-1999")+ylab("Latitude")+xlab("Longitude")
-
-year5<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=apz5,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=apy5,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="Plaice Eggs, 2000-2004")+ylab("Latitude")+xlab("Longitude")
-
-year6<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=apz6,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=apy6,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="Plaice Eggs, 2005-2009")+ylab("Latitude")+xlab("Longitude")
-
-year7<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=apz7,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=apy7,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="Plaice Eggs, 2010-2014")+ylab("Latitude")+xlab("Longitude")
-
-year8<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=apz8,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=apy8,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="Plaice Eggs, 2015-2016")+ylab("Latitude")+xlab("Longitude")
 ```
 
-```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=FALSE}
-year1
-```
 
-```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=FALSE}
-ggarrange(year2,year3,year4,nrow=2,ncol=2,common.legend=TRUE,legend="bottom")
-```
-
-```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=FALSE}
-ggarrange(year5,year6,year7,year8,ncol=2,nrow=2,common.legend=TRUE,legend="bottom")
-```
-
-```{r,echo=FALSE,eval=FALSE}
+```{r,echo=FALSE,eval=TRUE}
 apylarv<-aplarv.ctd%>%mutate(yearbin=case_when(year<=2002~'1997-2002',
                                                year<=2007&year>2002~'2003-2007',
                                                year<=2012&year>2007~'2008-2012',
@@ -280,28 +147,14 @@ apylarv<-aplarv.ctd%>%mutate(yearbin=case_when(year<=2002~'1997-2002',
 apylpos<-apylarv[apylarv$Cper10m2>0,]
 apylpos$logcpue<-log(apylpos$Cper10m2+1)
 apylz<-apylarv[apylarv$Cper10m2==0,]
-
-tmp2<-sort(unique(apylarv$yearbin))
-
-apyl1<-apylpos[apylpos$yearbin==tmp2[[1]],]
-apylz1<-apylz[apylz$yearbin==tmp2[[1]],]
-
-apyl2<-apylpos[apylpos$yearbin==tmp2[[2]],]
-apylz2<-apylz[apylz$yearbin==tmp2[[2]],]
-
-apyl3<-apylpos[apylpos$yearbin==tmp2[[3]],]
-apylz3<-apylz[apylz$yearbin==tmp2[[3]],]
-
-apyl4<-apylpos[apylpos$yearbin==tmp2[[4]],]
-apylz4<-apylz[apylz$yearbin==tmp2[[4]],]
 ```
 
-```{r,echo=FALSE,warning=FALSE,eval=FALSE}
-yearl1<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
+```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=TRUE}
+autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
   scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
                        colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=apylz1,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=apyl1,aes(x=lon,y=lat,size=logcpue),
+  geom_point(data=apylz,aes(x=lon,y=lat),fill="violetred4",shape=8)+
+  geom_point(data=apylpos,aes(x=lon,y=lat,size=logcpue),
                                fill="#993300",shape=21,alpha=0.8)+
   scale_size_continuous("Log (CPUE+1)",range=c(0,9),breaks=pretty_breaks(9))+
   theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
@@ -309,54 +162,11 @@ yearl1<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="gr
         legend.position="bottom",legend.direction="horizontal",
         legend.text=element_text(size=8))+
   scale_shape_manual(values=('No Catch'=8))+
-  labs(title="Plaice Larvae, 1997-2002")+ylab("Latitude")+xlab("Longitude")
+  facet_wrap(~yearbin)+
+  labs(title="Plaice Larvae")+ylab("Latitude")+xlab("Longitude")
 
-yearl2<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=apylz2,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=apyl2,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE+1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="Plaice Larvae, 2003-2007")+ylab("Latitude")+xlab("Longitude")
-
-yearl3<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=apylz3,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=apyl3,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE+1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="Plaice Larvae, 2008-2012")+ylab("Latitude")+xlab("Longitude")
-
-yearl4<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
-  scale_fill_gradientn("Depth",values=scales::rescale(c(-7600,0,1,2321)),
-                       colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
-  geom_point(data=apylz4,aes(x=lon,y=lat),fill="violetred4",shape=8)+
-  geom_point(data=apyl4,aes(x=lon,y=lat,size=logcpue),
-                               fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE+1)",range=c(0,9),breaks=pretty_breaks(9))+
-  theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position="bottom",legend.direction="horizontal",
-        legend.text=element_text(size=8))+
-  scale_shape_manual(values=('No Catch'=8))+
-  labs(title="Plaice Larvae, 2013-2016")+ylab("Latitude")+xlab("Longitude")
 ```
 
-```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=FALSE}
-ggarrange(yearl1,yearl2,yearl3,yearl4,ncol=2,nrow=2,common.legend=TRUE,legend="bottom")
-```
 
 Now we'll move into the GAMs. The following code *is only necessary if the data were re-trimmed and new GAMs need to be run*. In this case, modify markdown document such that "{eval = TRUE}". The other model figures are marked as "eval = FALSE" if they, as of the last model run, do not produce the best model results. **Make sure to save the new models as RDS objects.** 
 
@@ -865,9 +675,11 @@ image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(s
            col=hcl.colors(100,"Lajolla"),xlab='Salinity (psu)',
            ylab=expression(paste("Temperature ("^0, 'C)')),
            xlim=range(aplarv.ctd$salinity,na.rm=T),ylim=range(aplarv.ctd$temperature,na.rm=T),
-           main='Larval Biogeography By Temperature and Salinity',
+           main='',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+contour(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
+        col="white",levels=c(1.4,1.9),add=T)
 
 image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
            col=hcl.colors(100,"Lajolla"),xlab='Salinity (psu)',
@@ -884,8 +696,67 @@ points(aplarv.ctd$salinity[aplarv.ctd$Cper10m2==0],aplarv.ctd$temperature[aplarv
        pch='+',col='white')
 ```
 
-To again share the improvements of the best performing models from the base models, we can look at the AIC division produces. 
+Now I'll calculate a specific range of temperature, salinity, and both temperature and salinity to evaluate breadth of environmental tolerances. 
+
 ```{r,echo=FALSE}
+grid.extent<-grid.extent[!is.na(grid.extent$pred),] #remove NAs to get proper percentage of predictions
+
+clip<-as.numeric(0.6*dim(grid.extent)[[1]]) #define nrows = to 60% of prediction grid 
+
+grid.sort<-grid.extent%>%arrange(desc(pred))
+
+grid.clip<-grid.sort%>%slice_head(n=clip) #clip top 70% of prediction grid 
+head(grid.clip)
+
+write.csv(grid.clip,'Ak_larv_clip_60.csv')
+```
+
+```{r,echo=FALSE,fig.align='center',fig.width=8,fig.height=6,fig.fullwidth=TRUE,warning=FALSE}
+temp<-ggplot(grid.clip,aes(x=temperature,y=pred))+geom_point()+geom_smooth(method="loess")+
+  theme_bw()+theme(axis.text.x=element_text(angle=45,hjust=1))+
+  labs(title="Predictions vs. Temperature",x='Temperature',y='Prediction')+
+  scale_x_continuous(breaks=round(seq(min(grid.clip$temperature),max(grid.clip$temperature),by=0.75),1))
+
+sal<-ggplot(grid.clip,aes(x=salinity,y=pred))+geom_point()+geom_smooth(method="loess")+
+  theme_bw()+labs(title="Predictions vs. Salinity",x='Salinity',y='Prediction')+
+  scale_x_continuous(breaks=round(seq(min(grid.clip$salinity),max(grid.clip$salinity),by=0.5),1))
+
+par(mai=c(1,1,0.5,0.9))
+ggarrange(temp,sal)
+```
+
+```{r,echo=FALSE,fig.align='center',fig.width=9,fig.height=6,fig.fullwidth=TRUE}
+temp1<-ggplot(grid.clip,aes(x=temperature,y=pred))+geom_bin2d(bins=60)+
+  theme_bw()+theme(axis.text.x=element_text(angle=45,hjust=1.2))+
+  labs(title="Predictions vs. Temperature",x='Temperature',y='Prediction')+
+  scale_fill_continuous(type='viridis')+
+  scale_x_continuous(breaks=round(seq(min(grid.clip$temperature),max(grid.clip$temperature),by=0.75),1))
+
+sal1<-ggplot(grid.clip,aes(x=salinity,y=pred))+geom_bin2d(bins=60)+
+  theme_bw()+
+  labs(title="Predictions vs. Salinity",x='Salinity',y='Prediction')+
+  scale_fill_continuous(type='viridis')+
+  scale_x_continuous(breaks=round(seq(min(grid.clip$salinity),max(grid.clip$salinity),by=0.5),1))
+
+par(mai=c(1,1,0.5,0.9))
+ggarrange(temp1,sal1)
+```
+
+```{r,echo=FALSE,fig.align='center',fig.width=6,fig.height=10,fig.fullwidth=TRUE}
+par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
+image.plot(grid.clip$salinity,g,t(matrix(grid.clip$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
+           col=hcl.colors(100,"Lajolla"),xlab='Salinity (psu)',
+           ylab=expression(paste("Temperature ("^0, 'C)')),
+           xlim=range(grid.clip$salinity,na.rm=T),ylim=range(grid.clip$temperature,na.rm=T),
+           main='',
+           cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
+           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+
+```
+
+
+To again share the improvements of the best performing models from the base models, we can look at the AIC division produces.
+```{r,echo=FALSE,fig.align='center',fig.width=6,fig.height=10,fig.fullwidth=TRUE}
 bestdiv<-c((AIC(thr.geo)/AIC(eg.base)),(AIC(lv.2d)/AIC(lv.base)))
 second<-c((AIC(thr.geo)/AIC(vc.geo)),(AIC(lv.2d)/AIC(lv.temp.sal)))
 stage<-c("Eggs","Larvae")
@@ -895,6 +766,12 @@ kable(df,col.names=c("","Best Divided By Base","Best Divided By Second Best"),
       caption="Model Power through AIC Comparisons, Alaska plaice",align='c')
 ```
 
+Reduction in MSE (%):  
+```{r,echo=FALSE}
+var.ratio.lv<-(summary(lv.base)$scale-summary(lv.2d)$scale)/summary(lv.base)$scale
+perc<-var.ratio.lv*100
+print(perc)
+```
 
 ## Appendices: 
 
