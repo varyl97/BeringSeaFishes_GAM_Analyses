@@ -622,7 +622,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=c(-180,-155),ylim=c(52,63),
-           main='Predicted Larval Biogeography, 2D Model',
+           main='',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
@@ -652,8 +652,6 @@ sald<-seq(min(pklarv.ctd$salinity,na.rm=T),max(pklarv.ctd$salinity,na.rm=T),leng
 grid.extent<-expand.grid(sald,tempd)
 names(grid.extent)<-c('salinity','temperature')
 
-grid.extent$dist.sal<-NA
-grid.extent$dist.temp<-NA
 for(k in 1:nrow(grid.extent)){
   dist<-euclidean.distance(grid.extent$salinity[k],grid.extent$temperature[k],
                                pklarv.ctd$salinity,pklarv.ctd$temperature)
@@ -700,8 +698,79 @@ contour(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald
 
 Now I'll calculate a specific range of temperature, salinity, and both temperature and salinity to evaluate breadth of environmental tolerances. 
 
+For the univariate predictions, make a grid that holds either temperature or salinity constant depending on the variable of interest. 
+
 ```{r,echo=FALSE}
-grid.extent<-grid.extent[!is.na(grid.extent$pred),] #remove NAs to get proper percentage of predictions
+ntemp<-100
+tempd<-seq(min(pklarv.ctd$temperature,na.rm=TRUE),max(pklarv.ctd$temperature,na.rm=TRUE),length.out=ntemp)
+
+unit<-data.frame(matrix(ncol=1,nrow=100))
+names(unit)<-'temperature'
+unit$temperature<-as.numeric(tempd)
+
+for(k in 1:nrow(unit)){
+  unit$dist[k]<-unit$temperature[k]-pklarv.ctd$temperature[k]
+}
+
+unit$year<-as.numeric(2005)
+unit$lon<-as.numeric(median(pklarv.ctd$lon))
+unit$lat<-as.numeric(median(pklarv.ctd$lat))
+unit$doy<-as.numeric(median(pklarv.ctd$doy,na.rm=TRUE))
+unit$bottom_depth<-as.numeric(median(pklarv.ctd$bottom_depth,na.rm=TRUE))
+unit$salinity<-as.numeric(median(pklarv.ctd$salinity,na.rm=T))
+unit$pred<-predict(lv.2d,newdata=unit)
+unit$pred[unit$dist>mean(unit$dist)]<-NA
+
+nsal<-100
+sald<-seq(min(pklarv.ctd$salinity,na.rm=T),max(pklarv.ctd$salinity,na.rm=T),length.out=nsal)
+unis<-data.frame(matrix(ncol=1,nrow=100))
+names(unis)<-'salinity'
+unis$salinity<-as.numeric(sald)
+
+for(k in 1:nrow(unis)){
+  unis$dist[k]<-unis$salinity[k]-pklarv.ctd$salinity[k]
+}
+
+unis$year<-as.numeric(2005)
+unis$lon<-as.numeric(median(pklarv.ctd$lon))
+unis$lat<-as.numeric(median(pklarv.ctd$lat))
+unis$doy<-as.numeric(median(pklarv.ctd$doy,na.rm=TRUE))
+unis$bottom_depth<-as.numeric(median(pklarv.ctd$bottom_depth,na.rm=TRUE))
+unis$temperature<-as.numeric(median(pklarv.ctd$temperature,na.rm=T))
+unis$pred<-predict(lv.2d,newdata=unis)
+unis$pred[unis$dist>mean(unis$dist)]<-NA
+
+unit<-unit[!is.na(unit$pred),]
+unis<-unis[!is.na(unis$pred),]
+
+clipt<-as.numeric(0.6*dim(unit)[[1]])
+clips<-as.numeric(0.6*dim(unit)[[1]])
+
+grid.sort.t<-unit%>%arrange(desc(pred))
+grid.sort.s<-unis%>%arrange(desc(pred))
+
+grid.clip.t<-grid.sort.t%>%slice_head(n=clipt)
+grid.clip.s<-grid.sort.s%>%slice_head(n=clips)
+```
+
+
+```{r,echo=FALSE,fig.align='center',fig.width=8,fig.height=6,fig.fullwidth=TRUE,warning=FALSE}
+temp<-ggplot(grid.clip.t,aes(x=temperature,y=pred))+geom_point(color='grey')+geom_smooth(method="loess")+
+  theme_bw()+theme(axis.text.x=element_text(angle=45,hjust=1))+
+  labs(x='Temperature',y='Prediction')+
+  scale_x_continuous(breaks=round(seq(min(grid.clip.t$temperature),max(grid.clip.t$temperature),by=0.75),1))
+
+sal<-ggplot(grid.clip.s,aes(x=salinity,y=pred))+geom_point(color='grey')+geom_smooth(method="loess")+
+  theme_bw()+labs(x='Salinity',y='Prediction')+
+  scale_x_continuous(breaks=round(seq(min(grid.clip.s$salinity),max(grid.clip.s$salinity),by=0.4),1))
+
+par(mai=c(1,1,0.5,0.9))
+ggarrange(temp,sal)
+```
+
+For the bivariate analysis: 
+```{r,echo=FALSE}
+grid.extent<-grid.extent[!is.na(grid.extent$pred),] #remove NAs to get proper percentage of predictions, use grid extent previously calculated 
 
 clip<-as.numeric(0.6*dim(grid.extent)[[1]]) #define nrows = to 60% of prediction grid 
 
@@ -710,38 +779,14 @@ grid.sort<-grid.extent%>%arrange(desc(pred))
 grid.clip<-grid.sort%>%slice_head(n=clip) #clip top 70% of prediction grid 
 head(grid.clip)
 
-write.csv(grid.clip,'./Ichthyo Data/Pk_larv_clip_60.csv')
+#write.csv(grid.clip,'Ak_larv_clip_60.csv')
 ```
 
-```{r,echo=FALSE,fig.align='center',fig.width=8,fig.height=6,fig.fullwidth=TRUE}
-temp<-ggplot(grid.extent,aes(x=temperature,y=pred))+geom_point()+geom_smooth(method="loess")+
-  theme_bw()+theme(axis.text.x=element_text(angle=45,hjust=1))+
-  labs(title="Predictions vs. Temperature",x='Temperature',y='Prediction')+
-  scale_x_continuous(breaks=round(seq(min(grid.extent$temperature),max(grid.extent$temperature),by=0.75),1))
-
-sal<-ggplot(grid.extent,aes(x=salinity,y=pred))+geom_point()+geom_smooth(method="loess")+
-  theme_bw()+labs(title="Predictions vs. Salinity",x='Salinity',y='Prediction')+
-  scale_x_continuous(breaks=round(seq(min(grid.extent$salinity),max(grid.extent$salinity),by=0.5),1))
-
+```{r,echo=FALSE,fig.align='center',fig.width=6,fig.height=6,fig.fullwidth=TRUE}
 par(mai=c(1,1,0.5,0.9))
-ggarrange(temp,sal)
-```
-
-```{r,echo=FALSE,fig.align='center',fig.width=9,fig.height=6,fig.fullwidth=TRUE}
-temp1<-ggplot(grid.extent,aes(x=temperature,y=pred))+geom_bin2d(bins=60)+
-  theme_bw()+theme(axis.text.x=element_text(angle=45,hjust=1.2))+
-  labs(title="Predictions vs. Temperature",x='Temperature',y='Prediction')+
-  scale_fill_continuous(type='viridis')+
-  scale_x_continuous(breaks=round(seq(min(grid.extent$temperature),max(grid.extent$temperature),by=0.75),1))
-
-sal1<-ggplot(grid.extent,aes(x=salinity,y=pred))+geom_bin2d(bins=60)+
-  theme_bw()+
-  labs(title="Predictions vs. Salinity",x='Salinity',y='Prediction')+
-  scale_fill_continuous(type='viridis')+
-  scale_x_continuous(breaks=round(seq(min(grid.extent$salinity),max(grid.extent$salinity),by=0.5),1))
-
-par(mai=c(1,1,0.5,0.9))
-ggarrange(temp1,sal1)
+bivar<-ggplot(grid.clip)+geom_tile(aes(x=salinity,y=temperature,fill=pred))+theme_bw()+
+  labs(x='Salinity',y='Temperature')+scale_fill_viridis()
+bivar
 ```
 
 To again share the improvements of the best performing models from the base models, we can look at the AIC division produces. 

@@ -166,21 +166,34 @@ for(i in 1:length(tmp)){
 }
 
 # Boxplots for species' breadths: 
+ak_clip<-read.csv('./Ichthyo Data/Ak_larv_clip_60.csv',header=TRUE,check.names=TRUE)
+ak_clip$species<-'AP'
+pk_clip<-read.csv('./Ichthyo Data/Pk_larv_clip_60.csv',header=TRUE,check.names=TRUE)
+pk_clip$species<-'WP'
+pc_clip<-read.csv('./Ichthyo Data/Pc_larv_clip_60.csv',header=TRUE,check.names=TRUE)
+pc_clip$species<-'PC'
+yf_clip<-read.csv('./Ichthyo Data/Yfs_larv_clip_60.csv',header=TRUE,check.names=TRUE)
+yf_clip$species<-'YFS'
+nr_clip<-read.csv('./Ichthyo Data/Nrs_larv_clip_60.csv',header=TRUE,check.names=TRUE)
+nr_clip$species<-'NRS'
+fh_clip<-read.csv('./Ichthyo Data/Fh_larv_clip_60.csv',header=TRUE,check.names=TRUE)
+fh_clip$species<-'FHS'
 
-temp_ak<-ggplot(ak_clip,aes(x=pred,y=temperature))+geom_boxplot()+    #redo this with all species in one dataframe together, think that'll look more instructive 
+all_clip<-rbind(ak_clip,pk_clip,pc_clip,yf_clip,nr_clip,fh_clip)
+
+temp_all<-ggplot(all_clip,aes(x=species,y=temperature,group=species))+geom_boxplot()+   
   theme_bw()+theme(axis.text.x=element_text(angle=45,hjust=1.2))+
-  labs(title="Predictions against Temperature",x='Prediction',y='Temperature')+
-  scale_fill_continuous(type='viridis')+
-  scale_y_continuous(breaks=round(seq(min(ak_clip$temperature),max(ak_clip$temperature),by=0.75),1))
+  labs(title="Predictions against Temperature",x='Species',y='Temperature')+
+  scale_y_continuous(breaks=round(seq(min(all_clip$temperature),max(all_clip$temperature),by=0.75),1))
 
-sal_ak<-ggplot(ak_clip,aes(x=pred,y=salinity))+geom_boxplot()+
+sal_all<-ggplot(all_clip,aes(x=species,y=salinity,group=species))+geom_boxplot()+
   theme_bw()+
-  labs(title="Predictions against Salinity",x='Prediction',y='Salinity')+
-  scale_fill_continuous(type='viridis')+
-  scale_y_continuous(breaks=round(seq(min(ak_clip$salinity),max(ak_clip$salinity),by=0.5),1))
+  labs(title="Predictions against Salinity",x='Species',y='Salinity')+
+  scale_y_continuous(breaks=round(seq(min(all_clip$salinity),max(all_clip$salinity),by=0.5),1))
 
+windows(width=10,height=8)
 par(mai=c(1,1,0.5,0.9))
-ggarrange(temp2,sal2)
+ggarrange(temp_all,sal_all)
 
 
 
