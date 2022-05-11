@@ -131,18 +131,22 @@ colr<-adjustcolor("grey",alpha=0.3)
 ```
 
 ```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE}
+
+#Coastal: AP, YFS
+#Middle: WP, NRS, FHS
+#Outer: PC
+
 par(mai=c(1,1,0.5,0.9))
-contour2D(x=sal,y=temp,z=sigma.c,lwd=1.6,lty=3,main='Temperature-Salinity Diagram',col='black',
+contour2D(x=sal,y=temp,z=sigma.c,lwd=1.6,lty=3,main="",col='black',
           xlab=expression('Salinity (psu)'),ylab=expression('Temperature ('*~degree*C*')'))
-DrawEllipse(x=31.675,y=5.95,radius.x=0.15,radius.y=0.3,rot=0, border='steelblue4',col=colr,lwd=3)#x axis = salinity, y axis = temperature
-DrawEllipse(x=31.925,y=5.85,radius.x=0.25,radius.y=1.7,rot=0,border='orange',col=colr,lwd=3)
-DrawEllipse(x=31.675,y=5.05,radius.x=0.05,radius.y=0.5,rot=0,border='darkolivegreen3',col=colr,lwd=3)
-DrawEllipse(x=32,y=5.6,radius.x=0.6,radius.y=1.2,border='mediumpurple1',col=colr,lwd=3)
-DrawEllipse(x=31.925,y=5.25,radius.x=0.35,radius.y=1.5,border='palevioletred3',col=colr,lwd=3)
-DrawEllipse(x=31.45,y=9.6,radius.x=0.5,radius.y=0.8,border='goldenrod3',col=colr,lwd=3)
-legend(x="bottomleft",legend=c("Plaice","Flathead","Cod","Pollock","Northern Rock","Yellowfin"),
-       col=c("steelblue4","orange","darkolivegreen3","mediumpurple1","palevioletred3",
-             "goldenrod3"),pch=16,bg='snow1')
+DrawEllipse(x=31,y=5,radius.x=1,radius.y=0.8,rot=0, border='#9ac2e3',col=colr,lwd=3)#Plaice
+DrawEllipse(x=31.75,y=10,radius.x=0.5,radius.y=3.1,rot=0,border='#2c92e6',col=colr,lwd=3)#Flathead
+DrawEllipse(x=31.9,y=4,radius.x=0.5,radius.y=3.75,rot=0,border='#054375',col=colr,lwd=3)#Cod
+DrawEllipse(x=32,y=5,radius.x=1.5,radius.y=0.6,border='#2c92e6',col=colr,lwd=3)#Pollock
+DrawEllipse(x=31.4,y=5.1,radius.x=0.65,radius.y=1.3,border='#2c92e6',col=colr,lwd=3)#Northern 
+DrawEllipse(x=30.5,y=11,radius.x=1.4,radius.y=2,border='#9ac2e3',col=colr,lwd=3)#Yellowfin
+legend(x="bottomleft",legend=c("Coastal","Middle","Outer"),
+       col=c("#9ac2e3","#2c92e6","#054375"),pch=16,bg='snow1')
 ```
 
 

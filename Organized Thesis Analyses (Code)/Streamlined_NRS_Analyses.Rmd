@@ -141,6 +141,7 @@ saveRDS(lv.add.sal,file="./GAM Models/nrs_larvae_addsal.rds")
 ```{r,echo=F,include=FALSE}
 lv.add.sal<-readRDS("./GAM Models/nrs_larvae_addsal.rds")
 summary(lv.add.sal)
+AIC(lv.add.sal)
 ```
 
 ```{r,eval=F,echo=FALSE}
@@ -155,6 +156,7 @@ saveRDS(lv.add.temp,file="./GAM Models/nrs_larvae_addtemp.rds")
 ```{r,include=T,echo=FALSE}
 lv.add.temp<-readRDS("./GAM Models/nrs_larvae_addtemp.rds")
 summary(lv.add.temp)
+AIC(lv.add.temp)
 ```
 
 Then additive temperature and salinity, in individual additive terms. This is the second-best performing model. 
@@ -186,6 +188,35 @@ saveRDS(lv.2d,file="./GAM Models/nrs_larvae_2d.rds")
 lv.2d<-readRDS("./GAM Models/nrs_larvae_2d.rds")
 summary(lv.2d)
 AIC(lv.2d)
+```
+
+To confirm that this is indeed the best model, we can compare AIC values across all five tested models. 
+```{r, echo=FALSE}
+aic.base<-AIC(lv.base)
+aic.sal<-AIC(lv.add.sal)
+aic.temp<-AIC(lv.add.temp)
+aic.saltemp<-AIC(lv.temp.sal)
+aic.2d<-AIC(lv.2d)
+
+aic.nrslarv<-data.frame('model'=c('Base','Add Sal','Add Temp',
+                                'Sal and Temp','2-d Sal-Temp'),
+                      'AIC_value'=c(aic.base,aic.sal,aic.temp,
+                                    aic.saltemp,aic.2d))
+```
+
+
+
+```{r,echo=FALSE}
+windows(width=6,height=5);par(mai=c(1,1,0.5,0.9))
+plot(c(1:5),aic.nrslarv$AIC_value,main='NRS',
+     col=hcl.colors(5,"Zissou 1"),
+     pch=19,cex=2,ylab='AIC Score',xlab='')
+grid(nx=5,ny=14,col="lightgray")
+text(c(1:5),aic.nrslarv$AIC_value,labels=round(aic.nrslarv$AIC_value),pos=c(4,1,3,2,2))
+legend("bottomleft",legend=c('Base','Add. SSS','Add. SST',
+                             'Add. SSS, SST','Bivariate SSS-SST'),
+       col=hcl.colors(5,"Zissou 1"),
+       lwd=3,lty=1,cex=0.7)
 ```
 
 The following plot is the predicted NRS larval biogeography based on the best performing model, the bivariate salinity-temperature GAM. Observations (log transformed, n+1) are shown as well. 
@@ -223,9 +254,9 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=c(-180,-155),ylim=c(52,63),
-           main='Predicted NRS Larval Biogeography, 2D Model',
+           main='',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="gainsboro",add=T)
 
@@ -284,7 +315,7 @@ par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
 image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
            col=hcl.colors(100,"Lajolla"),xlab='Salinity (psu)',
            ylab=expression(paste("Temperature ("^0, 'C)')),
-           xlim=range(nrslarv.ctd$salinity,na.rm=T),ylim=range(nrslarv.ctd$temperature,na.rm=T),
+           xlim=c(29,33.5),ylim=c(-1.8,14),
            main='',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
@@ -294,7 +325,7 @@ contour(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald
 image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
            col=hcl.colors(100,"Lajolla"),xlab='Salinity (psu)',
            ylab=expression(paste("Temperature ("^0, 'C)')),
-           xlim=range(nrslarv.ctd$salinity,na.rm=T),ylim=range(nrslarv.ctd$temperature,na.rm=T),
+           xlim=c(29,33.5),ylim=c(-1.8,14),
            main='NRS Larval Biogeography By Temperature and Salinity',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
            legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
@@ -308,7 +339,29 @@ points(nrslarv.ctd$salinity[nrslarv.ctd$Cper10m2==0],
 
 Now I'll calculate a specific range of temperature, salinity, and both temperature and salinity to evaluate breadth of environmental tolerances. 
 
-For the univariate predictions, make a grid that holds either temperature or salinity constant depending on the variable of interest. 
+For the univariate predictions, make a grid that holds either temperature or salinity constant depending on the variable of interest. The temperature and salinity values held constant were chosen based on the bivariate temperature,salinity plots; I attempted to capture a representative snapshot of variability in the univariate dimension. 
+
+First, I'll determine the sum of larval log(CPUE+1) predictions and 60% of that sum, to know how many rows to cut from the larger extent. 
+
+```{r,echo=FALSE}
+sum<-sum(grid.extent$pred,na.rm=T)
+sum
+
+clip60<-0.6*sum
+clip60 #determine 60% of summed CPUE predictions 
+
+grid.extent1<-grid.extent
+grid.extent1$pos<-seq.int(nrow(grid.extent1))
+grid.extent1<-grid.extent1%>%arrange(pred)
+grid.extent1$consum<-cumsum(grid.extent1$pred)
+grid.extent1<-grid.extent1[grid.extent1$consum>clip60,]
+
+grid.clip<-grid.extent1%>%arrange(grid.extent1$pos)
+
+#write.csv(grid.clip,'Nrs_larv_clip_60.csv')
+```
+
+So this percentage (percbi, 42.6%) is the percentage of the total grid extent within which 60% of the predicted log(CPUE+1) lies. I.e., 42.6% percent of the whole grid extent encompasses 60% of the predicted observations. 
 
 ```{r,echo=FALSE}
 ntemp<-100
@@ -327,9 +380,24 @@ unit$lon<-as.numeric(median(nrslarv.ctd$lon))
 unit$lat<-as.numeric(median(nrslarv.ctd$lat))
 unit$doy<-as.numeric(median(nrslarv.ctd$doy,na.rm=TRUE))
 unit$bottom_depth<-as.numeric(median(nrslarv.ctd$bottom_depth,na.rm=TRUE))
-unit$salinity<-as.numeric(median(nrslarv.ctd$salinity,na.rm=T))
+unit$salinity<-31.5
 unit$pred<-predict(lv.2d,newdata=unit)
+unit$salinity<-31.25
+unit$pred.1<-predict(lv.2d,newdata=unit)
+unit$salinity<-31
+unit$pred.2<-predict(lv.2d,newdata=unit)
+unit$salinity<-30
+unit$pred.3<-predict(lv.2d,newdata=unit)
+unit$salinity<-31.75
+unit$pred.4<-predict(lv.2d,newdata=unit)
+unit$salinity<-32
+unit$pred.5<-predict(lv.2d,newdata=unit)
 unit$pred[unit$dist>mean(unit$dist)]<-NA
+unit$pred.1[unit$dist>mean(unit$dist)]<-NA
+unit$pred.2[unit$dist>mean(unit$dist)]<-NA
+unit$pred.3[unit$dist>mean(unit$dist)]<-NA
+unit$pred.4[unit$dist>mean(unit$dist)]<-NA
+unit$pred.5[unit$dist>mean(unit$dist)]<-NA
 
 nsal<-100
 sald<-seq(min(nrslarv.ctd$salinity,na.rm=T),max(nrslarv.ctd$salinity,na.rm=T),length.out=nsal)
@@ -346,58 +414,115 @@ unis$lon<-as.numeric(median(nrslarv.ctd$lon))
 unis$lat<-as.numeric(median(nrslarv.ctd$lat))
 unis$doy<-as.numeric(median(nrslarv.ctd$doy,na.rm=TRUE))
 unis$bottom_depth<-as.numeric(median(nrslarv.ctd$bottom_depth,na.rm=TRUE))
-unis$temperature<-as.numeric(median(nrslarv.ctd$temperature,na.rm=T))
+unis$temperature<-5.5
 unis$pred<-predict(lv.2d,newdata=unis)
+unis$temperature<-5.75
+unis$pred.1<-predict(lv.2d,newdata=unis)
+unis$temperature<-5.25
+unis$pred.2<-predict(lv.2d,newdata=unis)
+unis$temperature<-4.75
+unis$pred.3<-predict(lv.2d,newdata=unis)
+unis$temperature<-4
+unis$pred.4<-predict(lv.2d,newdata=unis)
+unis$temperature<-3.5
+unis$pred.5<-predict(lv.2d,newdata=unis)
 unis$pred[unis$dist>mean(unis$dist)]<-NA
+unis$pred.1[unis$dist>mean(unis$dist)]<-NA
+unis$pred.2[unis$dist>mean(unis$dist)]<-NA
+unis$pred.3[unis$dist>mean(unis$dist)]<-NA
+unis$pred.4[unis$dist>mean(unis$dist)]<-NA
+unis$pred.5[unis$dist>mean(unis$dist)]<-NA
 
 unit<-unit[!is.na(unit$pred),]
 unis<-unis[!is.na(unis$pred),]
 
-clipt<-as.numeric(0.6*dim(unit)[[1]])
-clips<-as.numeric(0.6*dim(unit)[[1]])
+clipt60<-0.6*(sum(unit$pred,na.rm=T))
+clips60<-0.6*(sum(unis$pred,na.rm=T))
 
-grid.sort.t<-unit%>%arrange(desc(pred))
-grid.sort.s<-unis%>%arrange(desc(pred))
+grid.t1<-unit
+grid.t1$pos<-seq.int(nrow(grid.t1))
+grid.t1<-grid.t1%>%arrange(pred)
+grid.t1$consum<-cumsum(grid.t1$pred)
+grid.t1<-grid.t1[grid.t1$consum>clipt60,]
+grid.clip.t<-grid.t1%>%arrange(grid.t1$pos)
 
-grid.clip.t<-grid.sort.t%>%slice_head(n=clipt)
-grid.clip.s<-grid.sort.s%>%slice_head(n=clips)
+grid.s1<-unis
+grid.s1$pos<-seq.int(nrow(grid.s1))
+grid.s1<-grid.s1%>%arrange(pred)
+grid.s1$consum<-cumsum(grid.s1$pred)
+grid.s1<-grid.s1[grid.s1$consum>clips60,]
+grid.clip.s<-grid.s1%>%arrange(grid.s1$pos)
+
 ```
 
 
 ```{r,echo=FALSE,fig.align='center',fig.width=8,fig.height=6,fig.fullwidth=TRUE,warning=FALSE}
 temp<-ggplot(grid.clip.t,aes(x=temperature,y=pred))+geom_point(color='grey')+geom_smooth(method="loess")+
-  theme_bw()+theme(axis.text.x=element_text(angle=45,hjust=1))+
-  labs(x='Temperature',y='Prediction')+
-  scale_x_continuous(breaks=round(seq(min(grid.clip.t$temperature),max(grid.clip.t$temperature),by=0.75),1))
+  geom_line(aes(x=temperature,y=pred.1),linetype="solid",color="grey48")+
+  geom_line(aes(x=temperature,y=pred.2),linetype="twodash",color="grey48")+
+  geom_line(aes(x=temperature,y=pred.3),linetype="longdash",color="grey48")+
+  geom_line(aes(x=temperature,y=pred.4),linetype="dotted",color="grey48")+
+  geom_line(aes(x=temperature,y=pred.5),linetype="dotdash",color="grey48")+
+  theme_bw()+theme(axis.text.x=element_text(angle=45,hjust=1,size=7.5))+
+  labs(x=expression(paste("Temperature ("^0,'C)')),y='Prediction')+
+  scale_x_continuous(breaks=seq(-1.7,14,by=1),limits=c(-1.7,14))+
+  scale_y_continuous(breaks=seq(1,7.3,by=1),limits=c(1,7.3))
 
 sal<-ggplot(grid.clip.s,aes(x=salinity,y=pred))+geom_point(color='grey')+geom_smooth(method="loess")+
-  theme_bw()+labs(x='Salinity',y='Prediction')+
-  scale_x_continuous(breaks=round(seq(min(grid.clip.s$salinity),max(grid.clip.s$salinity),by=0.4),1))
+  geom_line(aes(x=salinity,y=pred.1),linetype="solid",color="grey48")+
+  geom_line(aes(x=salinity,y=pred.2),linetype="twodash",color="grey48")+
+  geom_line(aes(x=salinity,y=pred.3),linetype="longdash",color="grey48")+
+  geom_line(aes(x=salinity,y=pred.4),linetype="dotted",color="grey48")+
+  geom_line(aes(x=salinity,y=pred.5),linetype="dotdash",color="grey48")+
+  theme_bw()+labs(x='Salinity (psu)',y='Prediction')+
+  theme(axis.text.x=element_text(hjust=1,angle=45,size=7.5))+
+  scale_x_continuous(breaks=round(seq(29,33.3,by=0.5),1),limits=c(29,33.3))+
+  scale_y_continuous(breaks=seq(1,7.3,by=1),limits=c(1,7.3))
 
 par(mai=c(1,1,0.5,0.9))
 ggarrange(temp,sal)
 ```
 
 For the bivariate analysis: 
-```{r,echo=FALSE}
-grid.extent<-grid.extent[!is.na(grid.extent$pred),] #remove NAs to get proper percentage of predictions, use grid extent previously calculated 
-
-clip<-as.numeric(0.6*dim(grid.extent)[[1]]) #define nrows = to 60% of prediction grid 
-
-grid.sort<-grid.extent%>%arrange(desc(pred))
-
-grid.clip<-grid.sort%>%slice_head(n=clip) #clip top 70% of prediction grid 
-head(grid.clip)
-
-#write.csv(grid.clip,'Ak_larv_clip_60.csv')
-```
 
 ```{r,echo=FALSE,fig.align='center',fig.width=6,fig.height=6,fig.fullwidth=TRUE}
 par(mai=c(1,1,0.5,0.9))
 bivar<-ggplot(grid.clip)+geom_tile(aes(x=salinity,y=temperature,fill=pred))+theme_bw()+
-  labs(x='Salinity',y='Temperature')+scale_fill_viridis()
+  theme(axis.text.x=element_text(angle=45,hjust=1,size=7.5))+
+  geom_vline(xintercept=31.5,linetype="dashed",color="black")+
+  geom_vline(xintercept=31.25,linetype="solid",color="grey48")+
+  geom_vline(xintercept=31,linetype="twodash",color="grey48")+
+  geom_vline(xintercept=30,linetype="longdash",color="grey48")+
+  geom_vline(xintercept=31.75,linetype="dotted",color="grey48")+
+  geom_vline(xintercept=32,linetype="dotdash",color="grey48")+
+  geom_hline(yintercept=5.5,linetype="dashed",color="black")+
+  geom_hline(yintercept=5.75,linetype="solid",color="grey48")+
+  geom_hline(yintercept=5.25,linetype="twodash",color="grey48")+
+  geom_hline(yintercept=4.75,linetype="longdash",color="grey48")+
+  geom_hline(yintercept=4,linetype="dotted",color="grey48")+
+  geom_hline(yintercept=3.5,linetype="dotdash",color="grey48")+
+  labs(x='Salinity (psu)',y=expression(paste("Temperature ("^0,'C)')))+scale_fill_viridis(name='Prediction')+
+  scale_x_continuous(breaks=seq(29,33.3,by=0.5),limits=c(29,33.3))+
+  scale_y_continuous(breaks=seq(-1.7,14,by=1),limits=c(-1.7,14))
 bivar
 ```
+
+Determine area in T-S units over which 60% of observations are contained.
+
+```{r,echo=FALSE}
+width<-max(grid.extent$salinity)-min(grid.extent$salinity)
+height<-max(grid.extent$temperature)-min(grid.extent$temperature)
+area.all<-width*height
+
+width.cl<-max(grid.clip$salinity)-min(grid.clip$salinity)
+height.cl<-max(grid.clip$temperature)-min(grid.clip$temperature)
+area.clip<-width.cl*height.cl
+
+perc.area<-(area.clip/area.all)*100
+perc.area
+```
+
+71.2% of the salinity-temperature area contains 60% of the total predicted log(CPUE+1). 
 
 To again share the improvements of the best performing models from the base models, we can look at the AIC division produces. 
 ```{r,echo=FALSE}

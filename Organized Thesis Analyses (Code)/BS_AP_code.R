@@ -92,7 +92,7 @@ apsub<-subset(apsub,doy>99&doy<182)
 aplarv<-aplarvae[c('CRUISE','STATION_NAME','HAUL_NAME','GMT_DATE_TIME','HAUL_ID',
                    'LARVALCATCHPER10M2','LARVALCATCHPER1000M3','YEAR_','MONTH_','LAT','LON','doy','VOLUME_FILTERED',
                    'BOTTOM_DEPTH','id','count','SS','DATE')]
-aplarv<-subset(aplarv,lat<62)
+aplarv<-subset(aplarv,LAT<62)
 names(apsub)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
                 'Cper1000m3','year','month','lat','lon','doy','vol','bottom_depth','id','count','SS','date')
 names(aplarv)<-c('CRUISE','STATION','HAUL','GMT_DATE_TIME','HAUL_ID','Cper10m2',
@@ -172,14 +172,14 @@ for(i in 1:nrow(aplarv.ctd)){
     aplarv.ctd$CTD_time[i]<-unique(ctdcast$Time)
   },error=function(e){cat(as.character(print(i)),as.character(aplarv.ctd$CRUISE[i]),
                           conditionMessage(e),"\n")})}
-aplarv.ctd<-aplarv.ctd[!aplarv.ctd$temperature=="NaN",]#dim: 2646 24
+aplarv.ctd<-aplarv.ctd[!aplarv.ctd$temperature=="NaN",]#dim: 2501 24
 
 aplarv.ctd$date_diff<-NA
 aplarv.ctd$date<-parse_date_time(aplarv.ctd$date,orders="mdy")
 aplarv.ctd$CTD_date<-parse_date_time(aplarv.ctd$CTD_date,orders="mdy")
 aplarv.ctd$date_diff<-difftime(aplarv.ctd$date,aplarv.ctd$CTD_date,units="hour")
 aplarv.ctd<-aplarv.ctd[which(aplarv.ctd$date_diff>(-6)&aplarv.ctd$date_diff<6),]
-dim(aplarv.ctd) #2565
+dim(aplarv.ctd) #2429
 
 #Additional trimming based on biological characteristics: 
 #Trim eggs to a depth less than 150m (spawn on the middle shelf between 50-100m)
@@ -190,6 +190,10 @@ aplarv<-subset(aplarv,bottom_depth<151)
 aplarv.ctd<-subset(aplarv.ctd,bottom_depth<151)
 aplarv.ctd<-subset(aplarv.ctd,lat<62)
 
+for(i in 1:nrow(apsub)){
+  apsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==apsub$year[i]]
+}
+  
 write.csv(apsub,'./Ichthyo Data/Cleaned_Cut_ApEggs.csv')
 write.csv(apsub.ctd,'./Ichthyo Data/Cleaned_Cut_ApEggs_wCTD.csv')
 write.csv(aplarv,'./Ichthyo Data/Cleaned_Cut_ApLarv.csv')

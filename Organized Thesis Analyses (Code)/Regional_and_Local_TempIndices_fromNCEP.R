@@ -11,11 +11,16 @@ ncep
 
 sst.df<-raster::as.data.frame(ncep,xy=TRUE)
 
-sst.df<-subset(sst.df,y>50&y<70)
-sst.df<-subset(sst.df,x>179&x<220)
+sst.df<-subset(sst.df,y>55&y<58)
+sst.df<-subset(sst.df,x>(191)&x<(197)) #want -164 to -168
 sst.df$x<-sst.df$x-360
+
+
 sst.df<-na.exclude(sst.df)
 
+world<-map_data("world")
+BSmap<-world[world$long<(-155)&world$lat>50&world$lat<70,]
+windows()
 ggplot()+geom_tile(data=sst.df,aes(x=x,y=y,color=X1891.01.01,fill=X1891.01.01))+
   geom_map(data=BSmap,map=BSmap,aes(long,lat,map_id=region)) #to check whats going on 
 
@@ -138,7 +143,7 @@ may.reg.sst<-aggregate(SST~year,data=may.sst,FUN=function(may.sst)(mean=mean(may
 write.csv(may.reg.sst,'./Environmental Data/May_SST_RegionalIndex_NCEP_BS.csv')
 
 windows()
-ggplot()+geom_tile(data=sub,aes(x=lon,y=lat,fill=SST))+
+ggplot()+geom_tile(data=feb.sst,aes(x=lon,y=lat,fill=SST))+
   scale_fill_viridis_c()+geom_map(data=BSmap,map=BSmap,aes(long,lat,map_id=region))+
   theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"))+

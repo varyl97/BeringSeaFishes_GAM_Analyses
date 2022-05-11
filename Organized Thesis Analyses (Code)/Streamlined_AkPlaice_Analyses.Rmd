@@ -44,12 +44,16 @@ Alaska plaice: both egg and larval data are included for this species. Plaice sp
 ```{r}
 apsub<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApEggs.csv',header=TRUE,
                 check.names=TRUE)
+
 aplarv.ctd<-read.csv(file='./Ichthyo Data/Cleaned_Cut_ApLarv_wCTD.csv',
                      header=TRUE,check.names=TRUE)
 aplarv.ctd<-subset(aplarv.ctd,doy>80&doy<182)
 
 reg.sst<-read.csv('./Environmental Data/Mar_SST_RegionalIndex_NCEP_BS.csv',
                   header=TRUE,check.names=TRUE)
+
+#for(i in 1:nrow(apsub)){
+ # apsub$reg.SST[i]<-reg.sst$SST[reg.sst$year==apsub$year[i]]}
 
 str_name<-"./Environmental Data/expanded_BS_bathy.tif"
 bathy<-raster(str_name)
@@ -104,7 +108,7 @@ hist(aplarv.ctd$year[aplarv.ctd$Cper10m2>0],xlab="Year",ylab="",main="")
 ```
 
 The following plots show Plaice egg and larval catch distributions (Catch per unit effort, or per 10m$^2$) across five year increments from 1979 to 2016. 
-```{r,echo=FALSE,eval=TRUE}
+```{r,echo=FALSE,eval=T}
 apysub<-apsub%>%mutate(yearbin=case_when(year<=1984~'1979-1984',
                                          year<=1989&year>1984~'1985-1989',
                                          year<=1994&year>1989~'1990-1994',
@@ -120,7 +124,7 @@ apypos$logcpue<-log(apypos$Cper10m2+1)
 bathybath<-as.bathy(bathy)
 ```
 
-```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=TRUE}
+```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=T}
 autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
   scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
                        colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
@@ -133,12 +137,12 @@ autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
         legend.position="bottom",legend.direction="horizontal",
         legend.text=element_text(size=8))+
   facet_wrap(~yearbin)+
-  labs(title="Plaice Eggs",shape="Log (CPUE + 1)")+ylab("Latitude")+xlab("Longitude")
+  labs(title="Alaska Plaice",shape="Log (CPUE + 1)")+ylab("Latitude")+xlab("Longitude")
 
 ```
 
 
-```{r,echo=FALSE,eval=TRUE}
+```{r,echo=FALSE,eval=T}
 apylarv<-aplarv.ctd%>%mutate(yearbin=case_when(year<=2002~'1997-2002',
                                                year<=2007&year>2002~'2003-2007',
                                                year<=2012&year>2007~'2008-2012',
@@ -149,7 +153,7 @@ apylpos$logcpue<-log(apylpos$Cper10m2+1)
 apylz<-apylarv[apylarv$Cper10m2==0,]
 ```
 
-```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=TRUE}
+```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=T}
 autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
   scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
                        colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
@@ -175,22 +179,25 @@ Alaska plaice eggs were best explained by the threshold geography model, in whic
 ## Generalized Additive Models: Alaska Plaice Eggs
 
 The base model formulation: 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
              data=apsub,family=tw(link='log'),method='REML')
 
 plot(eg.base,shade=FALSE,page=1,seWithMean=TRUE,scheme=2,scale=0)
 
+summary(eg.base)
+AIC(eg.base)
+
 saveRDS(eg.base,file="./GAM Models/ap_egg_base.rds")
 ```
-```{r,echo=FALSE,include=FALSE}
+```{r,echo=FALSE,include=FALSE,eval=FALSE}
 eg.base<-readRDS("./GAM Models/ap_egg_base.rds")
 summary(eg.base)
 AIC(eg.base)
 ```
 
 The variable-coefficient geography formulation (in which geographic egg distributions vary differently in relation to regional SST indices). 
-```{r, eval=FALSE,echo=FALSE,include=FALSE}
+```{r, eval=T,echo=FALSE}
 vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
               s(lon,lat,by=reg.SST),data=apsub,family=tw(link='log'),
             method='REML')
@@ -205,16 +212,19 @@ plot(vc.geo,select=4,scheme=2,too.far=0.025,shade=FALSE,
      main='V-C Flex Geo, Deviation from Avg. Variation')
 map("world",fill=T,col="snow4",add=T)
 
+summary(vc.geo)
+AIC(vc.geo)
+
 saveRDS(vc.geo,file="./GAM Models/ap_egg_vc_geo.rds")
 ```
-```{r,echo=FALSE,include=FALSE}
+```{r,echo=FALSE,include=FALSE,eval=FALSE}
 vc.geo<-readRDS("./GAM Models/ap_egg_vc_geo.rds")
 summary(vc.geo)
 AIC(vc.geo)
 ```
 
 The variable-coefficient phenology formulation (in which temporal (phenological) distribution of eggs vary in relation to regional SST indices). 
-```{r, eval=FALSE}
+```{r, eval=T}
 vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
                 s(doy,by=reg.SST),data=apsub,family=tw(link='log'),
               method='REML')
@@ -229,12 +239,14 @@ legend('topright',legend=c('Flexible Phenology Smooth','Deviation from Avg.Pheno
        col=c(NA,col),lwd=c(2,2),cex=0.8)
 mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 
+summary(vc.pheno)
+AIC(vc.pheno)
+
 saveRDS(vc.pheno,file="./GAM Models/ap_egg_vc_pheno.rds")
 ```
-```{r,echo=FALSE,include=FALSE}
+```{r,echo=FALSE,include=FALSE,eval=F}
 vc.pheno<-readRDS("./GAM Models/ap_egg_vc_pheno.rds")
-summary(vc.geo)
-AIC(vc.geo)
+
 ```
 
 The threshold phenology model formulation (in which the temporal (phenological) distribution of eggs vary differently above and below a threshold temperature: 
@@ -244,7 +256,7 @@ bd<-4
 temps.in<-temps[bd:(length(temps)-bd)]
 ```
 
-```{r,echo=FALSE, eval=FALSE}
+```{r,echo=FALSE, eval=T}
 aic.pheno<-NA*(temps.in)
 thr.pheno<-as.list(1:(length(temps.in)))
 
@@ -260,13 +272,17 @@ for(i in 1:length(temps.in)){
 
 best.index.phe<-order(aic.pheno)[1]
 thr.pheno<-thr.pheno[[best.index.phe]]
+best.index.phe
+
+summary(thr.pheno)
+AIC(thr.pheno)
 
 saveRDS(aic.pheno,file="./GAM Models/ap_egg_aic_pheno_list.rds")
 saveRDS(thr.pheno,file="./GAM Models/ap_egg_thr_pheno.rds")
 saveRDS(temps.in,file="./GAM Models/ap_egg_temps_in_pheno.rds")
 saveRDS(best.index.phe,file="./GAM Models/ap_egg_best_index_phe.rds")
 ```
-```{r,echo=FALSE,include=FALSE}
+```{r,echo=FALSE,include=FALSE,eval=F}
 temps.in<-readRDS("./GAM Models/ap_egg_temps_in_pheno.rds") #same for geo and pheno models 
 aic.pheno<-readRDS("./GAM Models/ap_egg_aic_geo_list.rds")
 thr.pheno<-readRDS("./GAM Models/ap_egg_thr_pheno.rds")
@@ -275,18 +291,18 @@ summary(thr.pheno)
 AIC(thr.pheno)
 ```
 
-```{r, fig.width=6,fig.height=4.5,fig.fullwidth=TRUE,echo=FALSE,eval=FALSE}
+```{r, fig.width=6,fig.height=4.5,fig.fullwidth=TRUE,echo=FALSE,eval=T}
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
 plot(thr.pheno,select=4,main='Alaska Plaice Phenology, Eggs',seWithMean=TRUE,
      ylim=c(-4.2,2))
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5),new=TRUE)
-plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col=col,ylim=c(-4.2,2))
-legend('topright',legend=c('Below','Above'),col=c(NA,col),lwd=c(2,2),cex=0.8)
+plot(thr.pheno,select=3,seWithMean=TRUE,shade=TRUE,shade.col="skyblue",ylim=c(-4.2,2))
+legend('topright',legend=c('Below','Above'),col=c(NA,"skyblue"),lwd=c(2,2),cex=0.8)
 mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 ```
 
-```{r, fig.width=6,fig.height=4.5,fig.fullwidth=TRUE,echo=FALSE,eval=FALSE}
+```{r, fig.width=6,fig.height=4.5,fig.fullwidth=TRUE,echo=FALSE,eval=T}
 plot(temps.in,aic.pheno,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.pheno)),
      main='Temperature Threshold Flexible Phenology',ylab='AIC Index',
      xlab='Temperature (degC)')
@@ -296,7 +312,7 @@ abline(v=temps.in[best.index.phe],lty=2,lwd=2,col='steelblue3')
 
 The threshold geography model formulation (in which the geographic distribution of eggs vary differently above and below a threshold temperature: 
 *This is the best model to explain Alaska plaice egg variation across years, as of 1/10/2021*. 
-```{r,echo=FALSE,eval=FALSE}
+```{r,echo=FALSE,eval=T}
 aic.geo<-NA*(temps.in)
 thr.geo<-as.list(1:(length(temps.in)))
 
@@ -312,12 +328,16 @@ for(i in 1:length(temps.in)){
 
 best.index.geo<-order(aic.geo)[1]
 thr.geo<-thr.geo[[best.index.geo]]
+best.index.geo[[1]]
+
+summary(thr.geo)
+AIC(thr.geo)
 
 saveRDS(aic.geo,file="./GAM Models/ap_egg_aic_geo_list.rds")
 saveRDS(thr.geo,file="./GAM Models/ap_egg_thr_geo.rds")
 saveRDS(best.index.geo,file="./GAM Models/ap_egg_best_index_geo.rds")
 ```
-```{r}
+```{r,eval=F}
 thr.geo<-readRDS("./GAM Models/ap_egg_thr_geo.rds")
 best.index.geo<-readRDS("./GAM Models/ap_egg_best_index_geo.rds")
 aic.geo<-readRDS("./GAM Models/ap_egg_aic_geo_list.rds")
@@ -341,18 +361,18 @@ aic.apegg<-data.frame('model'=c('Base','Threshold Pheno','Threshold Geo',
 ```
 
 ```{r,fig.height=4.5,fig.width=6,fig.align='center',echo=FALSE}
-plot(c(1:5),aic.apegg$AIC_value,main='AIC Results for ap Egg Models',
+plot(c(1:5),aic.apegg$AIC_value,main='AP',
      col=hcl.colors(5,"Zissou 1"),
-     pch=19,cex=2,ylab='AIC Value',xlab='')
+     pch=19,cex=2,ylab='AIC Score',xlab='')
 grid(nx=5,ny=14,col="lightgray")
 text(c(1:5),aic.apegg$AIC_value,labels=round(aic.apegg$AIC_value),pos=c(4,3,3,2,2))
-legend("bottomleft",legend=c('Base','Threshold Pheno','Threshold Geo',
-                             'VC Pheno','VC Geo'),
+legend("bottomleft",legend=c('Base','Thr. Phenology','Thr. Geography',
+                             'V-C Phenology','V-C Geography'),
        col=hcl.colors(5,"Zissou 1"),
        lwd=3,lty=1,cex=0.7)
 ```
 
-```{r, fig.width=12,fig.height=8,fig.fullwidth=TRUE,fig.align='center', echo=FALSE, eval=FALSE}
+```{r, fig.width=12,fig.height=8,fig.fullwidth=TRUE,fig.align='center', echo=FALSE, eval=T}
 par(mfrow=c(1,2))
 plot(thr.geo,select=4,scheme=2,too.far=0.025,
      main=paste('Below',round(temps.in[best.index.geo],digits=3),sep=" "),
@@ -396,22 +416,22 @@ grid.extent$pred2[grid.extent$dist>30000]<-NA
 ```
 
 ```{r,fig.height=10,fig.width=6,fig.align='center',echo=FALSE}
-par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
+par(mai=c(1,1,0.5,0.9),mfrow=c(1,2))
 image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=c(-180,-155),ylim=c(52,63),main='Below',
+           xlim=c(-180,-155),ylim=c(52,63),main='',zlim=c(-1.5,8.5),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
-           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
+           legend.lab=expression(paste("log(C/(10m"^2,')+1)')),legend.shrink=0.4)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="gainsboro",add=T)
 
 image.plot(lond,latd,t(matrix(grid.extent$pred2,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=c(-180,-155),ylim=c(52,63),main='Above',
+           xlim=c(-180,-155),ylim=c(52,63),main='',zlim=c(-1.5,8.5),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
-           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
+           legend.lab=expression(paste("log(C/(10m"^2,')+1)')),legend.shrink=0.4)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="gainsboro",add=T)
 ```
@@ -424,13 +444,13 @@ abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 ```
 
 ```{r, fig.fullwidth=TRUE,fig.align='center',echo=FALSE,fig.width=6,fig.height=4}
-plot(temps.in,aic.geo,type='b',lwd=1.8,ylim=range(c(AIC(eg.base),aic.geo)),
-     main='Temperature Threshold Flex Geography',xlab="Temperature (degC)")
+plot(temps.in,aic.geo,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.geo)),
+     main='',xlab=expression(paste("Temperature ("^0,'C)')),ylab='AIC Score')
 abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
 abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
-legend("bottomleft",cex=0.6,lty=c(2,2),lwd=c(1.2,1.2),col=c('sienna3',
+legend("bottomleft",cex=0.8,lty=c(2,2),lwd=c(1.2,1.2),col=c('sienna3',
                                                             'steelblue3'),
-       legend=c("Base Model (no threshold)","Best Tested Thr.Geo Model"))
+       legend=c("Base Model","Best Model"))
 ```
 
 With the threshold geography model, we can predict places where there is a significant *difference* in predictions when comparing the above threshold spatial prediction to the below threshold spatial prediction. This plot is calculated by subtracting the spatial distribution *below* the threshold from the prediction *above* the threshold. 
@@ -473,11 +493,11 @@ max.slope<-max(grid.extent$diff,na.rm=T)
 ```{r,fig.align='center',fig.height=3.67,fig.width=5,echo=FALSE}
 par(mai=c(1,1,0.5,0.5))
 image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
-           col=hcl.colors(100,"Lajolla"),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), 
+           col=hcl.colors(100,"BuPu",rev=T),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), 
            xlim=c(-180,-155),ylim=c(52,63),
-           main=expression(paste('Significant Change Across Threshold')),
+           main="",
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab="Change in CPUE Anomalies",
+           legend.lab=expression(paste("Change in log(C/(10m"^2,')+1)')),
            legend.shrink=0.4)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="gainsboro",add=T)
@@ -506,6 +526,7 @@ saveRDS(lv.base,file="./GAM Models/ap_larval_base.rds")
 ```{r,include=FALSE}
 lv.base<-readRDS("./GAM Models/ap_larval_base.rds")
 summary(lv.base)
+AIC(lv.base)
 ```
 
 Then we add in additive salinity: 
@@ -520,6 +541,7 @@ saveRDS(lv.add.sal,file="./GAM Models/ap_larval_addsal.rds")
 ```{r,include=FALSE}
 lv.add.sal<-readRDS("./GAM Models/ap_larval_addsal.rds")
 summary(lv.add.sal)
+AIC(lv.add.sal)
 ```
 
 Then additive temperature: 
@@ -534,6 +556,7 @@ saveRDS(lv.add.temp,file="./GAM Models/ap_larval_addtemp.rds")
 ```{r,include=FALSE}
 lv.add.temp<-readRDS("./GAM Models/ap_larval_addtemp.rds")
 summary(lv.add.temp)
+AIC(lv.add.temp)
 ```
 
 Then additive temperature and salinity, in individual additive terms: 
@@ -548,6 +571,7 @@ saveRDS(lv.temp.sal,file="./GAM Models/ap_larval_addtempsal.rds")
 ```{r,include=FALSE}
 lv.temp.sal<-readRDS("./GAM Models/ap_larval_addtempsal.rds")
 summary(lv.temp.sal)
+AIC(lv.temp.sal)
 ```
 
 And finally, the best performing model: the bivariate salinity-temperature additive term: 
@@ -561,6 +585,7 @@ saveRDS(lv.2d,file="./GAM Models/ap_larval_2d.rds")
 ```{r,echo=FALSE}
 lv.2d<-readRDS("./GAM Models/ap_larval_2d.rds")
 summary(lv.2d)
+AIC(lv.2d)
 ```
 
 To confirm that this is indeed the best model, we can compare AIC values across all five tested models. 
@@ -575,6 +600,21 @@ aic.aplarv<-data.frame('model'=c('Base','Add Sal','Add Temp',
                                 'Sal and Temp','2-d Sal-Temp'),
                       'AIC_value'=c(aic.base,aic.sal,aic.temp,
                                     aic.saltemp,aic.2d))
+```
+
+
+
+```{r,echo=FALSE}
+windows(width=6,height=5);par(mai=c(1,1,0.5,0.9))
+plot(c(1:5),aic.aplarv$AIC_value,main='AP',
+     col=hcl.colors(5,"Zissou 1"),
+     pch=19,cex=2,ylab='AIC Score',xlab='')
+grid(nx=5,ny=14,col="lightgray")
+text(c(1:5),aic.aplarv$AIC_value,labels=round(aic.aplarv$AIC_value),pos=c(4,1,3,2,2))
+legend("bottomleft",legend=c('Base','Add. SSS','Add. SST',
+                             'Add. SSS, SST','Bivariate SSS-SST'),
+       col=hcl.colors(5,"Zissou 1"),
+       lwd=3,lty=1,cex=0.7)
 ```
 
 The following plot is the predicted Alaska Plaice larval biogeography based on the best performing model, the bivariate salinity-temperature GAM, next to the same plot with log(CPUE+1) observations shown. 
@@ -612,9 +652,9 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
            xlim=c(-180,-155),ylim=c(52,63),
-           main='Predicted Larval Biogeography, 2D Model',
+           main='',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="gainsboro",add=T)
 
@@ -624,7 +664,7 @@ image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
            xlim=c(-180,-155),ylim=c(52,63),
            main='',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 points(aplarv.ctd$lon[aplarv.ctd$Cper10m2==0],aplarv.ctd$lat[aplarv.ctd$Cper10m2==0],pch='+',col='white')
 symbols(aplarv.ctd$lon[aplarv.ctd$Cper10m2>0],
@@ -637,7 +677,7 @@ map("worldHires",fill=T,col="gainsboro",add=T)
 
 ```{r,fig.align='center',fig.fullwidth=TRUE,fig.width=5,fig.height=5,echo=FALSE}
 par(mai=c(1,1,0.5,0.9))
-plot(lv.2d,select=2,main="Larval Phenology (2D model)",xlab="Day of Year",
+plot(lv.2d,select=2,main="",xlab="Day of Year",
      ylab="Day of Year Effect",seWithMean=TRUE,shade=T,shade.col="lightgrey")
 abline(h=0,lty=2,lwd=1.3,col="mistyrose4")
 ```
@@ -674,20 +714,20 @@ par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
 image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
            col=hcl.colors(100,"Lajolla"),xlab='Salinity (psu)',
            ylab=expression(paste("Temperature ("^0, 'C)')),
-           xlim=range(aplarv.ctd$salinity,na.rm=T),ylim=range(aplarv.ctd$temperature,na.rm=T),
+           xlim=c(29,33.5),ylim=c(-1.8,14),
            main='',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 contour(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
         col="white",levels=c(1.4,1.9),add=T)
 
 image.plot(sald,tempd,t(matrix(grid.extent$pred,nrow=length(tempd),ncol=length(sald),byrow=T)),
            col=hcl.colors(100,"Lajolla"),xlab='Salinity (psu)',
            ylab=expression(paste("Temperature ("^0, 'C)')),
-           xlim=range(aplarv.ctd$salinity,na.rm=T),ylim=range(aplarv.ctd$temperature,na.rm=T),
+           xlim=c(29,33.5),ylim=c(-1.8,14),
            main='Larval Biogeography By Temperature and Salinity',
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.3)
+           legend.lab=expression(paste("log(C/(10m"^2,')+1)')),legend.shrink=0.3)
 symbols(aplarv.ctd$salinity[aplarv.ctd$Cper10m2>0],
         aplarv.ctd$temperature[aplarv.ctd$Cper10m2>0],
         circles=log(aplarv.ctd$Cper10m2+1)[aplarv.ctd$Cper10m2>0],
@@ -698,7 +738,40 @@ points(aplarv.ctd$salinity[aplarv.ctd$Cper10m2==0],aplarv.ctd$temperature[aplarv
 
 Now I'll calculate a specific range of temperature, salinity, and both temperature and salinity to evaluate breadth of environmental tolerances. 
 
-For the univariate predictions, make a grid that holds either temperature or salinity constant depending on the variable of interest. 
+For the univariate predictions, make a grid that holds either temperature or salinity constant depending on the variable of interest. The temperature and salinity values held constant were chosen based on the bivariate temperature,salinity plots; I attempted to capture a representative snapshot of variability in the univariate dimension. 
+
+First, I'll determine the sum of larval log(CPUE+1) predictions and 60% of that sum, to know how many rows to cut from the larger extent. 
+
+```{r,echo=FALSE}
+sum<-sum(grid.extent$pred,na.rm=T)
+sum
+
+clip60<-0.6*sum
+clip60 #determine 60% of summed CPUE predictions 
+
+grid.extent1<-grid.extent
+grid.extent1$pos<-seq.int(nrow(grid.extent1))
+grid.extent1<-grid.extent1%>%arrange(pred)
+grid.extent1$consum<-cumsum(grid.extent1$pred)
+grid.extent1<-grid.extent1[grid.extent1$consum>clip60,]
+
+grid.clip<-grid.extent1%>%arrange(grid.extent1$pos)
+
+#grid.sort$con.sum<-cumsum(grid.sort$pred) #calculate cumulative sums for each row 
+
+#grid.clip<-grid.sort[grid.sort$con.sum<=clip60,] #truncate top get 60% extent 
+#ntemp.cl<-211
+#nsal.cl<-211
+#tempd.cl<-seq(min(aplarv.ctd$temperature,na.rm=TRUE),max(aplarv.ctd$temperature,na.rm=TRUE),length.out=ntemp.cl)
+#sald.cl<-seq(min(aplarv.ctd$salinity,na.rm=T),max(aplarv.ctd$salinity,na.rm=T),length.out=nsal.cl)
+
+percbi<-(dim(grid.clip[!is.na(grid.clip$pred),])[[1]]/dim(grid.extent)[[1]])*100
+percbi 
+
+#write.csv(grid.clip,'Ak_larv_clip_60.csv')
+```
+
+So this percentage (percbi, 38.8%) is the percentage of the total grid extent (in terms of nrow) within which 60% of the predicted log(CPUE+1) lies. I.e., 38.8% percent of the whole grid extent encompasses 60% of the predicted observations. 
 
 ```{r,echo=FALSE}
 ntemp<-100
@@ -717,9 +790,24 @@ unit$lon<-as.numeric(median(aplarv.ctd$lon))
 unit$lat<-as.numeric(median(aplarv.ctd$lat))
 unit$doy<-as.numeric(median(aplarv.ctd$doy,na.rm=TRUE))
 unit$bottom_depth<-as.numeric(median(aplarv.ctd$bottom_depth,na.rm=TRUE))
-unit$salinity<-as.numeric(median(aplarv.ctd$salinity,na.rm=T))
+unit$salinity<-31.25 #near the peak predictions 
 unit$pred<-predict(lv.2d,newdata=unit)
+unit$salinity<-31
+unit$pred.1<-predict(lv.2d,newdata=unit)
+unit$salinity<-30.75
+unit$pred.2<-predict(lv.2d,newdata=unit)
+unit$salinity<-30.25
+unit$pred.3<-predict(lv.2d,newdata=unit)
+unit$salinity<-31.5
+unit$pred.4<-predict(lv.2d,newdata=unit)
+unit$salinity<-31.75
+unit$pred.5<-predict(lv.2d,newdata=unit)
 unit$pred[unit$dist>mean(unit$dist)]<-NA
+unit$pred.1[unit$dist>mean(unit$dist)]<-NA
+unit$pred.2[unit$dist>mean(unit$dist)]<-NA
+unit$pred.3[unit$dist>mean(unit$dist)]<-NA
+unit$pred.4[unit$dist>mean(unit$dist)]<-NA
+unit$pred.5[unit$dist>mean(unit$dist)]<-NA
 
 nsal<-100
 sald<-seq(min(aplarv.ctd$salinity,na.rm=T),max(aplarv.ctd$salinity,na.rm=T),length.out=nsal)
@@ -736,59 +824,128 @@ unis$lon<-as.numeric(median(aplarv.ctd$lon))
 unis$lat<-as.numeric(median(aplarv.ctd$lat))
 unis$doy<-as.numeric(median(aplarv.ctd$doy,na.rm=TRUE))
 unis$bottom_depth<-as.numeric(median(aplarv.ctd$bottom_depth,na.rm=TRUE))
-unis$temperature<-as.numeric(median(aplarv.ctd$temperature,na.rm=T))
+unis$temperature<-5 #centralized in peak predictions
 unis$pred<-predict(lv.2d,newdata=unis)
+unis$temperature<-5.25
+unis$pred.1<-predict(lv.2d,newdata=unis)
+unis$temperature<-5.75
+unis$pred.2<-predict(lv.2d,newdata=unis)
+unis$temperature<-4.75
+unis$pred.3<-predict(lv.2d,newdata=unis)
+unis$temperature<-4.25
+unis$pred.4<-predict(lv.2d,newdata=unis)
+unis$temperature<-6
+unis$pred.5<-predict(lv.2d,newdata=unis)
 unis$pred[unis$dist>mean(unis$dist)]<-NA
+unis$pred.1[unis$dist>mean(unis$dist)]<-NA
+unis$pred.2[unis$dist>mean(unis$dist)]<-NA
+unis$pred.3[unis$dist>mean(unis$dist)]<-NA
+unis$pred.4[unis$dist>mean(unis$dist)]<-NA
+unis$pred.5[unis$dist>mean(unis$dist)]<-NA
 
-unit<-unit[!is.na(unit$pred),]
+unit<-unit[!is.na(unit$pred),] #the following clip will be based on the main prediction (pred), not the secondary ones (1-5)
 unis<-unis[!is.na(unis$pred),]
 
-clipt<-as.numeric(0.6*dim(unit)[[1]])
-clips<-as.numeric(0.6*dim(unit)[[1]])
+clipt60<-0.6*(sum(unit$pred,na.rm=T))
+clips60<-0.6*(sum(unis$pred,na.rm=T))
 
-grid.sort.t<-unit%>%arrange(desc(pred))
-grid.sort.s<-unis%>%arrange(desc(pred))
+grid.t1<-unit
+grid.t1$pos<-seq.int(nrow(grid.t1))
+grid.t1<-grid.t1%>%arrange(pred)
+grid.t1$consum<-cumsum(grid.t1$pred)
+grid.t1<-grid.t1[grid.t1$consum>clipt60,]
+grid.clip.t<-grid.t1%>%arrange(grid.t1$pos)
 
-grid.clip.t<-grid.sort.t%>%slice_head(n=clipt)
-grid.clip.s<-grid.sort.s%>%slice_head(n=clips)
+grid.s1<-unis
+grid.s1$pos<-seq.int(nrow(grid.s1))
+grid.s1<-grid.s1%>%arrange(pred)
+grid.s1$consum<-cumsum(grid.s1$pred)
+grid.s1<-grid.s1[grid.s1$consum>clips60,]
+grid.clip.s<-grid.s1%>%arrange(grid.s1$pos)
+
+#grid.sort.t<-unit%>%arrange(desc(pred))
+#grid.sort.s<-unis%>%arrange(desc(pred))
+
+#sumt<-sum(unit$pred,na.rm=T)
+#sums<-sum(unis$pred,na.rm=T)
+
+#clipt<-0.6*sumt
+#clips<-0.6*sums
+
+#grid.sort.t$con.sum<-cumsum(grid.sort.t$pred)
+#grid.sort.s$con.sum<-cumsum(grid.sort.s$pred)
+
+#grid.clip.t<-grid.sort.t[grid.sort.t$con.sum<=clipt,]
+#grid.clip.s<-grid.sort.s[grid.sort.s$con.sum<=clips,]
 ```
-
 
 ```{r,echo=FALSE,fig.align='center',fig.width=8,fig.height=6,fig.fullwidth=TRUE,warning=FALSE}
 temp<-ggplot(grid.clip.t,aes(x=temperature,y=pred))+geom_point(color='grey')+geom_smooth(method="loess")+
-  theme_bw()+theme(axis.text.x=element_text(angle=45,hjust=1))+
-  labs(x='Temperature',y='Prediction')+
-  scale_x_continuous(breaks=round(seq(min(grid.clip.t$temperature),max(grid.clip.t$temperature),by=0.75),1))
+  geom_line(aes(x=temperature,y=pred.1),linetype="solid",color="grey48")+
+  geom_line(aes(x=temperature,y=pred.2),linetype="twodash",color="grey48")+
+  geom_line(aes(x=temperature,y=pred.3),linetype="longdash",color="grey48")+
+  geom_line(aes(x=temperature,y=pred.4),linetype="dotted",color="grey48")+
+  geom_line(aes(x=temperature,y=pred.5),linetype="dotdash",color="grey48")+
+  theme_bw()+theme(axis.text.x=element_text(angle=45,hjust=1,size=7.5))+
+  labs(x=expression(paste("Temperature ("^0,'C)')),y='Prediction')+
+  scale_x_continuous(breaks=seq(-1.7,14,by=1),limits=c(-1.7,14))+
+  scale_y_continuous(breaks=seq(1,7.3,by=1),limits=c(1,7.3))
 
 sal<-ggplot(grid.clip.s,aes(x=salinity,y=pred))+geom_point(color='grey')+geom_smooth(method="loess")+
-  theme_bw()+labs(x='Salinity',y='Prediction')+
-  scale_x_continuous(breaks=round(seq(min(grid.clip.s$salinity),max(grid.clip.s$salinity),by=0.2),1))
+  geom_line(aes(x=salinity,y=pred.1),linetype="solid",color="grey48")+
+  geom_line(aes(x=salinity,y=pred.2),linetype="twodash",color="grey48")+
+  geom_line(aes(x=salinity,y=pred.3),linetype="longdash",color="grey48")+
+  geom_line(aes(x=salinity,y=pred.4),linetype="dotted",color="grey48")+
+  geom_line(aes(x=salinity,y=pred.5),linetype="dotdash",color="grey48")+
+  theme_bw()+labs(x='Salinity (psu)',y='Prediction')+
+  theme(axis.text.x=element_text(hjust=1,angle=45,size=7.5))+
+  scale_x_continuous(breaks=round(seq(29,33.3,by=0.5),1),limits=c(29,33.3))+
+  scale_y_continuous(breaks=seq(1,7.3,by=1),limits=c(1,7.3))
 
 par(mai=c(1,1,0.5,0.9))
 ggarrange(temp,sal)
 ```
 
 For the bivariate analysis: 
-```{r,echo=FALSE}
-grid.extent<-grid.extent[!is.na(grid.extent$pred),] #remove NAs to get proper percentage of predictions, use grid extent previously calculated 
-
-clip<-as.numeric(0.6*dim(grid.extent)[[1]]) #define nrows = to 60% of prediction grid 
-
-grid.sort<-grid.extent%>%arrange(desc(pred))
-
-grid.clip<-grid.sort%>%slice_head(n=clip) #clip top 70% of prediction grid 
-head(grid.clip)
-
-#write.csv(grid.clip,'Ak_larv_clip_60.csv')
-```
 
 ```{r,echo=FALSE,fig.align='center',fig.width=6,fig.height=6,fig.fullwidth=TRUE}
 par(mai=c(1,1,0.5,0.9))
-bivar<-ggplot(grid.clip)+geom_tile(aes(x=salinity,y=temperature,fill=pred))+theme_bw()+
-  labs(x='Salinity',y='Temperature')+scale_fill_viridis()
+bivar<-ggplot()+geom_tile(data=grid.clip,aes(x=salinity,y=temperature,fill=pred))+
+  geom_vline(xintercept=31.25,linetype="dashed",color="black")+
+  geom_vline(xintercept=31,linetype="solid",color="grey48")+
+  geom_vline(xintercept=30.75,linetype="twodash",color="grey48")+
+  geom_vline(xintercept=30.25,linetype="longdash",color="grey48")+
+  geom_vline(xintercept=31.5,linetype="dotted",color="grey48")+
+  geom_vline(xintercept=31.75,linetype="dotdash",color="grey48")+
+  geom_hline(yintercept=5,linetype="dashed",color="black")+
+  geom_hline(yintercept=5.25,linetype="solid",color="grey48")+
+  geom_hline(yintercept=5.75,linetype="twodash",color="grey48")+
+  geom_hline(yintercept=4.75,linetype="longdash",color="grey48")+
+  geom_hline(yintercept=4.25,linetype="dotted",color="grey48")+
+  geom_hline(yintercept=6,linetype="dotdash",color="grey48")+
+  labs(x='Salinity (psu)',y=expression(paste("Temperature ("^0,'C)')))+scale_fill_viridis(name='Prediction')+
+  scale_x_continuous(breaks=seq(29,33.3,by=0.5),limits=c(29,33.3))+
+  scale_y_continuous(breaks=seq(-1.7,14,by=1),limits=c(-1.7,14))+
+  theme(axis.text.x=element_text(hjust=1,angle=45,size=7.5))
 bivar
 ```
 
+Determine area in T-S units over which 60% of observations are contained.
+
+```{r,echo=FALSE}
+width<-max(grid.extent$salinity)-min(grid.extent$salinity)
+height<-max(grid.extent$temperature)-min(grid.extent$temperature)
+area.all<-width*height
+
+width.cl<-max(grid.clip$salinity)-min(grid.clip$salinity)
+height.cl<-max(grid.clip$temperature)-min(grid.clip$temperature)
+area.clip<-width.cl*height.cl
+
+perc.area<-(area.clip/area.all)*100
+perc.area
+```
+
+41.78% of the salinity-temperature area contains 60% of the total predicted log(CPUE+1). 
 
 To again share the improvements of the best performing models from the base models, we can look at the AIC division produces.
 ```{r,echo=FALSE,fig.align='center',fig.width=6,fig.height=10,fig.fullwidth=TRUE}
@@ -834,13 +991,14 @@ set1<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey
   geom_point(data=apdz1,aes(x=lon,y=lat),fill="violetred4",shape=8)+
   geom_point(data=apd1,aes(x=lon,y=lat,size=logcpue),
                         fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  scale_size_continuous(expression(paste("log(C/(10m"^2,')+1)')),range=c(0,9),breaks=pretty_breaks(9))+
   theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
         legend.position="bottom",legend.direction="horizontal",
         legend.text=element_text(size=8))+
-  labs(title="Plaice Eggs, DOY 123-128",
-       shape="Log (CPUE + 1)")+ylab("Latitude")+xlab("Longitude")
+  labs(title="DOY 123-128",
+       shape=expression(paste("log(C/(10m"^2,')+1)')))+
+  ylab(expression(paste("Latitude ("^o,')')))+xlab(expression(paste("Longitude ("^o,'E)')))
 
 set2<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
   scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
@@ -848,13 +1006,14 @@ set2<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey
   geom_point(data=apdz2,aes(x=lon,y=lat),fill="violetred4",shape=8)+
   geom_point(data=apd2,aes(x=lon,y=lat,size=logcpue),
                         fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  scale_size_continuous(expression(paste("log(C/(10m"^2,')+1)')),range=c(0,9),breaks=pretty_breaks(9))+
   theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
         legend.position="bottom",legend.direction="horizontal",
         legend.text=element_text(size=8))+
-  labs(title="Plaice Eggs, DOY 142-149",
-       shape="Log (CPUE + 1)")+ylab("Latitude")+xlab("Longitude")
+  labs(title="DOY 142-149",
+       shape=expression(paste("log(C/(10m"^2,')+1)')))+
+  ylab(expression(paste("Latitude ("^o,')')))+xlab(expression(paste("Longitude ("^o,'E)')))
 
 set3<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
   scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
@@ -862,13 +1021,14 @@ set3<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey
   geom_point(data=apdz3,aes(x=lon,y=lat),fill="violetred4",shape=8)+
   geom_point(data=apd3,aes(x=lon,y=lat,size=logcpue),
                         fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  scale_size_continuous(expression(paste("log(C/(10m"^2,')+1)')),range=c(0,9),breaks=pretty_breaks(9))+
   theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
         legend.position="bottom",legend.direction="horizontal",
         legend.text=element_text(size=8))+
-  labs(title="Plaice Eggs, DOY 163-173",
-       shape="Log (CPUE + 1)")+ylab("Latitude")+xlab("Longitude")
+  labs(title="DOY 163-173",
+       shape=expression(paste("log(C/(10m"^2,')+1)')))+
+  ylab(expression(paste("Latitude ("^o,')')))+xlab(expression(paste("Longitude ("^o,'E)')))
 ```
 
 

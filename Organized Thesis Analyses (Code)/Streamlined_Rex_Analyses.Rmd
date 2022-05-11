@@ -81,7 +81,7 @@ hist(rxsub$year[rxsub$Cper10m2>0],xlab="Year",ylab="",main="")
 ```
 
 The following plots show rex egg catch distributions (Catch per unit effort, or per 10m$^2$) across five year increments from 1979 to 2016. 
-```{r,echo=FALSE,eval=TRUE}
+```{r,echo=FALSE,eval=F}
 rxysub<-rxsub%>%mutate(yearbin=case_when(year<=1984~'1979-1984',
                                          year<=1989&year>1984~'1985-1989',
                                          year<=1994&year>1989~'1990-1994',
@@ -97,7 +97,7 @@ rxypos$logcpue<-log(rxypos$Cper10m2+1)
 bathybath<-as.bathy(bathy)
 ```
 
-```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=TRUE}
+```{r,fig.height=10,fig.width=8,fig.align='center',fig.fullwidth=T,echo=FALSE,warning=FALSE,eval=F}
 autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
   scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
                        colors=c("steelblue4","#C7E0FF","grey50","grey80"))+
@@ -120,31 +120,37 @@ Rex sole eggs were best explained by the threshold geography model, in which the
 ## Generalized Additive Models: Rex Eggs
 
 The base model formulation: 
-```{r, eval=FALSE,echo=FALSE}
+```{r, eval=T,echo=FALSE}
 eg.base<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5),
              data=rxsub,family=tw(link='log'),method='REML')
+
+AIC(eg.base)
+summary(eg.base)
 ```
 
-```{r, eval=FALSE,echo=FALSE}
+```{r, eval=T,echo=FALSE}
 plot(eg.base,shade=FALSE,page=1,seWithMean=TRUE,scheme=2,scale=0)
 
 saveRDS(eg.base,file="./GAM Models/rx_egg_base.rds")
 ```
 
-```{r}
+```{r,eval=F}
 eg.base<-readRDS("./GAM Models/rx_egg_base.rds")
 summary(eg.base)
 AIC(eg.base)
 ```
 
 The variable-coefficient geography formulation (in which geographic egg distributions vary differently in relation to regional SST indices). This was the second best-performing model for rex egg variance. 
-```{r, eval=FALSE,echo=FALSE}
+```{r, eval=T,echo=FALSE}
 vc.geo<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
               s(lon,lat,by=reg.SST),data=rxsub,family=tw(link='log'),
             method='REML')
+
+summary(vc.geo)
+AIC(vc.geo)
 ```
 
-```{r, eval=FALSE,echo=FALSE}
+```{r, eval=T,echo=FALSE}
 par(mfrow=c(1,2))
 plot(vc.geo,select=1,scheme=2,too.far=0.025,shade=FALSE,
      seWithMean=TRUE,xlab='Longitude',ylab='Latitude',
@@ -158,18 +164,18 @@ map("world",fill=T,col="gainsboro",add=T)
 saveRDS(vc.geo,file="./GAM Models/rx_egg_vc_geo.rds")
 ```
 
-```{r,echo=FALSE}
+```{r,echo=FALSE,eval=F}
 vc.geo<-readRDS("./GAM Models/rx_egg_vc_geo.rds")
 summary(vc.geo)
 ```
 
-```{r, eval=FALSE,echo=FALSE}
+```{r, eval=T,echo=FALSE}
 vc.pheno<-gam((Cper10m2+1)~factor(year)+s(lon,lat)+s(doy)+s(bottom_depth,k=5)+
                 s(doy,by=reg.SST),data=rxsub,family=tw(link='log'),
               method='REML')
 ```
 
-```{r, eval=FALSE,echo=FALSE}
+```{r, eval=T,echo=FALSE}
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
 plot(vc.pheno,select=2,main='Pollock VC Phenology, Eggs',seWithMean=TRUE)
 abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
@@ -182,7 +188,7 @@ mtext(c("Day of Year","Anomalies in log(CPUE+1)"),side=c(1,2),line=2.5)
 saveRDS(vc.pheno,file="./GAM Models/rx_egg_vc_pheno.rds")
 ```
 
-```{r,echo=FALSE,include=FALSE}
+```{r,echo=FALSE,include=FALSE,eval=F}
 vc.pheno<-readRDS("./GAM Models/rx_egg_vc_pheno.rds")
 summary(vc.pheno)
 AIC(vc.pheno)
@@ -190,7 +196,7 @@ AIC(vc.pheno)
 
 The threshold geography model formulation (in which the geographic distribution of eggs vary differently above and below a threshold temperature of 2.28 degrees Celsius): 
 *This is the best model to explain rex egg distribution as of 1/10/2022*
-```{r,eval=FALSE,echo=FALSE}
+```{r,eval=T,echo=FALSE}
 aic.geo<-NA*(temps.in)
 thr.geo<-as.list(1:(length(temps.in)))
 
@@ -204,30 +210,34 @@ for(i in 1:length(temps.in)){
 
 best.index.geo<-order(aic.geo)[1]
 thr.geo<-thr.geo[[best.index.geo]]
+temps.in[[best.index.geo]]
+
+summary(thr.geo)
+AIC(thr.geo)
 ```
 
 
-```{r,eval=FALSE,echo=FALSE}
+```{r,eval=T,echo=FALSE}
 saveRDS(aic.geo,file="./GAM Models/rx_egg_aic_geo_list.rds")
 saveRDS(thr.geo,file="./GAM Models/rx_egg_thr_geo.rds")
 saveRDS(best.index.geo,file="./GAM Models/rx_egg_best_index_geo.rds")
 ```
-```{r,echo=FALSE}
+```{r,echo=FALSE,eval=F}
 thr.geo<-readRDS("./GAM Models/rx_egg_thr_geo.rds")
 best.index.geo<-readRDS("./GAM Models/rx_egg_best_index_geo.rds")
 aic.geo<-readRDS("./GAM Models/rx_egg_aic_geo_list.rds")
 ```
-```{r,echo=FALSE}
+```{r,echo=FALSE,eval=F}
 summary(thr.geo)
 ```
 
-```{r,eval=FALSE,echo=FALSE}
+```{r,eval=T,echo=FALSE}
 temps<-sort(unique(reg.sst$SST))
 bd<-4
 temps.in<-temps[bd:(length(temps)-bd)]
 ```
 
-```{r,eval=FALSE}
+```{r,eval=T}
 aic.pheno<-NA*(temps.in)
 thr.pheno<-as.list(1:(length(temps.in)))
 
@@ -243,24 +253,25 @@ for(i in 1:length(temps.in)){
 
 best.index.phe<-order(aic.pheno)[1]
 thr.pheno<-thr.pheno[[best.index.phe]]
+temps.in[[best.index.phe]]
 ```
 
 
-```{r, eval=FALSE, echo=FALSE}
+```{r, eval=T, echo=FALSE}
 saveRDS(aic.pheno,file="./GAM Models/rx_egg_aic_pheno_list.rds")
 saveRDS(thr.pheno,file="./GAM Models/rx_egg_thr_pheno.rds")
 saveRDS(temps.in,file="./GAM Models/rx_egg_temps_in.rds")
 saveRDS(best.index.phe,file="./GAM Models/rx_egg_best_index_phe.rds")
 ```
 
-```{r,echo=FALSE}
+```{r,echo=FALSE,eval=F}
 temps.in<-readRDS("./GAM Models/rx_egg_temps_in.rds") #same for geo and pheno models 
 #aic.pheno<-readRDS("./GAM Models/rx_egg_aic_pheno_list.rds") 
 thr.pheno<-readRDS("./GAM Models/rx_egg_thr_pheno.rds")
 best.index.phe<-readRDS("./GAM Models/rx_egg_best_index_phe.rds")
 ```
 
-```{r,echo=FALSE,eval=FALSE}
+```{r,echo=FALSE,eval=T}
 summary(thr.pheno)
 AIC(thr.pheno)
 ```
@@ -271,7 +282,7 @@ print(temps.in[[best.index.geo]])
 ```
 
 
-```{r, fig.width=6.5,fig.height=4.5,fig.fullwidth=TRUE,echo=FALSE,eval=FALSE}
+```{r, fig.width=6.5,fig.height=4.5,fig.fullwidth=TRUE,echo=FALSE,eval=T}
 par(oma=c(1,1,1,0.5),mar=c(3,3,3,1.5))
 plot(thr.pheno,select=4,main='Rex Sole Phenology, Eggs',seWithMean=TRUE,
      ylim=c(-4.2,2))
@@ -297,18 +308,18 @@ aic.rxegg<-data.frame('model'=c('Base','Threshold Pheno','Threshold Geo',
 ```
 
 ```{r,fig.fullwidth=TRUE,fig.width=6.5,fig.height=4.5,fig.align='center',echo=FALSE}
-plot(c(1:5),aic.rxegg$AIC_value,main='AIC Results for Rex Egg Models',
+plot(c(1:5),aic.rxegg$AIC_value,main='RS',
      col=hcl.colors(5,"Zissou 1"),
-     pch=19,cex=2,ylab='AIC Value',xlab='')
+     pch=19,cex=2,ylab='AIC Score',xlab='')
 grid(nx=5,ny=14,col="lightgray")
 text(c(1:5),aic.rxegg$AIC_value,labels=round(aic.rxegg$AIC_value),pos=c(4,3,3,2,2))
-legend("bottomleft",legend=c('Base','Threshold Pheno','Threshold Geo',
-                             'VC Pheno','VC Geo'),
+legend("bottomleft",legend=c('Base','Thr. Phenology','Thr. Geography',
+                             'V-C Phenology','V-C Geography'),
        col=hcl.colors(5,"Zissou 1"),
        lwd=3,lty=1,cex=0.75)
 ```
 
-This is the below threshold (2.28 deg C) and above threshold geographic distribution of Rex eggs. 
+This is the below threshold (2.31 deg C) and above threshold geographic distribution of Rex eggs. 
 ```{r, echo=FALSE}
 nlat=120
 nlon=120
@@ -340,22 +351,22 @@ grid.extent$pred2[grid.extent$dist>30000]<-NA
 ```
 
 ```{r,fig.height=10,fig.width=6,fig.align='center',echo=FALSE}
-par(mai=c(1,1,0.5,0.9),mfrow=c(2,1))
+par(mai=c(1,1,0.5,0.9),mfrow=c(1,2))
 image.plot(lond,latd,t(matrix(grid.extent$pred,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=c(-180,-155),ylim=c(52,63),main='Below',
+           xlim=c(-180,-155),ylim=c(52,63),main='',zlim=c(-1,3.6),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
-           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
+           legend.lab=expression(paste("log(C/(10m"^2,')+1)')),legend.shrink=0.4)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="gainsboro",add=T)
 
 image.plot(lond,latd,t(matrix(grid.extent$pred2,nrow=length(latd),
                               ncol=length(lond),byrow=T)),col=hcl.colors(100,"Lajolla"),
            ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')),
-           xlim=c(-180,-155),ylim=c(52,63),main='Above',
+           xlim=c(-180,-155),ylim=c(52,63),main='',zlim=c(-1,3.6),
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-1.8,
-           legend.lab=expression(paste("Anomalies in (log(C/(10m"^2,')+1)')),legend.shrink=0.4)
+           legend.lab=expression(paste("log(C/(10m"^2,')+1)')),legend.shrink=0.4)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)
 map("worldHires",fill=T,col="gainsboro",add=T)
 ```
@@ -369,12 +380,12 @@ abline(h=0,col='mistyrose4',lty=2,lwd=1.3)
 
 ```{r, fig.width=6.5,fig.height=4,fig.fullwidth=TRUE,echo=FALSE}
 plot(temps.in,aic.geo,type='b',lwd=2,ylim=range(c(AIC(eg.base),aic.geo)),
-     main='Temperature Threshold Flex Geography',xlab="Temperature (degC)")
+     main='',xlab=expression(paste("Temperature ("^0,'C)')),ylab='AIC Score')
 abline(h=AIC(eg.base),lty=2,lwd=2,col='sienna3')
 abline(v=temps.in[best.index.geo],lty=2,lwd=2,col='steelblue3')
-legend("bottomleft",cex=0.6,lty=c(2,2),lwd=c(1.2,1.2),col=c('sienna3',
+legend("bottomleft",cex=0.8,lty=c(2,2),lwd=c(1.2,1.2),col=c('sienna3',
                                                             'steelblue3'),
-       legend=c("Base Model (no threshold)","Best Tested Thr.Geo Model"))
+       legend=c("Base Model","Best Model"))
 ```
 
 With the threshold geography model, we can also see the *significant* differences across the temperature threshold in predicted catch anomalies. This figure shows the prediction of egg catch anomalies below the threshold subtracted from those above the threshold. Thus, more positive values indicate a higher predicted egg catch anomaly above the threshold compared with below the threshold. 
@@ -423,10 +434,10 @@ max.slope<-max(grid.extent$diff,na.rm=T)
 ```{r,fig.align='center',fig.width=5,fig.height=3.67,fig.fullwidth=TRUE,echo=FALSE}
 par(mai=c(1,1,0.5,0.5))
 image.plot(lond,latd,t(matrix(grid.extent$diff,nrow=length(latd),ncol=length(lond),byrow=T)),
-           col=hcl.colors(100,"Lajolla"),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), 
-           xlim=c(-180,-155),ylim=c(52,63),main=expression(paste('Significant Change Across Threshold (2.29'^0,'C)')),
+           col=hcl.colors(100,"BuPu",rev=T),ylab=expression(paste("Latitude ("^0,'N)')),xlab=expression(paste("Longitude ("^0,'E)')), 
+           xlim=c(-180,-155),ylim=c(52,63),main="",
            cex.main=1,cex.lab=1,cex.axis=0.9,legend.line=-2,
-           legend.lab=expression(paste("Change in CPUE Anomalies")),
+           legend.lab=expression(paste("Change in log(C/(10m"^2,')+1)')),
            legend.shrink=0.3)
 contour(bathy,levels=-c(50,200),labcex=0.4,col='grey28',add=T)#would prefer to have legend within plot margins, and for all font to be times, but not sure how to do that. 
 map("worldHires",fill=T,col="gainsboro",add=T)
@@ -473,13 +484,14 @@ set1<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey
   geom_point(data=rxdz1,aes(x=lon,y=lat),fill="violetred4",shape=8)+
   geom_point(data=rxd1,aes(x=lon,y=lat,size=logcpue),
                         fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  scale_size_continuous(expression(paste("log(C/(10m"^2,')+1)')),range=c(0,9),breaks=pretty_breaks(9))+
   theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
         legend.position="bottom",legend.direction="horizontal",
         legend.text=element_text(size=8))+
-  labs(title="Rex, DOY 165-175",
-       shape="Log (CPUE + 1)")+ylab("Latitude")+xlab("Longitude")
+  labs(title="DOY 165-175",
+       shape=expression(paste("log(C/(10m"^2,')+1)')))+
+  ylab(expression(paste("Latitude ("^o,')')))+xlab(expression(paste("Longitude ("^o,'E)')))
 
 set2<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey")+
   scale_fill_gradientn("Depth (m)",values=scales::rescale(c(-7600,0,1,2321)),
@@ -487,13 +499,14 @@ set2<-autoplot.bathy(bathybath,geom=c("contour","raster"),coast=TRUE,color="grey
   geom_point(data=rxdz2,aes(x=lon,y=lat),fill="violetred4",shape=8)+
   geom_point(data=rxd2,aes(x=lon,y=lat,size=logcpue),
                         fill="#993300",shape=21,alpha=0.8)+
-  scale_size_continuous("Log (CPUE + 1)",range=c(0,9),breaks=pretty_breaks(9))+
+  scale_size_continuous(expression(paste("log(C/(10m"^2,')+1)')),range=c(0,9),breaks=pretty_breaks(9))+
   theme(panel.grid.major=element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
         legend.position="bottom",legend.direction="horizontal",
         legend.text=element_text(size=8))+
   labs(title="DOY 190-200",
-       shape="Log (CPUE + 1)")+ylab("Latitude")+xlab("Longitude")
+       shape=expression(paste("log(C/(10m"^2,')+1)')))+
+  ylab(expression(paste("Latitude ("^o,')')))+xlab(expression(paste("Longitude ("^o,'E)')))
 ```
 
 ```{r,fig.fullwidth=T,fig.align='center',fig.width=8,fig.height=10,echo=F}

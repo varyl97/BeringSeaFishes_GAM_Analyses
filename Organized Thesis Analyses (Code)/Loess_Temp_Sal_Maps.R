@@ -35,10 +35,193 @@ library(rlist)
 allctd2<-list.rbind(splitCTD2)
 
 #Start here: 
-muCTD<-read.csv(file="./Environmental Data/Split_CTD_MeanTopTempSal.csv",
+muctd<-read.csv(file="./Environmental Data/Split_CTD_MeanTopTempSal.csv",
                 header=T,check.names=T)
 
-year<-c(2003,2005,2008,2009) #2 cold and warm years, respectively, according to Baker 2021
+
+################# FOR THESIS: #######################################
+#average SST and SSS for region: 
+## fix this so that it's just the months of interest
+#cutting just to may
+muctd$month<-str_sub(muctd$Date,start=1,end=1) #not perfect for double digit months but doesn't matter 
+cutctd<-muctd[muctd$month==5,]
+
+cutctd<-cutctd[!is.na(cutctd$Longitude),]
+cutctd<-cutctd[!is.na(cutctd$Latitude),]
+
+lon.poly<-c(-154.2265, -166.4125, -161.5889, -154.2688)
+lat.poly<-c(58.32915, 53.87126, 53.12828, 55.95868)
+
+point.in.poly<-in.chull(cutctd$Longitude,cutctd$Latitude,lon.poly,lat.poly)
+cutctd<-cutctd[!point.in.poly==TRUE,]
+
+zlim.t<-range(cutctd$mean_temp,na.rm=T)
+zlim.s<-range(cutctd$mean_sal,na.rm=T)
+
+loess.t<-loess(mean_temp~Longitude*Latitude,
+               data=cutctd,degree=2,span=0.15)
+loess.s<-loess(mean_sal~Longitude*Latitude,
+               data=cutctd,degree=2,span=0.15)
+
+lond<-seq(min(cutctd$Longitude,na.rm=T),max(cutctd$Longitude,na.rm=T),
+          length.out=100)
+latd<-seq(min(cutctd$Latitude,na.rm=T),max(cutctd$Latitude,na.rm=T),
+          length.out=100)
+predict.grid<-expand.grid(lond,latd)
+names(predict.grid)<-c("Longitude","Latitude")
+
+for(j in 1:nrow(predict.grid)){
+  predict.grid$dist[j]<-min(distance.function(
+    predict.grid$Latitude[j],predict.grid$Longitude[j],
+    cutctd$Latitude,cutctd$Longitude),na.rm=T)}
+predict.grid[predict.grid$dist>30000,]<-NA
+
+sst.pred<-predict(loess.t,newdata=predict.grid)
+sss.pred<-predict(loess.s,newdata=predict.grid)
+
+windows(width=12,height=5);par(mai=c(1,1,0.5,1.2),mfrow=c(1,2))
+image.plot(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),
+           zlim=zlim.t,ylab=expression(paste("Latitude ("^0,'N)')),
+           xlab=expression(paste("Longitude ("^0,'E)')),
+           main="",
+           xlim=c(-174,-155),ylim=c(53,60),
+           legend.lab=expression(paste("Temperature ("^0,"C)")),
+           legend.line=(-1.8))
+contour(bathy,levels=-c(50,100),labcex=0.4,col='grey58',add=T)
+contour(lond,latd,sst.pred,levels=c(2),add=T,lwd=1.9,col="grey90")
+contour(lond,latd,sst.pred,levels=c(6),add=T,lwd=1.9,col='grey90')
+map("worldHires",fill=T,col="gainsboro",add=T)
+
+image.plot(lond,latd,sss.pred,col=hcl.colors(100,"Mako",rev=T),
+           zlim=zlim.s,ylab=expression(paste("Latitude ("^0,'N)')),
+           xlab=expression(paste("Longitude ("^0,'E)')),
+           main="",
+           xlim=c(-174,-155),ylim=c(53,60),
+           legend.lab=expression(paste("Salinity (psu)")),
+           legend.line=(-1.8))
+contour(bathy,levels=-c(50,100),labcex=0.4,col='grey58',add=T)
+contour(lond,latd,sss.pred,levels=c(31),add=T,lwd=1.9,col="grey90")
+contour(lond,latd,sss.pred,levels=c(32),add=T,lwd=1.9,col='grey90')
+map("worldHires",fill=T,col="gainsboro",add=T)
+
+#averages in warm and cold regimes: 
+#cold regime: '06 through '13
+#warm regime: '14 through '16
+
+cutctd<-cutctd %>% mutate(regime = 
+                            case_when(Year>=2006 & Year<=2013 ~ "Cold",
+                                      Year>=2001 & Year<=2005 ~ "Warm",
+                                      Year>=2014 & Year<=2016 ~ "Warm"))
+
+warm<-cutctd[cutctd$regime=="Warm",]
+cold<-cutctd[cutctd$regime=="Cold",]
+
+zlimt.cold<-range(cold$mean_temp,na.rm=T)
+zlimt.warm<-range(warm$mean_temp,na.rm=T)
+
+zlims.cold<-range(cold$mean_sal,na.rm=T)
+zlims.warm<-range(warm$mean_sal,na.rm=T)
+
+loess.t.cold<-loess(mean_temp~Longitude*Latitude,
+                    data=cold,degree=2,span=0.15)
+loess.t.warm<-loess(mean_temp~Longitude*Latitude,
+                    data=warm,degree=2,span=0.15)
+
+loess.s.cold<-loess(mean_sal~Longitude*Latitude,
+                    data=cold,degree=2,span=0.15)
+loess.s.warm<-loess(mean_sal~Longitude*Latitude,
+                  data=warm,degree=2,span=0.15)
+
+lond.cold<-seq(min(cold$Longitude,na.rm=T),
+               max(cold$Longitude,na.rm=T),length=100)
+latd.cold<-seq(min(cold$Latitude,na.rm=T),
+               max(cold$Latitude,na.rm=T),length=100)
+lond.warm<-seq(min(warm$Longitude,na.rm=T),
+               max(warm$Longitude,na.rm=T),length=100)
+latd.warm<-seq(min(warm$Latitude,na.rm=T),
+               max(warm$Latitude,na.rm=T),length=100)
+
+grid.cold<-expand.grid(lond.cold,latd.cold)
+names(grid.cold)<-c("Longitude","Latitude")
+
+grid.warm<-expand.grid(lond.warm,latd.warm)
+names(grid.warm)<-c("Longitude","Latitude")
+
+for(j in 1:nrow(grid.cold)){
+    grid.cold$dist[j]<-min(distance.function(
+    grid.cold$Latitude[j],grid.cold$Longitude[j],
+    cold$Latitude,cold$Longitude),na.rm=T)}
+grid.cold[grid.cold$dist>30000,]<-NA
+
+for(j in 1:nrow(grid.warm)){
+    grid.warm$dist[j]<-min(distance.function(
+    grid.warm$Latitude[j],grid.warm$Longitude[j],
+    warm$Latitude,warm$Longitude),na.rm=T)}
+grid.warm[grid.warm$dist>30000,]<-NA
+
+sst.cold<-predict(loess.t.cold,newdata=grid.cold)
+sst.warm<-predict(loess.t.warm,newdata=grid.warm)
+
+sss.cold<-predict(loess.s.cold,newdata=grid.cold)
+sss.warm<-predict(loess.s.warm,newdata=grid.warm)
+
+windows(width=12,height=5);par(mai=c(1,1,0.5,1.2),mfrow=c(1,2))
+image.plot(lond.warm,latd.warm,sst.warm,col=hcl.colors(100,"Viridis"),
+           zlim=c(-2,9.5),ylab=expression(paste("Latitude ("^0,'N)')),
+           xlab=expression(paste("Longitude ("^0,'E)')),
+           main="",
+           xlim=c(-174,-155),ylim=c(53,60),
+           legend.lab=expression(paste("Temperature ("^0,"C)")),
+           legend.line=(-1.8))
+contour(bathy,levels=-c(50,100),labcex=0.4,col='grey58',add=T)
+contour(lond.warm,latd.warm,sst.warm,levels=c(2),add=T,lwd=1.75,col="grey")
+contour(lond.warm,latd.warm,sst.warm,levels=c(6),add=T,lwd=1.75,col='grey')
+map("worldHires",fill=T,col="gainsboro",add=T)
+
+image.plot(lond.warm,latd.warm,sss.warm,col=hcl.colors(100,"Mako",rev=T),
+           zlim=c(29.5,33.5),ylab=expression(paste("Latitude ("^0,'N)')),
+           xlab=expression(paste("Longitude ("^0,'E)')),
+           main="",
+           xlim=c(-174,-155),ylim=c(53,60),
+           legend.lab=expression(paste("Salinity (psu)")),
+           legend.line=(-1.8))
+contour(bathy,levels=-c(50,100),labcex=0.4,col='grey58',add=T)
+contour(lond.warm,latd.warm,sss.warm,levels=c(31),add=T,lwd=1.75,col="grey")
+contour(lond.warm,latd.warm,sss.warm,levels=c(32),add=T,lwd=1.75,col='grey')
+map("worldHires",fill=T,col="gainsboro",add=T)
+
+windows(width=12,height=5);par(mai=c(1,1,0.5,1.2),mfrow=c(1,2))
+image.plot(lond.cold,latd.cold,sst.cold,col=hcl.colors(100,"Viridis"),
+           zlim=c(-2,9.5),ylab=expression(paste("Latitude ("^0,'N)')),
+           xlab=expression(paste("Longitude ("^0,'E)')),
+           main="",
+           xlim=c(-174,-155),ylim=c(53,60),
+           legend.lab=expression(paste("Temperature ("^0,"C)")),
+           legend.line=(-1.8))
+contour(bathy,levels=-c(50,100),labcex=0.4,col='grey58',add=T)
+contour(lond.cold,latd.cold,sst.cold,levels=c(2),add=T,lwd=1.75,col="grey")
+contour(lond.cold,latd.cold,sst.cold,levels=c(6),add=T,lwd=1.75,col='grey')
+map("worldHires",fill=T,col="gainsboro",add=T)
+
+image.plot(lond.cold,latd.cold,sss.cold,col=hcl.colors(100,"Mako",rev=T),
+           zlim=c(29.5,33.5),ylab=expression(paste("Latitude ("^0,'N)')),
+           xlab=expression(paste("Longitude ("^0,'E)')),
+           main="",
+           xlim=c(-174,-155),ylim=c(53,60),
+           legend.lab=expression(paste("Salinity (psu)")),
+           legend.line=(-1.8))
+contour(bathy,levels=-c(50,100),labcex=0.4,col='grey58',add=T)
+contour(lond.cold,latd.cold,sss.cold,levels=c(31),add=T,lwd=1.75,col="grey")
+contour(lond.cold,latd.cold,sss.cold,levels=c(32),add=T,lwd=1.75,col='grey')
+map("worldHires",fill=T,col="gainsboro",add=T)
+
+
+
+
+
+
+###by year (some older code below here)
+year<-c(2003,2005,2008,2009) #2 cold and warm years, respectively, according to Baker 202102.
 #cold 1=2003, 2=2005; warm 1=2008, warm 2=2009
 
 for(i in 1:length(year)){
@@ -58,6 +241,8 @@ zlim3<-range(warm1$mean_temp,na.rm=T)
 warm2<-muCTD[muCTD$Year==2009,]
 zlim4<-range(warm2$mean_temp,na.rm=T)
 
+
+
 #temperature plots: 
 loess.t1<-loess(mean_temp~Longitude*Latitude,
                 data=cold1,span=0.15,degree=2)
@@ -69,6 +254,13 @@ loess.t4<-loess(mean_temp~Longitude*Latitude,
                 data=warm2,span=0.15,degree=2)
 
 #framework of prediction grid
+lond<-seq(min(muCTD$Longitude,na.rm=T),max(muCTD$Longitude,na.rm=T),
+          length=100)
+latd<-seq(min(muCTD$Latitude,na.rm=T),max(muCTD$Latitude,na.rm=T),
+          length=100)
+predict.grid<-expand.grid(lond,latd)
+names(predict.grid)<-c("Longitude","Latitude")
+
 lond1<-seq(min(cold1$Longitude,na.rm=T),
           max(cold1$Longitude,na.rm=T),length=100)
 latd1<-seq(min(cold1$Latitude,na.rm=T),
@@ -97,6 +289,10 @@ latd4<-seq(min(warm2$Latitude,na.rm=T),
 predict.grid4<-expand.grid(lond4,latd4)
 names(predict.grid4)<-c("Longitude","Latitude")
 
+for(j in 1:nrow(predict.grid)){
+  predict.grid$dist[j]<-min(distance.function(
+    predict.grid$Latitude[j],predict.grid$Longitude[j],
+    muCTD$Latitude[j],muCTD$Longitude[j]))}
 
 for(j in 1:nrow(predict.grid1)){
   predict.grid1$dist[j]<-min(distance.function(
@@ -118,6 +314,8 @@ for(j in 1:nrow(predict.grid4)){
     predict.grid4$Latitude[j],predict.grid4$Longitude[j],
     warm2$Latitude[j],warm2$Longitude[j]))}
 
+sst.pred<-predict(loess.all,newdata=predict.grid)
+
 sst.pred1<-predict(loess.t1,newdata=predict.grid1)
 #sst.pred1[predict.grid1$dist>500000]<-NA
 
@@ -129,6 +327,18 @@ sst.pred3<-predict(loess.t3,newdata=predict.grid3)
 
 sst.pred4<-predict(loess.t4,newdata=predict.grid4)
 #sst.pred4[predict.grid4$dist>500000]<-NA
+
+windows(width=6,height=5);par(mai=c(1,1,0.5,0.9))
+image.plot(lond,latd,sst.pred,col=hcl.colors(100,"Viridis"),
+      zlim=zlim,ylab=expression(paste("Latitude ("^0,'N)')),
+      xlab=expression(paste("Longitude ("^0,'E)')),
+      main="",
+      xlim=c(-175,-155),ylim=c(53,65),
+      legend.lab=expression(paste("Temperature ("^0,"C)")),
+      legend.line=(-2.2))
+contour(lond,latd,sst.pred,levels=c(2),add=T,lwd=1.5,col="grey")
+contour(lond,latd,sst.pred,levels=c(6),add=T,lwd=1.5,col='grey')
+map("worldHires",fill=T,col="gainsboro",add=T)
 
 windows(width=15,height=13)
 par(mfrow=c(2,2))
@@ -163,6 +373,31 @@ image(lond4,latd4,sst.pred4,col=hcl.colors(100,"Lajolla"),
 contour(lond4,latd4,sst.pred4,levels=c(2.5),add=T,lwd=2)
 contour(lond4,latd4,sst.pred4,levels=c(-1),add=T,lwd=2,col='grey')
 map("worldHires",fill=T,col="gainsboro",add=T)
+
+
+###### For thesis: 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #monthly iteration - 2/21/2022
 #still really patchy, think the data just might not be ideal 
